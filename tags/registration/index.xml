@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Registration | Wei Pan</title><link>https://willpan.xyz/tags/registration/</link><atom:link href="https://willpan.xyz/tags/registration/index.xml" rel="self" type="application/rss+xml"/><description>Registration</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>en-us</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Dynamic correlation network and structure-aware matching for robust point cloud registration</title><link>https://willpan.xyz/publications/lu-2026-dynamic-correlation-network-and-structure-aware/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/publications/lu-2026-dynamic-correlation-network-and-structure-aware/</guid><description>&lt;p>Relative rotations between point clouds pose significant challenges for reliable correspondence estimation. This work proposes a rotation-robust registration framework that integrates a Dynamic Correlation Network (DCN) with Structure-Aware Point Matching (SAPM), using rotation-equivariant features, adaptive feature correlation, and bidirectional correspondence consistency to stabilize matching under unseen orientations.&lt;/p>
+&lt;p>In the broader publication record, this work sits in Computers &amp;amp; Graphics, 104672 and connects to practical problems in 3D sensing, computational geometry, and industrial machine vision.&lt;/p>
+&lt;!-- publication-auto-details:start -->
+&lt;h2 id="algorithm-principle">Algorithm principle&lt;/h2>
+&lt;p>This work focuses on rotation-robust point cloud registration. A major weakness of many learned registration methods is that rotation augmentation cannot densely cover the continuous SO(3) space, so feature correlations become unstable when test-time rotations differ from training-time rotations.&lt;/p>
+&lt;p>The proposed framework combines a Dynamic Correlation Network (DCN) with Structure-Aware Point Matching (SAPM). DCN starts from rotation-equivariant features and dynamically assembles local feature correlations with adaptive channel and spatial weighting, then reasons in a rotation-invariant feature space. SAPM refines patch-level and point-level correspondences with contextual interactions and bidirectional consistency, so the final matching stage is less dependent on brittle single-point similarities or RANSAC-style cleanup.&lt;/p>
+&lt;h2 id="visual-evidence">Visual evidence&lt;/h2>
+&lt;img src="figure-code-1-architecture.webp" alt="DC-SAM architecture" loading="lazy">
+&lt;p>&lt;em>Overall DC-SAM architecture. Rotation-equivariant feature extraction is followed by dynamic correlation modeling and structure-aware correspondence refinement.&lt;/em>&lt;/p>
+&lt;img src="figure-code-2-correspondences.webp" alt="Structure-aware point cloud correspondences" loading="lazy">
+&lt;p>&lt;em>Point-level correspondences after structure-aware matching. The module uses neighborhood context and bidirectional consistency to suppress unstable matches.&lt;/em>&lt;/p>
+&lt;img src="figure-code-3-registration-3dmatch.webp" alt="Indoor registration examples on 3DMatch" loading="lazy">
+&lt;p>&lt;em>Indoor registration examples on 3DMatch/3DLoMatch-style scenes, where rotation variation and partial overlap make correspondence selection difficult.&lt;/em>&lt;/p>
+&lt;img src="figure-code-4-registration-kitti.webp" alt="Outdoor registration examples on KITTI" loading="lazy">
+&lt;p>&lt;em>Outdoor KITTI registration examples showing that the same matching strategy transfers from indoor RGB-D scans to LiDAR-scale scenes.&lt;/em>&lt;/p>
+&lt;h2 id="results-and-impact">Results and impact&lt;/h2>
+&lt;p>Experiments on indoor benchmarks (3DMatch and 3DLoMatch) and outdoor KITTI data show stronger accuracy and robustness under varying rotations than recent registration baselines. The main practical contribution is not only higher registration quality, but a registration pipeline that remains stable when the relative orientation is outside the narrow distribution seen during training.&lt;/p>
+&lt;!-- publication-auto-details:end --></description></item><item><title>SuP: Sub-cloud Driven Point Cloud Registration</title><link>https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</guid><description>&lt;p>SuP is a CVPR 2026 Highlight paper on robust point cloud registration when two scans have very little shared geometry. The key idea is to stop forcing a direct whole-cloud match in the hardest case. Instead, SuP searches for high-overlap sub-cloud pairs hidden inside a globally low-overlap pair, then uses those anchors to build the final correspondence set.&lt;/p>
+&lt;!-- publication-auto-details:start -->
+&lt;h2 id="problem-setting">Problem setting&lt;/h2>
+&lt;p>Low-overlap registration fails for a familiar reason: the non-overlapping regions can still look geometrically or semantically similar. Methods that match the whole source and target cloud can therefore lock onto attractive but wrong structures, while the true inlier region is small and easy to bury under outliers.&lt;/p>
+&lt;p>SuP reframes this as a local anchor mining problem. Source and target point clouds are subdivided into multiple sub-clouds; among all possible sub-cloud pairs, the method searches for pairs that have high actual overlap and consistent features. Those pairs become reliable supports for the final transformation.&lt;/p>
+&lt;img src="figure-2.webp" alt="Low-overlap ambiguity in point cloud registration" loading="lazy">
+&lt;p>&lt;em>Motivation. Similar non-overlapping structures create false matches, while SuP exposes hidden inlier regions by selecting high-overlap sub-cloud anchor pairs.&lt;/em>&lt;/p>
+&lt;h2 id="algorithm-principle">Algorithm principle&lt;/h2>
+&lt;p>The pipeline first extracts point-wise features with KPConv and Transformer-based aggregation. The Dual-phase Sub-cloud Anchor Mining (DSAM) module then performs the central selection step. It subdivides each point cloud, scores candidate source-target sub-cloud pairs, estimates preliminary poses for promising candidates, and keeps the anchors with strong feature consensus.&lt;/p>
+&lt;p>DSAM has two phases. The overlap-guided prior-weighting scheme (OPS) computes feature-correlation based prior weights and selects likely overlapping sub-cloud candidates, avoiding an exhaustive and noisy search over all local pairs. After preliminary sub-cloud matching, the multi-scale post-weighting network (MPN) evaluates feature consensus from aligned candidates at several scales. The top anchor pairs are passed to merge-to-match, where reliable local correspondences are merged and the final rigid transform is estimated.&lt;/p>
+&lt;p>The training objective combines overlap-aware feature learning, point matching, and an alignment-aware weighting loss. The last term is important: instead of only supervising anchors as static pair labels, it uses the alignment errors produced during training to teach the weighting module which anchors actually lead to good registration.&lt;/p>
+&lt;img src="figure-1.webp" alt="SuP pipeline with DSAM, OPS, MPN, and merge-to-match" loading="lazy">
+&lt;p>&lt;em>Method overview. Multi-scale point features are aggregated, DSAM mines anchor pairs through OPS and MPN, and merge-to-match estimates the final transformation from anchor-supported correspondences.&lt;/em>&lt;/p>
+&lt;h2 id="implementation">Implementation&lt;/h2>
+&lt;p>The released configuration subdivides each point cloud into six sub-clouds. OPS keeps 24 candidate sub-cloud pairs, and MPN uses an overlap threshold of 0.04 before selecting the top eight feature-consensus weighted anchor pairs. The model is trained end-to-end in PyTorch with SGD, an initial learning rate of 1e-4, exponential decay, and L2 weight decay. The paper reports training for 40 epochs on eight RTX 4070 Ti GPUs, taking about 10 hours.&lt;/p>
+&lt;h2 id="results">Results&lt;/h2>
+&lt;p>SuP is evaluated on the color-enhanced 3DMatch (C3DM) and 3DLoMatch (C3DLM) benchmarks. Under the standard RANSAC-based setting, SuP reaches 97.8% registration recall on C3DM and 90.2% on C3DLM. The low-overlap result is the more important one: it shows that sub-cloud anchor isolation helps when direct matching is dominated by outlier correspondences.&lt;/p>
+&lt;p>The LGR setting confirms the same behavior without relying on RANSAC as the outlier filter. SuP reports 97.8% / 90.2% registration recall on C3DM / C3DLM, with geometric errors of 1.374 degrees / 0.046 m and 2.493 degrees / 0.074 m respectively. As a plug-in, the sub-cloud strategy also improves existing pipelines: GeoTransformer rises from 91.5% to 92.8% RR on C3DM and from 74.0% to 76.7% on C3DLM; PEAL rises from 94.3% to 95.6% and from 81.2% to 83.4%; ColorPCR reaches 97.8% and 90.2%.&lt;/p>
+&lt;img src="figure-3.webp" alt="Qualitative low-overlap comparison on 3DLoMatch" loading="lazy">
+&lt;p>&lt;em>Main qualitative comparison. ColorPCR is pulled toward non-overlap outliers; SuP removes many of these misleading correspondences through sub-cloud anchor mining.&lt;/em>&lt;/p>
+&lt;img src="figure-4.webp" alt="Additional qualitative comparison on color-enhanced 3DMatch" loading="lazy">
+&lt;p>&lt;em>Supplementary visual result on C3DM. The sub-cloud strategy keeps more inlier correspondences and produces cleaner alignments.&lt;/em>&lt;/p>
+&lt;img src="figure-5.webp" alt="Extreme low-overlap qualitative comparison on color-enhanced 3DLoMatch" loading="lazy">
+&lt;p>&lt;em>Supplementary visual result on extremely low-overlap C3DLM pairs. SuP still finds high-overlap anchors when visible overlap is below 15%.&lt;/em>&lt;/p>
+&lt;h2 id="ablation-and-takeaways">Ablation and takeaways&lt;/h2>
+&lt;p>The ablation study removes OPS, feature consensus weights, MPN, and the alignment-aware weighting loss in sequence. Each component adds a measurable gain, with the full model reaching the best registration recall of 97.8% on C3DM and 90.2% on C3DLM. The sub-cloud subdivision threshold also matters: the reported default, tau = 0.35, balances enough local detail with enough shared support inside each anchor.&lt;/p>
+&lt;p>For industrial 3D vision, the broader lesson is useful beyond this benchmark. When scans are partial, noisy, repetitive, or captured from difficult viewpoints, robust registration can improve by first locating dependable local anchors rather than trusting global correspondence scores over the entire cloud.&lt;/p>
+&lt;!-- publication-auto-details:end --></description></item><item><title>DeSC: Learning Deep Semantic Descriptor for NeRF Registration</title><link>https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/</guid><description>&lt;p>DeSC studies NeRF-to-NeRF registration: given two independently trained NeRF models of the same object or scene, estimate the rigid transformation between their coordinate frames. This is useful when large scenes are reconstructed as separate NeRF blocks, when camera poses are unavailable or noisy, or when new image subsets need to be integrated without retraining one monolithic NeRF.&lt;/p>
+&lt;!-- publication-auto-details:start -->
+&lt;h2 id="problem-setting">Problem setting&lt;/h2>
+&lt;p>Classical point cloud registration tools can be applied by sampling points from NeRF, but those point clouds are often noisy and artifact-prone because density estimation may be inaccurate. Pure photometric optimization has the opposite problem: it can fail on textureless, symmetric, or low-overlap cases. DeSC takes another route by using NeRF&amp;rsquo;s internal view-independent embeddings, which carry both geometric and appearance information but are less tied to a single rendered view.&lt;/p>
+&lt;p>The main observation is that independently trained NeRFs do not share an identical embedding space, yet corresponding regions of the same scene still preserve similar local relations. DeSC therefore learns descriptors from local NeRF patches instead of matching raw sampled geometry or final rendered color alone.&lt;/p>
+&lt;img src="figure-2.webp" alt="DeSC feature visualization from NeRF embeddings to robust correspondences" loading="lazy">
+&lt;p>&lt;em>Feature motivation. Raw NeRF embeddings can be inconsistent across frames, while the learned deep semantic descriptor produces more stable local features, better correspondences, and more accurate NeRF alignment.&lt;/em>&lt;/p>
+&lt;h2 id="algorithm-principle">Algorithm principle&lt;/h2>
+&lt;p>The pipeline first samples a NeRF-derived point cloud using the occupancy grid and density threshold. KP-FCNN builds multi-level geometric features and downsampled point sets. For each sparse point, DeSC forms a local patch from nearby dense points, queries the NeRF for view-independent embeddings, and enriches them with color and density through photometric encoding.&lt;/p>
+&lt;p>The core module is the Deep Semantic Aggregation Module (DSAM). It applies a texture-aware graph convolution over each local patch, using local high-frequency texture weights so nearby points with distinctive implicit features are emphasized. The resulting deep semantic descriptors are fused with geometric features, then passed through self-attention and cross-attention Transformer blocks. A point matching module produces correspondences, outliers are removed, and the final relative pose is estimated by SVD.&lt;/p>
+&lt;img src="figure-1.webp" alt="DeSC architecture overview" loading="lazy">
+&lt;p>&lt;em>Method overview. DeSC extracts geometric and implicit NeRF features, aggregates local semantic descriptors with graph convolution, exchanges context with a Transformer, and estimates the final transformation from matched points.&lt;/em>&lt;/p>
+&lt;h2 id="training-objective">Training objective&lt;/h2>
+&lt;p>DeSC uses a coarse-to-fine correspondence pipeline with overlap-aware and matching losses, and adds a density-aware photometric consistency loss (DPCL). DPCL encourages descriptors to respect the photometric consistency of corresponding NeRF regions while remaining robust to noisy sampled geometry. The ablation in the final manuscript studies DSAM, photometric encoding (PE), local high-frequency texture weights (LHTW), and DPCL separately.&lt;/p>
+&lt;h2 id="results">Results&lt;/h2>
+&lt;p>On Objaverse, removing all DeSC modules reduces registration recall from 97.7% to 93.2%, and increases RRE from 2.57 degrees to 9.19 degrees. Removing DPCL alone also drops registration recall from 97.7% to 96.9%, showing that the photometric consistency term helps make the learned descriptor more reliable.&lt;/p>
+&lt;p>The revised manuscript also evaluates real and large-scale scenes. On DTU, DeSC reports the highest registration recall at 30%, 50%, and 80% overlap: 90.6%, 95.3%, and 97.9%. On LLFF, the corresponding values are 91.0%, 94.2%, and 98.1%. On Mip-NeRF360, DeSC reaches 88.1%, 90.9%, and 95.3%, with particularly clear gains in the 30% low-overlap setting.&lt;/p>
+&lt;img src="figure-3.webp" alt="Qualitative DeSC registration comparison with camera poses" loading="lazy">
+&lt;p>&lt;em>Objaverse qualitative comparison. The visualized NeRF geometry and camera poses show that DeSC is less affected by noisy high-density artifacts in empty space.&lt;/em>&lt;/p>
+&lt;img src="figure-4.webp" alt="DeSC qualitative comparison on DTU LLFF and Mip-NeRF360" loading="lazy">
+&lt;p>&lt;em>Real-scene comparison at 30% overlap. DeSC aligns DTU, LLFF, and Mip-NeRF360 examples more closely than DReg-NeRF and VF-NeRF in these low-overlap cases.&lt;/em>&lt;/p>
+&lt;img src="figure-5.webp" alt="DeSC qualitative registration under different overlap ratios" loading="lazy">
+&lt;p>&lt;em>Overlap robustness. Qualitative examples at 30%, 50%, and 80% overlap show that the learned descriptor remains effective as shared visual support decreases.&lt;/em>&lt;/p>
+&lt;h2 id="limitation">Limitation&lt;/h2>
+&lt;p>The method is designed for NeRF-style implicit representations and does not directly apply to explicit 3D Gaussian Splatting, voxel grids, or hash-based representations without adaptation. The paper also notes a symmetry failure mode: if object geometry and texture are highly symmetric, the learned features may still produce visually plausible but metrically incorrect alignments.&lt;/p>
+&lt;img src="figure-6.webp" alt="DeSC limitation on a symmetric structure" loading="lazy">
+&lt;p>&lt;em>Failure case. Strong symmetry can lead to incorrect correspondences even when the visual alignment appears reasonable.&lt;/em>&lt;/p>
+&lt;!-- publication-auto-details:end --></description></item><item><title>SemReg: Semantics-Constrained Point Cloud Registration</title><link>https://willpan.xyz/publications/fung-2024-semreg/</link><pubDate>Sun, 01 Sep 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/publications/fung-2024-semreg/</guid><description>&lt;p>Point cloud registration is the task of finding the rigid transformation that best aligns two 3D scans of the same scene captured from different viewpoints. Geometric matching methods based on local shape descriptors are powerful but brittle: textureless walls, repetitive furniture, and symmetric objects all create correspondence ambiguities that cause alignment failures. SemReg resolves this fundamental limitation by treating semantic labels as first-class geometric constraints. The key insight is that semantic category membership is invariant to viewpoint and illumination, providing a complementary signal that can eliminate geometrically degenerate correspondences. Technically, SemReg integrates semantic feature embeddings into a transformer-based correspondence network, jointly optimising geometric and semantic consistency in the matching layer. The result is a registration system that remains reliable precisely in the cases where purely geometric methods fail—low-overlap captures and symmetry-rich scenes. Accepted at ECCV 2024, a top-tier computer vision venue, SemReg achieves state-of-the-art performance on the standard 3DMatch, 3DLoMatch, and KITTI benchmarks, with the largest improvements concentrated in the hardest, low-overlap evaluation splits.&lt;/p>
+&lt;!-- publication-auto-details:start -->
+&lt;h2 id="algorithm-principle">Algorithm principle&lt;/h2>
+&lt;p>The algorithmic problem is to estimate a rigid transformation between two partially overlapping point clouds. The method builds discriminative local or sub-cloud features, searches for reliable correspondences, and then uses those correspondences to solve for the final alignment while suppressing ambiguous matches from repeated geometry, low overlap, or noisy regions.&lt;/p>
+&lt;h2 id="visual-material">Visual material&lt;/h2>
+&lt;p>The local archive does not currently include a matched PDF for this entry, so additional method and result figures are pending. Once the PDF is added, the page can be regenerated with representative visuals.&lt;/p>
+&lt;h2 id="results-and-impact">Results and impact&lt;/h2>
+&lt;p>The reported evaluation in European Conference on Computer Vision, 293-310 positions the method as a practical contribution to the surrounding 3D vision and industrial inspection workflow. The experiments are used to show whether the proposed representation or pipeline improves robustness, accuracy, speed, or deployability compared with the relevant baseline methods.&lt;/p>
+&lt;!-- publication-auto-details:end --></description></item><item><title>TopFormer: Topology-Aware Transformer for Point Cloud Registration</title><link>https://willpan.xyz/publications/fung-2024-topformer/</link><pubDate>Mon, 01 Apr 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/publications/fung-2024-topformer/</guid><description>&lt;p>Point cloud registration requires finding reliable correspondences between two scans of the same scene. Transformer-based methods have improved on classical descriptor matching by using attention to capture global context, yet they remain vulnerable to scenes with repetitive geometric motifs—tiled floors, uniform walls, symmetric objects—where many local regions appear nearly identical. TopFormer tackles this robustness gap by enriching transformer feature tokens with topological structure descriptors that capture how each surface point connects to its neighbours at multiple scales. These topological features provide information not available in standard geometric or learned local descriptors: two patches that look locally similar may have different global connectivity signatures, making them distinguishable. TopFormer integrates these topology-aware tokens into a standard transformer matching pipeline with minimal added complexity. Presented at the International Conference on Computational Visual Media (CVM) 2024, the method achieves competitive or superior registration recall on 3DMatch and KITTI benchmarks, with the clearest gains on the challenging low-overlap evaluation split where conventional attention-based methods degrade most.&lt;/p>
+&lt;!-- publication-auto-details:start -->
+&lt;h2 id="problem-setting">Problem setting&lt;/h2>
+&lt;p>Transformer-based point cloud registration methods have achieved strong performance by matching local geometric descriptors with global attention, but they still struggle in scenes with repetitive geometry or limited texture where local shape alone is insufficient to distinguish correspondences. TopFormer addresses this by incorporating topological structure descriptors—derived from persistent homology or graph connectivity of the local neighbourhood—into the transformer feature tokens. These topology-aware tokens encode how each point sits within the broader surface topology, providing a complementary discriminative signal that reduces false matches in symmetric or repetitive regions.&lt;/p>
+&lt;p>In the broader publication record, this work appears in International Conference on Computational Visual Media (CVM) 2024, 112–128. The visual notes below pair the paper&amp;rsquo;s original figures with a concise reading of the method, experimental setup, and reported results.&lt;/p>
+&lt;h2 id="method-and-visual-evidence">Method and visual evidence&lt;/h2>
+&lt;p>The method works on 3D geometric observations such as point clouds, poses, correspondences, or segmented regions, then uses the proposed representation to improve robustness under noise, viewpoint change, or limited observations.&lt;/p>
+&lt;p>The extracted figures below show the geometric representation, network or optimization pipeline, and qualitative or quantitative results.&lt;/p>
+&lt;img src="figure-1.webp" alt="TopFormer: Topology-Aware Transformer for Point Cloud Registration - Method overview" loading="lazy">
+&lt;p>&lt;em>Method overview. This image is extracted from an embedded PDF image object on page 2, then recomposed for web display.&lt;/em>&lt;/p>
+&lt;img src="figure-2.webp" alt="TopFormer: Topology-Aware Transformer for Point Cloud Registration - Representation and setup" loading="lazy">
+&lt;p>&lt;em>Representation and setup. This image is extracted from an embedded PDF image object on page 2, then recomposed for web display.&lt;/em>&lt;/p>
+&lt;img src="figure-3.webp" alt="TopFormer: Topology-Aware Transformer for Point Cloud Registration - Experimental evidence" loading="lazy">
+&lt;p>&lt;em>Experimental evidence. This image is extracted from an embedded PDF image object on page 5, then recomposed for web display.&lt;/em>&lt;/p>
+&lt;img src="figure-4.webp" alt="TopFormer: Topology-Aware Transformer for Point Cloud Registration - Result comparison" loading="lazy">
+&lt;p>&lt;em>Result comparison. This image is extracted from an embedded PDF image object on page 5, then recomposed for web display.&lt;/em>&lt;/p>
+&lt;img src="figure-5.webp" alt="TopFormer: Topology-Aware Transformer for Point Cloud Registration - Additional visual result" loading="lazy">
+&lt;p>&lt;em>Additional visual result. This image is extracted from an embedded PDF image object on page 11, then recomposed for web display.&lt;/em>&lt;/p>
+&lt;h2 id="results-and-impact">Results and impact&lt;/h2>
+&lt;p>The evaluation reported in International Conference on Computational Visual Media (CVM) 2024, 112–128 uses the extracted figures above to show the method&amp;rsquo;s measurement, reconstruction, segmentation, matching, or diagnostic behavior on representative experiments. These visuals are paired with the paper&amp;rsquo;s quantitative or qualitative analysis to make the workflow easier to inspect from the homepage.&lt;/p>
+&lt;h2 id="source-handling">Source handling&lt;/h2>
+&lt;p>I extracted 24 candidate image objects from &lt;code>paper.pdf&lt;/code> and generated the compressed WebP figures used on this page.&lt;/p>
+&lt;!-- publication-auto-details:end --></description></item><item><title>3D Autoscan System</title><link>https://willpan.xyz/projects/3d-autoscan/</link><pubDate>Tue, 15 Jan 2019 00:00:00 +0000</pubDate><guid>https://willpan.xyz/projects/3d-autoscan/</guid><description>&lt;p>A scanner + rotary platform pipeline that captures arbitrary objects to ~0.1 mm in under five minutes — built to seed a 3D shape database without per-object parameter tuning.&lt;/p>
+&lt;p>
+&lt;figure >
+&lt;div class="flex justify-center ">
+&lt;div class="w-100" >&lt;img alt="Full system photo" srcset="
+/projects/3d-autoscan/3dscan-system_hu6d484e7b24375fcb8f3d957d31b0d824_11312_2836b2b5f4d9c074730ffff78cccac8e.webp 400w,
+/projects/3d-autoscan/3dscan-system_hu6d484e7b24375fcb8f3d957d31b0d824_11312_44385411534ee89f593f8f42d63b030a.webp 760w,
+/projects/3d-autoscan/3dscan-system_hu6d484e7b24375fcb8f3d957d31b0d824_11312_1200x1200_fit_q80_h2_lanczos_2.webp 1200w"
+src="https://willpan.xyz/projects/3d-autoscan/3dscan-system_hu6d484e7b24375fcb8f3d957d31b0d824_11312_2836b2b5f4d9c074730ffff78cccac8e.webp"
+width="760"
+height="282"
+loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;em>Figure 1. Scanner + rotary platform setup. Controlled by a single PC running the registration pipeline.&lt;/em>&lt;/p>
+&lt;h2 id="problem">Problem&lt;/h2>
+&lt;p>Building a 3D shape database requires scanning many objects. Off-the-shelf scanning is fine for one model, but at database scale it costs human hours: every object shape requires re-tuning algorithm parameters, and every mis-registration eats into the ~5 min/object budget. The need is a robust pipeline that adapts — per-object parameter tuning has to disappear.&lt;/p>
+&lt;h2 id="pipeline">Pipeline&lt;/h2>
+&lt;p>The system fuses three algorithmic stages tuned to handle scale, reflectance, and pose variation without manual intervention.&lt;/p>
+&lt;p>
+&lt;figure >
+&lt;div class="flex justify-center ">
+&lt;div class="w-100" >&lt;img alt="Frame-to-frame registration" srcset="
+/projects/3d-autoscan/3dscan-registration_hu0ab9288b3a3023cae94a0f3e53dd0110_4634_bb3e2adf496d7ffd9fb855db56de77c4.webp 400w,
+/projects/3d-autoscan/3dscan-registration_hu0ab9288b3a3023cae94a0f3e53dd0110_4634_eef56101ab7f18c756d1f4d1076bb4ff.webp 760w,
+/projects/3d-autoscan/3dscan-registration_hu0ab9288b3a3023cae94a0f3e53dd0110_4634_1200x1200_fit_q80_h2_lanczos_2.webp 1200w"
+src="https://willpan.xyz/projects/3d-autoscan/3dscan-registration_hu0ab9288b3a3023cae94a0f3e53dd0110_4634_bb3e2adf496d7ffd9fb855db56de77c4.webp"
+width="555"
+height="272"
+loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;em>Figure 2. Frame-to-frame point cloud + texture registration.&lt;/em>&lt;/p>
+&lt;p>
+&lt;figure >
+&lt;div class="flex justify-center ">
+&lt;div class="w-100" >&lt;img alt="Outlier removal" srcset="
+/projects/3d-autoscan/3dscan-outlier-remove_hu648b63bc71c7ee585316250bc4100a0a_12468_fbabdc78683657837a5f6ed160c16b9e.webp 400w,
+/projects/3d-autoscan/3dscan-outlier-remove_hu648b63bc71c7ee585316250bc4100a0a_12468_4f9ea54393fd2d73d06350d95e67c24d.webp 760w,
+/projects/3d-autoscan/3dscan-outlier-remove_hu648b63bc71c7ee585316250bc4100a0a_12468_1200x1200_fit_q80_h2_lanczos_2.webp 1200w"
+src="https://willpan.xyz/projects/3d-autoscan/3dscan-outlier-remove_hu648b63bc71c7ee585316250bc4100a0a_12468_fbabdc78683657837a5f6ed160c16b9e.webp"
+width="760"
+height="407"
+loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;em>Figure 3. Environmental outlier removal.&lt;/em>&lt;/p>
+&lt;p>
+&lt;figure >
+&lt;div class="flex justify-center ">
+&lt;div class="w-100" >&lt;img alt="Global registration" srcset="
+/projects/3d-autoscan/3dscan-global-registration_huc4efc538bda26f788689caca0d67f04a_8158_fa4f6745f8de714f9956fc68c4293438.webp 400w,
+/projects/3d-autoscan/3dscan-global-registration_huc4efc538bda26f788689caca0d67f04a_8158_1ca39e59441ea2d7a83e563251149b56.webp 760w,
+/projects/3d-autoscan/3dscan-global-registration_huc4efc538bda26f788689caca0d67f04a_8158_1200x1200_fit_q80_h2_lanczos_2.webp 1200w"
+src="https://willpan.xyz/projects/3d-autoscan/3dscan-global-registration_huc4efc538bda26f788689caca0d67f04a_8158_fa4f6745f8de714f9956fc68c4293438.webp"
+width="760"
+height="467"
+loading="lazy" data-zoomable />&lt;/div>
+&lt;/div>&lt;/figure>
+&lt;em>Figure 4. Multi-pose global registration.&lt;/em>&lt;/p>
+&lt;p>Frame-to-frame registration aligns sequential scans on both geometry and texture; an outlier removal stage strips away background noise; finally a global registration pass aligns the multiple platform poses into a coherent model.&lt;/p></description></item></channel></rss>
