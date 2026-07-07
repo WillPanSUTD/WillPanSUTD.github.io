@@ -1,50 +1,32 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>3D Mesh | Wei Pan</title>
-    <link>http://localhost:1313/tags/3d-mesh/</link>
-      <atom:link href="http://localhost:1313/tags/3d-mesh/index.xml" rel="self" type="application/rss+xml" />
-    <description>3D Mesh</description>
-    <generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>en-us</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate>
-    <item>
-      <title>Surface Smoothing based on Discrete Orthogonal Polynomial</title>
-      <link>http://localhost:1313/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/</link>
-      <pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/</guid>
-      <description>&lt;p&gt;This paper studies feature-preserving denoising for triangle meshes obtained from 3D scanning and digitization. The core difficulty is familiar in industrial geometry processing: noise must be removed, but edges, creases, holes, and local shape details must survive the smoothing step.&lt;/p&gt;
-&lt;!-- publication-auto-details:start --&gt;
-&lt;h2 id=&#34;problem-setting&#34;&gt;Problem setting&lt;/h2&gt;
-&lt;p&gt;Many early smoothing methods are isotropic, so they reduce noise but also shrink surfaces or blur sharp features. Later anisotropic methods such as bilateral normal filtering, guided normal filtering, sparse L0/L1 formulations, half-kernel Laplacian operators, and segmentation-driven filters improve feature preservation, but they can still be sensitive to local noise or expensive optimization.&lt;/p&gt;
-&lt;p&gt;This work takes a normal-first route. Instead of trusting a single noisy face normal or a small local neighborhood, it builds a more stable support region from non-local similar structures and then filters the resulting normal matrix with an orthogonal polynomial basis.&lt;/p&gt;
-&lt;h2 id=&#34;algorithm-principle&#34;&gt;Algorithm principle&lt;/h2&gt;
-&lt;p&gt;For each face, the method starts with an r-ring local structure. A normal tensor is estimated from neighboring faces with spatial and angular weights, and its dominant eigenvector gives a representative local direction. Faces whose normals deviate strongly from this direction are removed, producing a local co-oriented structure.&lt;/p&gt;
-&lt;p&gt;The search is then expanded to a larger R-ring neighborhood. Local co-oriented structures with similar directions are collected as non-local similar structures, so the normal estimate is not dominated by a single small noisy patch. This gives a richer support set for feature-aware denoising.&lt;/p&gt;
-&lt;img src=&#34;figure-1.webp&#34; alt=&#34;Algorithm overview from noisy mesh to filtered normals and updated vertices&#34; loading=&#34;lazy&#34;&gt;
-&lt;p&gt;&lt;em&gt;Algorithm overview. The pipeline estimates non-local similar structures, filters normals, and updates mesh vertices from the refined normal field.&lt;/em&gt;&lt;/p&gt;
-&lt;h2 id=&#34;orthogonal-polynomial-filtering&#34;&gt;Orthogonal polynomial filtering&lt;/h2&gt;
-&lt;p&gt;For each non-local similar structure, face normals are stacked into a matrix and reshaped into a near-square normal matrix. The method constructs orthogonal polynomial bases in the X and Y directions, using Legendre-style basis functions over the interval [-1, 1]. The normal matrix is projected through these bases and reconstructed, which suppresses high-frequency noise while reducing interference between polynomial orders.&lt;/p&gt;
-&lt;img src=&#34;figure-2.webp&#34; alt=&#34;Legendre polynomial basis used for orthogonal polynomial normal fitting&#34; loading=&#34;lazy&#34;&gt;
-&lt;p&gt;&lt;em&gt;Orthogonal basis. The first six Legendre polynomials illustrate the low-order basis used to fit and smooth the normal matrix.&lt;/em&gt;&lt;/p&gt;
-&lt;p&gt;When overlapping structures contribute to the same face, the method accumulates the filtered normal estimates and divides by the corresponding weights. The final step updates each vertex by averaging displacements along the filtered normals of its incident faces.&lt;/p&gt;
-&lt;h2 id=&#34;synthetic-mesh-results&#34;&gt;Synthetic mesh results&lt;/h2&gt;
-&lt;p&gt;The experiments compare the proposed method with L0-minimisation, Bilateral Normal Filter (BNF), Unilateral Normal Filter (UNF), Guided Normal Filter (GNF), L1-median filtering, Half-kernel Laplacian Operator (HLO), and Segmentation-Driven Feature-Preserving filtering (SNF). The paper evaluates both visual quality and quantitative errors, including vertex-based error and mean square angular error.&lt;/p&gt;
-&lt;img src=&#34;figure-3.webp&#34; alt=&#34;CAD synthetic mesh smoothing comparison&#34; loading=&#34;lazy&#34;&gt;
-&lt;p&gt;&lt;em&gt;CAD benchmark. The proposed result removes the heavy synthetic noise while keeping the mechanical feature boundaries sharper than several competing filters.&lt;/em&gt;&lt;/p&gt;
-&lt;img src=&#34;figure-4.webp&#34; alt=&#34;Octaflower synthetic mesh smoothing comparison&#34; loading=&#34;lazy&#34;&gt;
-&lt;p&gt;&lt;em&gt;Octaflower benchmark. The method preserves the spiral structure and suppresses surface roughness, matching the qualitative conclusions in the paper&amp;rsquo;s synthetic-noise experiments.&lt;/em&gt;&lt;/p&gt;
-&lt;h2 id=&#34;real-scanned-meshes&#34;&gt;Real scanned meshes&lt;/h2&gt;
-&lt;p&gt;The paper also tests raw scanned meshes where noise comes from acquisition rather than synthetic perturbation. On the Angel and Nicolo examples, the method smooths high-frequency scan artifacts while retaining salient geometric structures. The manuscript notes that SNF can be slightly better on one Angel case, but the proposed method remains stronger than several other baselines and maintains good feature fidelity.&lt;/p&gt;
-&lt;img src=&#34;figure-5.webp&#34; alt=&#34;Raw scanned mesh denoising comparison&#34; loading=&#34;lazy&#34;&gt;
-&lt;p&gt;&lt;em&gt;Raw scanned data. The method is evaluated on scanned Angel and Nicolo meshes, where it reduces acquisition noise without washing away the main geometry.&lt;/em&gt;&lt;/p&gt;
-&lt;h2 id=&#34;robustness-and-limitation&#34;&gt;Robustness and limitation&lt;/h2&gt;
-&lt;p&gt;The Bunny stress test studies different noise levels on the same irregular model. The method performs well under low and moderate noise levels, especially at 0.1 and 0.3, but the paper reports limitations when the noise level becomes very high, such as 0.5. This is a useful boundary condition for deployment: the method is strongest when non-local similar structures can still be recovered reliably from the noisy mesh.&lt;/p&gt;
-&lt;img src=&#34;figure-6.webp&#34; alt=&#34;Bunny denoising results under multiple noise levels&#34; loading=&#34;lazy&#34;&gt;
-&lt;p&gt;&lt;em&gt;Noise-level stress test. Low and moderate noise are handled effectively; extremely heavy noise remains a harder case.&lt;/em&gt;&lt;/p&gt;
-&lt;h2 id=&#34;takeaway&#34;&gt;Takeaway&lt;/h2&gt;
-&lt;p&gt;The practical contribution is a robust normal-filtering pipeline for 3D mesh preprocessing. By combining non-local similar structures with orthogonal polynomial fitting, the method smooths scanning noise while retaining sharp features that are important for downstream CAD repair, inspection, reverse engineering, and geometry-based manufacturing workflows.&lt;/p&gt;
-&lt;!-- publication-auto-details:end --&gt;
-</description>
-    </item>
-    
-  </channel>
-</rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>3D Mesh | Wei Pan</title><link>https://willpan.xyz/tags/3d-mesh/</link><atom:link href="https://willpan.xyz/tags/3d-mesh/index.xml" rel="self" type="application/rss+xml"/><description>3D Mesh</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>en-us</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>Surface Smoothing based on Discrete Orthogonal Polynomial</title><link>https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/</guid><description>&lt;p>This paper studies feature-preserving denoising for triangle meshes obtained from 3D scanning and digitization. The core difficulty is familiar in industrial geometry processing: noise must be removed, but edges, creases, holes, and local shape details must survive the smoothing step.&lt;/p>
+&lt;!-- publication-auto-details:start -->
+&lt;h2 id="problem-setting">Problem setting&lt;/h2>
+&lt;p>Many early smoothing methods are isotropic, so they reduce noise but also shrink surfaces or blur sharp features. Later anisotropic methods such as bilateral normal filtering, guided normal filtering, sparse L0/L1 formulations, half-kernel Laplacian operators, and segmentation-driven filters improve feature preservation, but they can still be sensitive to local noise or expensive optimization.&lt;/p>
+&lt;p>This work takes a normal-first route. Instead of trusting a single noisy face normal or a small local neighborhood, it builds a more stable support region from non-local similar structures and then filters the resulting normal matrix with an orthogonal polynomial basis.&lt;/p>
+&lt;h2 id="algorithm-principle">Algorithm principle&lt;/h2>
+&lt;p>For each face, the method starts with an r-ring local structure. A normal tensor is estimated from neighboring faces with spatial and angular weights, and its dominant eigenvector gives a representative local direction. Faces whose normals deviate strongly from this direction are removed, producing a local co-oriented structure.&lt;/p>
+&lt;p>The search is then expanded to a larger R-ring neighborhood. Local co-oriented structures with similar directions are collected as non-local similar structures, so the normal estimate is not dominated by a single small noisy patch. This gives a richer support set for feature-aware denoising.&lt;/p>
+&lt;img src="figure-1.webp" alt="Algorithm overview from noisy mesh to filtered normals and updated vertices" loading="lazy">
+&lt;p>&lt;em>Algorithm overview. The pipeline estimates non-local similar structures, filters normals, and updates mesh vertices from the refined normal field.&lt;/em>&lt;/p>
+&lt;h2 id="orthogonal-polynomial-filtering">Orthogonal polynomial filtering&lt;/h2>
+&lt;p>For each non-local similar structure, face normals are stacked into a matrix and reshaped into a near-square normal matrix. The method constructs orthogonal polynomial bases in the X and Y directions, using Legendre-style basis functions over the interval [-1, 1]. The normal matrix is projected through these bases and reconstructed, which suppresses high-frequency noise while reducing interference between polynomial orders.&lt;/p>
+&lt;img src="figure-2.webp" alt="Legendre polynomial basis used for orthogonal polynomial normal fitting" loading="lazy">
+&lt;p>&lt;em>Orthogonal basis. The first six Legendre polynomials illustrate the low-order basis used to fit and smooth the normal matrix.&lt;/em>&lt;/p>
+&lt;p>When overlapping structures contribute to the same face, the method accumulates the filtered normal estimates and divides by the corresponding weights. The final step updates each vertex by averaging displacements along the filtered normals of its incident faces.&lt;/p>
+&lt;h2 id="synthetic-mesh-results">Synthetic mesh results&lt;/h2>
+&lt;p>The experiments compare the proposed method with L0-minimisation, Bilateral Normal Filter (BNF), Unilateral Normal Filter (UNF), Guided Normal Filter (GNF), L1-median filtering, Half-kernel Laplacian Operator (HLO), and Segmentation-Driven Feature-Preserving filtering (SNF). The paper evaluates both visual quality and quantitative errors, including vertex-based error and mean square angular error.&lt;/p>
+&lt;img src="figure-3.webp" alt="CAD synthetic mesh smoothing comparison" loading="lazy">
+&lt;p>&lt;em>CAD benchmark. The proposed result removes the heavy synthetic noise while keeping the mechanical feature boundaries sharper than several competing filters.&lt;/em>&lt;/p>
+&lt;img src="figure-4.webp" alt="Octaflower synthetic mesh smoothing comparison" loading="lazy">
+&lt;p>&lt;em>Octaflower benchmark. The method preserves the spiral structure and suppresses surface roughness, matching the qualitative conclusions in the paper&amp;rsquo;s synthetic-noise experiments.&lt;/em>&lt;/p>
+&lt;h2 id="real-scanned-meshes">Real scanned meshes&lt;/h2>
+&lt;p>The paper also tests raw scanned meshes where noise comes from acquisition rather than synthetic perturbation. On the Angel and Nicolo examples, the method smooths high-frequency scan artifacts while retaining salient geometric structures. The manuscript notes that SNF can be slightly better on one Angel case, but the proposed method remains stronger than several other baselines and maintains good feature fidelity.&lt;/p>
+&lt;img src="figure-5.webp" alt="Raw scanned mesh denoising comparison" loading="lazy">
+&lt;p>&lt;em>Raw scanned data. The method is evaluated on scanned Angel and Nicolo meshes, where it reduces acquisition noise without washing away the main geometry.&lt;/em>&lt;/p>
+&lt;h2 id="robustness-and-limitation">Robustness and limitation&lt;/h2>
+&lt;p>The Bunny stress test studies different noise levels on the same irregular model. The method performs well under low and moderate noise levels, especially at 0.1 and 0.3, but the paper reports limitations when the noise level becomes very high, such as 0.5. This is a useful boundary condition for deployment: the method is strongest when non-local similar structures can still be recovered reliably from the noisy mesh.&lt;/p>
+&lt;img src="figure-6.webp" alt="Bunny denoising results under multiple noise levels" loading="lazy">
+&lt;p>&lt;em>Noise-level stress test. Low and moderate noise are handled effectively; extremely heavy noise remains a harder case.&lt;/em>&lt;/p>
+&lt;h2 id="takeaway">Takeaway&lt;/h2>
+&lt;p>The practical contribution is a robust normal-filtering pipeline for 3D mesh preprocessing. By combining non-local similar structures with orthogonal polynomial fitting, the method smooths scanning noise while retaining sharp features that are important for downstream CAD repair, inspection, reverse engineering, and geometry-based manufacturing workflows.&lt;/p>
+&lt;!-- publication-auto-details:end --></description></item></channel></rss>
