@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>16&nbsp; Template Matching – Machine Vision Algorithms: Principles and Industrial Practice</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./shape_matching.html" rel="next">
+<link href="./hough_transform.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_locating.html">Locating</a></li><li class="breadcrumb-item"><a href="./template_matching.html"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Template Matching</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Machine Vision Algorithms: Principles and Industrial Practice</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Digital Image Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Preliminaries</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Imaging and Calibration</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Cameras and Lenses</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Illumination</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Camera Calibration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Image Enhancement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Spatial Filtering</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Thresholding</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Morphology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Gray-Level Transforms and Histograms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Geometric Transforms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Frequency Domain Processing and the FFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Advanced Enhancement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Locating</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Edge Detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Template Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Shape Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Feature and Color Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI Generation and Fixturing</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Caliper Measurement and Subpixel Localization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Geometric Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Intensity, Color, and Gap Measurement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inspection</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Contour Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Shape Features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Defect Detection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recognition</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1D and 2D Barcode Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Optical Character Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Classical Classifiers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Imaging</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Overview of 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Stereo Vision</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Structured Light 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Laser Triangulation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Photometric Stereo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Phase Measuring Deflectometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Confocal Imaging and Focus Variation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Processing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Point Cloud Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Point Cloud Preprocessing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP Registration and 3D Rectification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D Inspection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-tm-metrics" id="toc-sec-tm-metrics" class="nav-link active" data-scroll-target="#sec-tm-metrics"><span class="header-section-number">16.1</span> Similarity Measures</a></li>
+  <li><a href="#sec-tm-scoremap" id="toc-sec-tm-scoremap" class="nav-link" data-scroll-target="#sec-tm-scoremap"><span class="header-section-number">16.2</span> Score Maps and Peaks</a></li>
+  <li><a href="#sec-tm-rotation" id="toc-sec-tm-rotation" class="nav-link" data-scroll-target="#sec-tm-rotation"><span class="header-section-number">16.3</span> Rotation and Pose Search</a></li>
+  <li><a href="#sec-tm-pyramid" id="toc-sec-tm-pyramid" class="nav-link" data-scroll-target="#sec-tm-pyramid"><span class="header-section-number">16.4</span> Pyramid Acceleration</a></li>
+  <li><a href="#sec-tm-scivision" id="toc-sec-tm-scivision" class="nav-link" data-scroll-target="#sec-tm-scivision"><span class="header-section-number">16.5</span> SciVision Implementation</a></li>
+  <li><a href="#sec-tm-summary" id="toc-sec-tm-summary" class="nav-link" data-scroll-target="#sec-tm-summary"><span class="header-section-number">16.6</span> Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_locating.html">Locating</a></li><li class="breadcrumb-item"><a href="./template_matching.html"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Template Matching</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-template_matching" class="quarto-section-identifier"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Template Matching</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>“Where is this thing in the image?” — that is the question industrial vision gets asked most often: where on the tray is the part the robot arm must pick? By how much is the pad the placement head must align to offset? Where does the measurement program’s fiducial land in this frame? The most direct answer to this question is to take a “photo” of the target and compare it against the image position by position, looking for the spot that resembles it most. This is <strong>template matching</strong>: take a small reference image as the <strong>template</strong>, slide it across the search image comparing as you go, and output the position (and angle) of highest similarity. It needs no modeling, no training samples, and works on arbitrary texture — it is, deservedly, the workhorse of industrial localization.</p>
+<p>This chapter runs from start to finish on a set of real sample images: surface-mount aluminum electrolytic capacitors (rated 470 µF, 35 V, RVT series) scattered on a black background, provided by the Smart3 gray-value-matching example recipe (<span class="math inline">\(1280\times 960\)</span> single-channel grayscale). Each capacitor is a reflective metal disc whose top face carries the silkscreen “470 / 35V / RVT” in three lines, with a dark polarity stripe on the left — stripe and text together break the circular rotational symmetry, giving the angle a unique solution. The template is cropped from one capacitor in the upper left of sample 001 (<a href="#fig-tm-input-a" class="quarto-xref">Figure&nbsp;<span>16.1 (a)</span></a>): a <span class="math inline">\(230\times 230\)</span> window around its disc top (disc diameter about 214 px). The search image is sample 003 (<a href="#fig-tm-input-b" class="quarto-xref">Figure&nbsp;<span>16.1 (b)</span></a>), on which five capacitors of the same type are scattered at <strong>differing positions and poses</strong>: some upright, some rotated by small angles, and one flipped by nearly <span class="math inline">\(180^\circ\)</span> — exactly how parts look after being fed onto a line. <a href="#sec-tm-scivision" class="quarto-xref"><span>Section 16.5</span></a> further validates the same model on samples 004 and 005.</p>
+<div id="fig-tm-input" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tm-input-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-tm-input" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-tm-input-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-tm-input-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/template_matching/template.png" class="lightbox" data-gallery="fig-tm-input" title="Figure&nbsp;16.1&nbsp;(a): Template: one capacitor disc cropped from sample 001"><img src="figures/template_matching/template.png" class="img-fluid figure-img" data-ref-parent="fig-tm-input"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-tm-input-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) Template: one capacitor disc cropped from sample 001
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-tm-input" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-tm-input-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-tm-input-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/template_matching/scene.png" class="lightbox" data-gallery="fig-tm-input" title="Figure&nbsp;16.1&nbsp;(b): Search image (sample 003): five same-type capacitors at differing poses"><img src="figures/template_matching/scene.png" class="img-fluid figure-img" data-ref-parent="fig-tm-input"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-tm-input-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) Search image (sample 003): five same-type capacitors at differing poses
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tm-input-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16.1: The experimental data for this chapter. (a) The <span class="math inline">\(230\times 230\)</span> template; the dark polarity stripe and the silkscreen text leave it with no rotational symmetry; (b) the <span class="math inline">\(1280\times 960\)</span> search image: five 470 µF / 35 V capacitors scattered on black, each at a different position and rotation, including one flipped by nearly <span class="math inline">\(180^\circ\)</span>.
+</figcaption>
+</figure>
+</div>
+<section id="sec-tm-metrics" class="level2 page-columns page-full" data-number="16.1">
+<h2 data-number="16.1" class="anchored" data-anchor-id="sec-tm-metrics"><span class="header-section-number">16.1</span> Similarity Measures</h2>
+<p>Align the top-left corner of the template <span class="math inline">\(t(u,v)\)</span> with position <span class="math inline">\((x,y)\)</span> of the search image <span class="math inline">\(f\)</span>; “how alike is it?” needs a number for an answer — this is a <strong>similarity measure</strong>. The two plainest are accumulations of pixel-wise differences: the <strong>sum of absolute differences (SAD)</strong> and the <strong>sum of squared differences (SSD)</strong>:</p>
+<p><span class="math display">\[
+D_{\mathrm{SAD}}(x,y)=\sum_{u,v}\bigl|f(x{+}u,\,y{+}v)-t(u,v)\bigr|,
+\qquad
+D_{\mathrm{SSD}}(x,y)=\sum_{u,v}\bigl(f(x{+}u,\,y{+}v)-t(u,v)\bigr)^2 .
+\]</span></p>
+<p>For both, smaller means more alike; they are cheap to compute and plain in meaning, but they carry one defect that is fatal on a production line: <strong>sensitivity to brightness changes</strong>. Suppose the window content somewhere happens to be the template multiplied by an illumination gain <span class="math inline">\(g\)</span> (lights getting stronger or weaker, batch-to-batch differences in workpiece surface reflectance — all produce this kind of linear change); then</p>
+<p><span class="math display">\[
+D_{\mathrm{SSD}}=\sum_{u,v}\bigl(g\,t(u,v)-t(u,v)\bigr)^2=(g-1)^2\sum_{u,v}t(u,v)^2 .
+\]</span></p>
+<p>The shape matches to the last detail, yet the residual grows <strong>quadratically</strong> with the gain deviation — let the lighting shift, and a “perfect match” looks “far off” in the eyes of SSD.</p>
+<p>The remedy is to “standardize” the window and the template separately before comparing: subtract the mean (removing the brightness offset), divide by the standard deviation (removing the gain) — what remains is pure “shape.” This is <strong>normalized cross-correlation (NCC)</strong>:</p>
+<p><span class="math display">\[
+\rho(x,y)=\frac{\displaystyle\sum_{u,v}\bigl(f(x{+}u,\,y{+}v)-\bar f_{x,y}\bigr)\bigl(t(u,v)-\bar t\,\bigr)}
+{\sqrt{\displaystyle\sum_{u,v}\bigl(f(x{+}u,\,y{+}v)-\bar f_{x,y}\bigr)^2}\;\sqrt{\displaystyle\sum_{u,v}\bigl(t(u,v)-\bar t\,\bigr)^2}},
+\]</span></p>
+<p>where <span class="math inline">\(\bar f_{x,y}\)</span> is the mean of the current window and <span class="math inline">\(\bar t\)</span> is the template mean. Its invariance to linear illumination changes can be seen through in one line: replace the window content by <span class="math inline">\(a f + b\)</span> (with <span class="math inline">\(a&gt;0\)</span>); the mean subtraction eliminates the offset <span class="math inline">\(b\)</span> in one step, and the gain <span class="math inline">\(a\)</span>, appearing as a common factor in numerator and denominator, cancels — <span class="math inline">\(\rho\)</span> does not budge.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>A geometric view: regard the mean-subtracted window and template each as a high-dimensional vector; NCC is then the <strong>cosine</strong> of the angle between the two vectors, hence always <span class="math inline">\(|\rho|\le 1\)</span>; <span class="math inline">\(\rho=1\)</span> holds if and only if the window is a positive linear transform of the template, and <span class="math inline">\(\rho=-1\)</span> corresponds to a black-white inversion (opposite polarity) — exactly the situation the SDK’s <code>polarity</code> parameter distinguishes.</p>
+</div></div><p>The experiment confirms the derivation. Scanning sample 003 pixel by pixel with the <strong>fixed <span class="math inline">\(0^\circ\)</span> template</strong> cropped from sample 001, the highest response lands on the nearly upright instance in the upper left, with an NCC of 0.827. That this does not reach close to 1 is precisely because the instance itself still carries about <span class="math inline">\(12^\circ\)</span> of residual rotation relative to the template (see the angle-search result in <a href="#sec-tm-scivision" class="quarto-xref"><span>Section 16.5</span></a>) — a fixed-angle template cannot even align the “best” instance, a foreshadowing we defer to <a href="#sec-tm-rotation" class="quarto-xref"><span>Section 16.3</span></a>. To isolate NCC’s illumination invariance, we apply a <strong>controlled and openly disclosed</strong> perturbation to the real image: multiply the gray values within this instance’s neighbourhood wholesale by 0.5, emulating the illumination at this station dropping by half. The result is plain — NCC moves from 0.827 to 0.827 (a change of 0.0001), not budging; yet the root-mean-square SSD residual (rms) at the same position rises from 41.2 to 62.3, about a factor of 1.5. If a detection threshold with 40% margin is calibrated on the bright instance, the verdicts come out as follows:</p>
+<div id="tbl-tm-detect" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-tm-detect-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;16.1: Detection verdicts of SSD versus NCC under an illumination change, at the same threshold
+</figcaption>
+<div aria-describedby="tbl-tm-detect-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Measure and threshold</th>
+<th style="text-align: center;">Bright instance</th>
+<th style="text-align: center;">50% illumination instance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SSD (rms <span class="math inline">\(\le 58\)</span>)</td>
+<td style="text-align: center;">detected (41.2)</td>
+<td style="text-align: center;"><strong>missed</strong> (62.3)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NCC (<span class="math inline">\(\rho \ge 0.80\)</span>)</td>
+<td style="text-align: center;">detected (0.827)</td>
+<td style="text-align: center;">detected (0.827)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>One utterly ordinary decay of the lighting is enough for SSD to declare a good part “absent.” NCC carries a further engineering benefit: its score naturally lies in <span class="math inline">\([-1,1]\)</span> (the SDK converts it to a 0–100 scale), so a “pass score” threshold transfers directly across stations and cameras; an SSD threshold, by contrast, depends on the gray-value scale and the noise level — swap the camera and you must recalibrate. This is why industrial matching almost universally uses NCC (or the shape matching of the next chapter).</p>
+</section>
+<section id="sec-tm-scoremap" class="level2" data-number="16.2">
+<h2 data-number="16.2" class="anchored" data-anchor-id="sec-tm-scoremap"><span class="header-section-number">16.2</span> Score Maps and Peaks</h2>
+<p>Arrange the similarity at every position into an image and you obtain the <strong>score map</strong>. <a href="#fig-tm-maps" class="quarto-xref">Figure&nbsp;<span>16.2</span></a> shows the NCC score map and the SSD score map of the same scene (the latter displayed as “bright = small residual”). To bring the cost of a full-resolution full-image scan down to a demonstrable range, both maps are computed at <span class="math inline">\(1/2\)</span> resolution (<span class="math inline">\(640\times 480\)</span>) with a <span class="math inline">\(115\times 115\)</span> template (the reason is given in <a href="#sec-tm-pyramid" class="quarto-xref"><span>Section 16.4</span></a>).</p>
+<div id="fig-tm-maps" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tm-maps-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-tm-maps" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-tm-maps-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-tm-maps-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/template_matching/score_map.png" class="lightbox" data-gallery="fig-tm-maps" title="Figure&nbsp;16.2&nbsp;(a): NCC score map"><img src="figures/template_matching/score_map.png" class="img-fluid figure-img" data-ref-parent="fig-tm-maps"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-tm-maps-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) NCC score map
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-tm-maps" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-tm-maps-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-tm-maps-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/template_matching/ssd_map.png" class="lightbox" data-gallery="fig-tm-maps" title="Figure&nbsp;16.2&nbsp;(b): SSD score map (bright = small residual)"><img src="figures/template_matching/ssd_map.png" class="img-fluid figure-img" data-ref-parent="fig-tm-maps"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-tm-maps-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) SSD score map (bright = small residual)
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tm-maps-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16.2: Score maps from a full-image scan with the fixed <span class="math inline">\(0^\circ\)</span> template. (a) NCC: each of the five capacitors stirs up a response, but <strong>the peak height falls off with rotation</strong> — the upright instance at 0.827 is the brightest, sharpest peak, and the more an instance is turned, the lower its score; (b) SSD: again the upright instance is the brightest, while the flipped instance is far dimmer.
+</figcaption>
+</figure>
+</div>
+<p>On the NCC score map each of the five capacitors raises a circular response, but <strong>the peaks are clearly graded</strong>: under the fixed <span class="math inline">\(0^\circ\)</span> template the five instances’ peak values descend from 0.827 (upright) to 0.750, 0.656, 0.622, and 0.516 — the more an instance departs from the template pose, the lower the correlation, and the instance flipped by nearly <span class="math inline">\(180^\circ\)</span> is left with only a faint response just over 0.5. This is precisely the lead-in to the next section: NCC is helpless against rotation. The SSD map tells the same story in its “residual” version: the upright instance is the brightest blob, and the brightness of the rest collapses fast.</p>
+<p>The score map also reveals a deeper fact: <strong>the sharpness of a peak is the localization power</strong>. The sharper the peak, the faster the score falls off around the optimum, and the less room noise has to nudge the summit aside; conversely, a gentle ridge-like response means a string of positions are “about equally alike,” and localization is bound to wander. The richer the high-frequency structure in the template (disc edge, polarity stripe, silkscreen text), the sharper the peak. Finally, the integer-pixel summit is only the starting point: within the peak’s neighborhood, apply three-point parabola vertex interpolation to the scores along <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> separately (the <span class="math inline">\(\delta=(g_{-1}-g_{+1})/(2(g_{-1}-2g_0+g_{+1}))\)</span> derived in <a href="math_preliminaries.html" class="quarto-xref"><span>Chapter 2</span></a>) to refine the position to subpixel — fractional coordinates such as the <span class="math inline">\((404.07, 204.06)\)</span> reported by commercial matchers come exactly from this.</p>
+</section>
+<section id="sec-tm-rotation" class="level2" data-number="16.3">
+<h2 data-number="16.3" class="anchored" data-anchor-id="sec-tm-rotation"><span class="header-section-number">16.3</span> Rotation and Pose Search</h2>
+<p>NCC solves illumination but is helpless against rotation: on sample 003 the fixed <span class="math inline">\(0^\circ\)</span> template scores <strong>only 0.827 even on the best-aligned instance</strong> (which itself is still turned by about <span class="math inline">\(12^\circ\)</span>), and the instance flipped by nearly <span class="math inline">\(180^\circ\)</span> is left with barely over 0.5 — at a threshold of 0.80, the very same capacitor is declared absent merely for having turned. NCC compares with pixel-wise alignment; turn the template and the edges misregister, and the correlation collapses rapidly. A practical matcher must therefore make angle (and, when necessary, scale) an explicit search dimension: prepare a rotated copy of the template for each candidate angle, compare them one by one, and take the pose with the highest score.</p>
+<p>SciVision’s approach moves this expense to <strong>training time</strong>: <code>CreateGreyImageModel</code> pre-rotates the template into a series of sampled poses according to <code>startAngle</code>, <code>angleExtent</code>, and <code>angleStep</code> and stores them in the model. Since capacitors may land at any orientation after feeding (the sample even contains an instance flipped by nearly <span class="math inline">\(180^\circ\)</span>), this example uses a <strong>full-circle search</strong>: starting at <span class="math inline">\(-180^\circ\)</span>, spanning <span class="math inline">\(360^\circ\)</span>, with a step of <span class="math inline">\(1^\circ\)</span>, for 360 poses in all; at search time each pose is scored, and the angle is then refined by interpolation around the best pose. The cost is proportional to the number of angles — the wider the range and the finer the step, the slower the training, the larger the model, and the more time each match takes. The immediate payoff: the upright instance that scored only 0.827 under the fixed template climbs to 97.58 (0–100 scale) once angle search is on — align the angle and the correlation fills right back up.</p>
+<p>How to choose the step? Too coarse, and when the true angle falls between two sampled bins the score drops and the localization drifts; too fine is sheer waste. A practical estimate: a rotation by <span class="math inline">\(\Delta\theta\)</span> displaces a point at radius <span class="math inline">\(r\)</span> by about <span class="math inline">\(r\,\Delta\theta\)</span> (in radians); requiring the displacement at the template’s outermost edge to stay within 1 px gives <span class="math inline">\(\Delta\theta \approx 57.3^\circ/r\)</span> — this example’s disc has a radius of about 107 px, so a <span class="math inline">\(1^\circ\)</span> step corresponds to an outer-edge displacement of about 1.9 px, already a touch coarser than the “1 px rule,” with the subpixel angle interpolation at search time making up the rest.</p>
+</section>
+<section id="sec-tm-pyramid" class="level2 page-columns page-full" data-number="16.4">
+<h2 data-number="16.4" class="anchored" data-anchor-id="sec-tm-pyramid"><span class="header-section-number">16.4</span> Pyramid Acceleration</h2>
+<p>The cost of a full-resolution pixel-by-pixel scan is staggering: in this example, <span class="math inline">\((1280-230+1)\times(960-230+1)\)</span> windows at about <span class="math inline">\(5.3\times 10^4\)</span> multiply-adds each, totaling about <span class="math inline">\(4\times 10^{13}\)</span> operations — unbearable even for a single angle, which is exactly why pyramids and commercial matchers exist (and why the score maps of the previous section retreat to <span class="math inline">\(1/2\)</span> resolution for computation). The way out is the <strong>image pyramid</strong> and the <strong>coarse-to-fine</strong> strategy: repeatedly downsample the scene and the template by <span class="math inline">\(2\times 2\)</span> averaging (box pre-filter, then decimate — precisely the anti-aliasing downsampling emphasized in <a href="geometric_transforms.html" class="quarto-xref"><span>Chapter 10</span></a>), run the full-image scan on the smallest top level — nearly free; take a handful of coarse candidates, map them back up level by level, and refine only within small windows around the candidates.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>The cost accounting: with each level down, the scene pixel count and the template area each shrink to <span class="math inline">\(1/4\)</span>, so the per-level scan cost shrinks to <span class="math inline">\(1/16\)</span>; after descending two levels, the top-level full scan is only <span class="math inline">\(1/256\)</span> of the original workload, and the candidate-refinement windows (here <span class="math inline">\(\pm 8\)</span> px) cost a drop in the bucket. Every added level pays off by an order of magnitude.</p>
+</div></div><p>In the experiment we use <span class="math inline">\(1/2\)</span> resolution (<span class="math inline">\(640\times 480\)</span>, template <span class="math inline">\(115\times 115\)</span>) as the baseline for comparison: a full-image NCC scan on the baseline is about <span class="math inline">\(2.5\times 10^9\)</span> operations, measured at about 10.6 s (an unoptimized /Od build, so the absolute value runs high and fluctuates with machine load, but the ratios are representative). On top of this baseline we hand-write a two-level pyramid: the top level downsamples scene and template two more levels (top <span class="math inline">\(160\times 120\)</span>, template <span class="math inline">\(28\times 28\)</span>) for a full scan, keeps 3 candidates, and each returns to the baseline resolution for refinement within a <span class="math inline">\(\pm 8\)</span> px window. The result: about 0.11 s against the full scan’s 10.6 s — <strong>about a 100-fold speedup</strong> — while the peak positions found agree with the baseline full-resolution scan <strong>pixel for pixel</strong>: not a cent of accuracy lost.</p>
+<p>Can the levels be added without limit? No.&nbsp;The constraint is that <strong>the template at the top level must remain recognizable</strong>: when the <span class="math inline">\(230\times 230\)</span> capacitor disc shrinks to a few tens of pixels the circular outline and the polarity stripe still survive; shrink further and the stripe and silkscreen smear away completely — the candidates the top level produces are then untrustworthy. The SDK’s <code>GetGreyAutoPyramidLevel</code> makes this trade-off for you — for this template it automatically suggests 5 levels (counting the original-image level), with the top-level template at about <span class="math inline">\(14\times 14\)</span> where the disc and stripe are still discernible.</p>
+</section>
+<section id="sec-tm-scivision" class="level2" data-number="16.5">
+<h2 data-number="16.5" class="anchored" data-anchor-id="sec-tm-scivision"><span class="header-section-number">16.5</span> SciVision Implementation</h2>
+<p>Gray-value matching in SciVision is carried by <code>SCIMV::SciSvGreyMatch</code>, in two steps — training and search:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvGreyMatch gm<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> level <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>gm<span class="op">.</span>GetGreyAutoPyramidLevel<span class="op">(</span>tmplImg<span class="op">,</span> mask<span class="op">,</span> <span class="op">&amp;</span>level<span class="op">);</span>   <span class="co">// automatically suggests 5 levels for this example</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>SciMatchModel model<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>gm<span class="op">.</span>CreateGreyImageModel<span class="op">(</span>tmplImg<span class="op">,</span> mask<span class="op">,</span> <span class="co">/*pyramidLevel: automatic*/</span> <span class="op">-</span><span class="dv">1</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                        <span class="co">/*startAngle*/</span> <span class="op">-</span><span class="dv">180</span><span class="op">,</span> <span class="co">/*angleExtent*/</span> <span class="dv">360</span><span class="op">,</span> <span class="co">/*angleStep*/</span> <span class="dv">1</span><span class="op">,</span> <span class="op">&amp;</span>model<span class="op">);</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>SciPointArray centers<span class="op">;</span> SciVarArray angles<span class="op">,</span> scores<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>gm<span class="op">.</span>FindGreyImageModel<span class="op">(</span>sceneImg<span class="op">,</span> searchROI<span class="op">,</span> model<span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                      <span class="co">/*minScore*/</span> <span class="dv">60</span><span class="op">,</span> <span class="co">/*matchCount*/</span> <span class="dv">5</span><span class="op">,</span> <span class="co">/*overLapRatio*/</span> <span class="dv">50</span><span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                      <span class="co">/*startAngle*/</span> <span class="op">-</span><span class="dv">180</span><span class="op">,</span> <span class="co">/*angleExtent*/</span> <span class="dv">360</span><span class="op">,</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                      <span class="co">/*interpMethod: bilinear*/</span> <span class="dv">1</span><span class="op">,</span> <span class="co">/*polarity: distinguish polarity*/</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                      <span class="co">/*endLevel: refine down to the original level*/</span> <span class="dv">0</span><span class="op">,</span> <span class="co">/*clutter*/</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                      <span class="op">&amp;</span>centers<span class="op">,</span> <span class="op">&amp;</span>angles<span class="op">,</span> <span class="op">&amp;</span>scores<span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>On the training side: passing <span class="math inline">\(-1\)</span> for <code>pyramidLevel</code> lets the SDK choose the level count automatically (i.e., the result of <code>GetGreyAutoPyramidLevel</code>); <code>startAngle</code>/<code>angleExtent</code>/<code>angleStep</code> are the three angle-sampling parameters discussed in <a href="#sec-tm-rotation" class="quarto-xref"><span>Section 16.3</span></a>, here covering the full circle. On the search side: <code>minScore</code> is the acceptance threshold on the 0–100 scale (candidates below 60 are discarded outright); <code>matchCount</code> caps the number of instances returned (5 here, for the five capacitors); <code>overLapRatio</code> controls how much overlap two results may share, for multi-instance deduplication; the angle interval matches the training one; <code>interpMethod=1</code> rotates the template with bilinear interpolation; <code>polarity=0</code> requires the light-dark polarity to agree (a black-white-inverted “part” does not count as a match); <code>endLevel=0</code> means refine all the way down to the original-image level — if the localization accuracy requirement is loose, stopping at a higher level saves further time; <code>clutter</code> penalizes cluttered background outside the template region, with 0 meaning off.</p>
+<p>Two pitfalls hit in actual testing deserve an honest record. <strong>First, the ROI semantics of <code>mask</code>.</strong> The matching family is not uniform in what it demands of the <code>mask</code> parameter: for feature matching, color matching, and shape matching (<code>SciSvFeatureMatch</code>/<code>SciSvColorMatch</code>/<code>SciSvScaleShapeMatch</code>), <code>Create*Model</code> <strong>must be passed a default-constructed UNDEF ROI</strong> — passing a rectangle covering the whole image instead triggers errors such as “insufficient feature points”; gray-value matching, by measurement, accepts a <code>GenRect1</code> rectangle covering the entire template, but be sure to remember that <code>GenRect1</code>’s bottom-right corner is an <strong>exclusive</strong> endpoint — for the full template, pass <span class="math inline">\((T,T)\)</span>, not <span class="math inline">\((T{-}1,T{-}1)\)</span>. When switching to another matcher in the same family, first confirm which kind of mask it expects. <strong>Second, the angle convention.</strong> The SDK returns angles in the <strong>mathematically positive direction (counterclockwise positive)</strong>: the upright instance in sample 003 is reported as <span class="math inline">\(+12.00^\circ\)</span>, and feeding it straight into rotation drawing on the y-down image side turns things the wrong way; negate to convert. The correctly oriented pose boxes in this chapter’s <code>matches.png</code> (<a href="#fig-tm-matches" class="quarto-xref">Figure&nbsp;<span>16.3</span></a>) were drawn precisely after that negation.</p>
+<div id="fig-tm-matches" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tm-matches-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/template_matching/matches.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;16.3: The search results of FindGreyImageModel on sample 003: all five capacitors found — crosses mark the subpixel centers, white boxes mark the matched poses — including the nearly 180^\circ flipped instance and the large-angle rotated ones; none is falsely detected on the black background."><img src="figures/template_matching/matches.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tm-matches-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16.3: The search results of <code>FindGreyImageModel</code> on sample 003: all five capacitors found — crosses mark the subpixel centers, white boxes mark the matched poses — including the nearly <span class="math inline">\(180^\circ\)</span> flipped instance and the large-angle rotated ones; none is falsely detected on the black background.
+</figcaption>
+</figure>
+</div>
+<p>The SDK’s measured results on sample 003 are as follows (angles in the SDK’s counterclockwise-positive direction):</p>
+<div id="tbl-tm-sdk" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-tm-sdk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;16.2: Measured results of SDK gray-value matching (sample 003, minScore=60, angleStep=<span class="math inline">\(1^\circ\)</span>)
+</figcaption>
+<div aria-describedby="tbl-tm-sdk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Instance</th>
+<th style="text-align: left;">Position <span class="math inline">\((x, y)\)</span></th>
+<th style="text-align: center;">SDK angle</th>
+<th style="text-align: center;">Score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0 (upright)</td>
+<td style="text-align: left;"><span class="math inline">\((404.07, 204.06)\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(+12.00^\circ\)</span></td>
+<td style="text-align: center;">97.58</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;"><span class="math inline">\((621.79, 714.39)\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(-35.26^\circ\)</span></td>
+<td style="text-align: center;">92.87</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2 (flipped)</td>
+<td style="text-align: left;"><span class="math inline">\((878.39, 241.39)\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(+163.00^\circ\)</span></td>
+<td style="text-align: center;">91.15</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;"><span class="math inline">\((914.14, 794.30)\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(+49.00^\circ\)</span></td>
+<td style="text-align: center;">90.70</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;"><span class="math inline">\((321.08, 649.11)\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(-107.66^\circ\)</span></td>
+<td style="text-align: center;">89.59</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>All five capacitors score above 89, the angles span the full circle (including a <span class="math inline">\(+163^\circ\)</span> flipped instance), and the positions are refined to subpixel. Two cross-checks are worth noting. First, the highest peak found by the hand-written fixed <span class="math inline">\(0^\circ\)</span> template at <span class="math inline">\(1/2\)</span> resolution (upsampled back to <span class="math inline">\((404,204)\)</span>) agrees <strong>pixel for pixel</strong> with the SDK’s instance 0 at <span class="math inline">\((404.07,204.06)\)</span> — two independent implementations point to the same position. Second, for that same upright instance the fixed-angle NCC is only 0.827, whereas with angle search on the SDK gives 97.58 — <strong>angle search recovers the score</strong>, exactly the argument of <a href="#sec-tm-rotation" class="quarto-xref"><span>Section 16.3</span></a>. The same model also finds <strong>all five</strong> capacitors on samples 004 and 005 (lowest scores 88.9 and 91.2 respectively), confirming the model’s robustness to position and pose changes. The complete runnable project is at <code>code/template_matching/</code>.</p>
+<div class="industry-case">
+<p><span class="case-title">Industry Case: Feed Rotation Beyond the Angle Search Range</span></p>
+<p>On an assembly line, a gray-value matching model had its <code>angleExtent</code> set to <span class="math inline">\(\pm 20^\circ\)</span> at training time according to the incoming material of the day, and it ran stably for months. Then the feeding method changed and the workpieces’ actual rotation reached <span class="math inline">\(\pm 35^\circ\)</span> — instances beyond the search range had no template pose that could line up at all, match scores plunged below the threshold, and entire batches went undetected. The first reaction was to widen the range straight to the full circle “to be safe”; the result was a marked rise in training time and per-match latency, and worse, with the pose count doubled, similar shapes had more chances to collide with some angle, and the false-detection rate crept up instead. The final solution was to measure the actual rotation distribution of the upstream mechanism, set the range from its envelope plus margin, and add guide rails on the feed track to physically force the rotation back within range. The lesson: the angle search range’s job is to <strong>cover physical reality</strong> — in this chapter’s samples the capacitors do flip, so the full circle is warranted; but for a pose-constrained station it must not be smaller than the material’s true rotation, and it is emphatically not “the bigger, the safer.”</p>
+</div>
+</section>
+<section id="sec-tm-summary" class="level2" data-number="16.6">
+<h2 data-number="16.6" class="anchored" data-anchor-id="sec-tm-summary"><span class="header-section-number">16.6</span> Summary</h2>
+<ul>
+<li>Template matching = <strong>similarity measure + pose search</strong>: the measure decides which disturbances it is robust to, and the search dimensions decide which pose variations it can tolerate — neither can be spared.</li>
+<li><strong>SSD/SAD are sensitive to brightness changes</strong> (a gain <span class="math inline">\(g\)</span> brings a residual term of <span class="math inline">\((g-1)^2\)</span>); <strong>NCC subtracts the mean and divides by the standard deviation, and is strictly invariant to linear illumination</strong> — measured: dropping one capacitor’s neighbourhood illumination to 50% moves NCC merely from 0.827 to 0.827, while the SSD residual grows 1.5-fold and causes a miss.</li>
+<li><strong>The sharpness of the score-map peak is the localization power</strong>; the integer-pixel summit is refined to subpixel by parabola vertex interpolation — in this example the SDK localizes all five capacitors to subpixel with scores above 89.</li>
+<li><strong>NCC has no rotation invariance</strong> (under a fixed <span class="math inline">\(0^\circ\)</span> template the upright instance scores only 0.827 and the flipped instance drops to just over 0.5), so angle must be searched explicitly; here the full circle covers the capacitors’ arbitrary orientation, and with search on the score climbs from 0.827 to 97.58.</li>
+<li><strong>Coarse-to-fine pyramids are the standard means of speeding up matching</strong>: a coarse top-level scan plus candidate refinement gave a measured ~100-fold speedup with peak positions exactly identical to the full scan; the ceiling on the level count is that the top-level template must remain recognizable (5 levels automatically here).</li>
+</ul>
+<p>NCC’s robustness boundary stops at <strong>linear</strong> illumination: under nonlinear changes such as specular glare and local shadows, and when the part is partially occluded or changes scale, gray-value matching scores all collapse — those scenarios call for edge-based shape matching, see <a href="shape_matching.html" class="quarto-xref"><span>Chapter 17</span></a>. How this chapter’s normalized cross-correlation can be computed efficiently with integral images is covered in Lewis’s classic note <span class="citation" data-cites="Lewis1995">(<a href="references.html#ref-Lewis1995" role="doc-biblioref">Lewis 1995</a>)</span>; for template matching within the larger picture of image registration, see Brown’s survey <span class="citation" data-cites="Brown1992">(<a href="references.html#ref-Brown1992" role="doc-biblioref">Brown 1992</a>)</span>. For a more systematic treatment of gray-value matching and its acceleration strategies, see further the book by Steger et al. <span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, and Wiedemann 2018</a>)</span>.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Brown1992" class="csl-entry" role="listitem">
+Brown, Lisa Gottesfeld. 1992. <span>“A Survey of Image Registration Techniques.”</span> <em>ACM Computing Surveys</em> 24 (4): 325–76.
+</div>
+<div id="ref-Lewis1995" class="csl-entry" role="listitem">
+Lewis, J. P. 1995. <span>“Fast Normalized Cross-Correlation.”</span> In <em>Vision Interface</em>, 120–23.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, and Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2nd ed. Wiley-VCH.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./hough_transform.html" class="pagination-link" aria-label="The Hough Transform">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./shape_matching.html" class="pagination-link" aria-label="Shape Matching">
+        <span class="nav-page-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Shape Matching</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

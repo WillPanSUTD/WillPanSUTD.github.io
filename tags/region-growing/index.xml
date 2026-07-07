@@ -1,38 +1,56 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Region Growing | Wei Pan</title><link>https://willpan.xyz/tags/region-growing/</link><atom:link href="https://willpan.xyz/tags/region-growing/index.xml" rel="self" type="application/rss+xml"/><description>Region Growing</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>en-us</language><lastBuildDate>Sun, 01 Sep 2024 00:00:00 +0000</lastBuildDate><item><title>Segmentation-Driven Feature-Preserving Mesh Denoising</title><link>https://willpan.xyz/publications/wang-2024-mesh-denoising/</link><pubDate>Sun, 01 Sep 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/publications/wang-2024-mesh-denoising/</guid><description>&lt;p>This work studies a practical problem in geometry processing: how to denoise triangle meshes without blurring the sharp edges, corners, boundaries, and local details that make the shape useful for CAD, inspection, 3D modeling, animation, and industrial design. The paper is the journal work linked to the related PAT entry.&lt;/p>
-&lt;!-- publication-auto-details:start -->
-&lt;h2 id="problem-setting">Problem setting&lt;/h2>
-&lt;p>Many mesh denoising methods rely on local face-normal relationships. They assign smaller weights to anisotropic neighborhoods and larger weights to isotropic regions so that features are not completely washed away. The issue is that anisotropic neighbors still influence the filtering process, especially when the mesh is heavily corrupted, so small weights can still damage the final edge and detail preservation.&lt;/p>
-&lt;p>The main idea here is simple and effective: before denoising, partition the mesh into geometric regions. Denoising is then performed region-wise, so faces from different feature regions do not interfere with each other during filtering.&lt;/p>
-&lt;h2 id="pipeline">Pipeline&lt;/h2>
-&lt;p>The method first decides whether a noisy mesh needs pre-filtering. For lower noise levels, segmentation is performed directly. For severe noise, where face orientations may be distorted or flipped, the mesh is first pre-filtered to obtain a more reliable segmentation target. The resulting segments are then mapped back to the original noisy mesh, and the original mesh is denoised using the segment labels.&lt;/p>
-&lt;img src="figure-1.webp" alt="Segmentation-driven mesh denoising pipeline" loading="lazy">
-&lt;p>&lt;em>Pipeline. For high noise, pre-filtering improves segmentation reliability; region labels are then mapped back to the original noisy mesh and used to guide denoising.&lt;/em>&lt;/p>
-&lt;h2 id="edge-based-segmentation">Edge-based segmentation&lt;/h2>
-&lt;p>The segmentation is geometric rather than semantic. It combines two tests. The first is a global normal-angle threshold that compares normals of adjacent faces. The second is an area-based edge operator D(e), which measures whether a shared edge behaves like a flat edge or a feature edge. A face is added to the current region only when the normal and edge tests indicate that it belongs to the same coherent surface patch.&lt;/p>
-&lt;img src="figure-2.webp" alt="Edge operator and region-growing segmentation process" loading="lazy">
-&lt;p>&lt;em>Segmentation principle. The edge operator and normal threshold stop region growing across sharp features, while same-region faces continue to propagate labels.&lt;/em>&lt;/p>
-&lt;p>The paper also introduces a refinement step to merge or clean up small clusters. Without this step, tiny regions may be treated as anisotropic surfaces and leave pits or rough edges after denoising. With refinement, region-wise filtering produces cleaner surfaces and tidier edges.&lt;/p>
-&lt;img src="figure-3.webp" alt="Segmentation strategy thresholding and refinement results" loading="lazy">
-&lt;p>&lt;em>Segmentation analysis. Combining D(e) with the normal-threshold prior gives more informative regions; the Dthr parameter and cluster refinement affect final denoising quality.&lt;/em>&lt;/p>
-&lt;h2 id="region-wise-denoising-backbone">Region-wise denoising backbone&lt;/h2>
-&lt;p>The contribution is not a single standalone filter. It is a backbone that can be embedded into commonly used mesh denoising methods, including BNF, UNF, GNF, L1, HLO, TGV, and related normal-filtering pipelines. The segmentation labels constrain which neighboring faces participate in filtering, so the algorithm avoids mixing normals across feature boundaries.&lt;/p>
-&lt;p>This makes the approach useful in practice: existing denoisers can keep their own parameters, while the segmentation backbone contributes one additional threshold Dthr and improves feature preservation.&lt;/p>
-&lt;h2 id="quantitative-results">Quantitative results&lt;/h2>
-&lt;p>The experiments use synthetic Gaussian noise and compare face-normal error and vertex-position error. The paper reports MAE for normal accuracy and Ev for vertex-based mesh-to-mesh error. Across six benchmark shapes, the segmentation-driven backbone achieves the best Ev on all tested shapes and competitive MAE. The largest visual and numerical gains appear on CAD-like shapes, where preserving polyhedral edges is critical.&lt;/p>
-&lt;img src="figure-4.webp" alt="Quantitative mesh denoising comparisons on CAD-like synthetic-noise models" loading="lazy">
-&lt;p>&lt;em>Quantitative comparison. Region guidance reduces edge error and improves multiple denoising backbones, especially on CAD and polyhedral models.&lt;/em>&lt;/p>
-&lt;h2 id="visual-results">Visual results&lt;/h2>
-&lt;p>On synthetic models, the method recovers features that are easily blurred by ordinary denoising. Octaflower keeps its sharp tip and curved regions; Fandisk remains robust under heavy noise; and Nicolo preserves fine details around the eye and ear.&lt;/p>
-&lt;img src="figure-5.webp" alt="Synthetic noisy mesh denoising visual comparisons" loading="lazy">
-&lt;p>&lt;em>Synthetic visual results. The segmentation-guided results preserve local features while reducing noise across smooth regions.&lt;/em>&lt;/p>
-&lt;p>The method also works on raw scanned meshes, where noise is not a clean Gaussian perturbation. The Angel, Wilhelm, Iron, and Rabbit examples show that scan artifacts can be reduced while retaining feathers, facial details, holes, and local surface structures.&lt;/p>
-&lt;img src="figure-6.webp" alt="Raw scanned mesh denoising visual comparisons" loading="lazy">
-&lt;p>&lt;em>Raw scan results. The method preserves visible details on scanned meshes while reducing acquisition noise.&lt;/em>&lt;/p>
-&lt;h2 id="stability-and-limitation">Stability and limitation&lt;/h2>
-&lt;p>A useful finding is that segmentation also improves parameter stability. When the backbone is embedded into UNF or GNF, the resulting denoising is less sensitive to threshold or range-kernel parameter changes. Pre-filtering also helps high-noise cases by producing cleaner segmentation.&lt;/p>
-&lt;p>The limitation is sparse and irregular triangulation. If the mesh is extremely sparse, the segmentation may still identify reasonable geometric regions, but the denoising stage may not fully recover the original shape because folded or undersampled triangles leave too little local support.&lt;/p>
-&lt;img src="figure-7.webp" alt="Stability ablation and sparse triangulation limitation" loading="lazy">
-&lt;p>&lt;em>Stability and limitation. The segmentation backbone improves robustness to denoising parameters, but extremely sparse irregular triangulation remains difficult.&lt;/em>&lt;/p>
-&lt;h2 id="takeaway">Takeaway&lt;/h2>
-&lt;p>The practical value is that segmentation turns mesh denoising from a purely local filtering problem into a region-aware operation. By preventing anisotropic neighbors from disturbing each other, the method improves existing denoisers without replacing them, making it suitable for CAD-like meshes, raw scanned parts, and other geometry processing workflows where feature preservation matters.&lt;/p>
-&lt;!-- publication-auto-details:end --></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Region Growing | Wei Pan</title>
+    <link>http://localhost:1313/tags/region-growing/</link>
+      <atom:link href="http://localhost:1313/tags/region-growing/index.xml" rel="self" type="application/rss+xml" />
+    <description>Region Growing</description>
+    <generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>en-us</language><lastBuildDate>Sun, 01 Sep 2024 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>Segmentation-Driven Feature-Preserving Mesh Denoising</title>
+      <link>http://localhost:1313/publications/wang-2024-mesh-denoising/</link>
+      <pubDate>Sun, 01 Sep 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/publications/wang-2024-mesh-denoising/</guid>
+      <description>&lt;p&gt;This work studies a practical problem in geometry processing: how to denoise triangle meshes without blurring the sharp edges, corners, boundaries, and local details that make the shape useful for CAD, inspection, 3D modeling, animation, and industrial design. The paper is the journal work linked to the related PAT entry.&lt;/p&gt;
+&lt;!-- publication-auto-details:start --&gt;
+&lt;h2 id=&#34;problem-setting&#34;&gt;Problem setting&lt;/h2&gt;
+&lt;p&gt;Many mesh denoising methods rely on local face-normal relationships. They assign smaller weights to anisotropic neighborhoods and larger weights to isotropic regions so that features are not completely washed away. The issue is that anisotropic neighbors still influence the filtering process, especially when the mesh is heavily corrupted, so small weights can still damage the final edge and detail preservation.&lt;/p&gt;
+&lt;p&gt;The main idea here is simple and effective: before denoising, partition the mesh into geometric regions. Denoising is then performed region-wise, so faces from different feature regions do not interfere with each other during filtering.&lt;/p&gt;
+&lt;h2 id=&#34;pipeline&#34;&gt;Pipeline&lt;/h2&gt;
+&lt;p&gt;The method first decides whether a noisy mesh needs pre-filtering. For lower noise levels, segmentation is performed directly. For severe noise, where face orientations may be distorted or flipped, the mesh is first pre-filtered to obtain a more reliable segmentation target. The resulting segments are then mapped back to the original noisy mesh, and the original mesh is denoised using the segment labels.&lt;/p&gt;
+&lt;img src=&#34;figure-1.webp&#34; alt=&#34;Segmentation-driven mesh denoising pipeline&#34; loading=&#34;lazy&#34;&gt;
+&lt;p&gt;&lt;em&gt;Pipeline. For high noise, pre-filtering improves segmentation reliability; region labels are then mapped back to the original noisy mesh and used to guide denoising.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;edge-based-segmentation&#34;&gt;Edge-based segmentation&lt;/h2&gt;
+&lt;p&gt;The segmentation is geometric rather than semantic. It combines two tests. The first is a global normal-angle threshold that compares normals of adjacent faces. The second is an area-based edge operator D(e), which measures whether a shared edge behaves like a flat edge or a feature edge. A face is added to the current region only when the normal and edge tests indicate that it belongs to the same coherent surface patch.&lt;/p&gt;
+&lt;img src=&#34;figure-2.webp&#34; alt=&#34;Edge operator and region-growing segmentation process&#34; loading=&#34;lazy&#34;&gt;
+&lt;p&gt;&lt;em&gt;Segmentation principle. The edge operator and normal threshold stop region growing across sharp features, while same-region faces continue to propagate labels.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;The paper also introduces a refinement step to merge or clean up small clusters. Without this step, tiny regions may be treated as anisotropic surfaces and leave pits or rough edges after denoising. With refinement, region-wise filtering produces cleaner surfaces and tidier edges.&lt;/p&gt;
+&lt;img src=&#34;figure-3.webp&#34; alt=&#34;Segmentation strategy thresholding and refinement results&#34; loading=&#34;lazy&#34;&gt;
+&lt;p&gt;&lt;em&gt;Segmentation analysis. Combining D(e) with the normal-threshold prior gives more informative regions; the Dthr parameter and cluster refinement affect final denoising quality.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;region-wise-denoising-backbone&#34;&gt;Region-wise denoising backbone&lt;/h2&gt;
+&lt;p&gt;The contribution is not a single standalone filter. It is a backbone that can be embedded into commonly used mesh denoising methods, including BNF, UNF, GNF, L1, HLO, TGV, and related normal-filtering pipelines. The segmentation labels constrain which neighboring faces participate in filtering, so the algorithm avoids mixing normals across feature boundaries.&lt;/p&gt;
+&lt;p&gt;This makes the approach useful in practice: existing denoisers can keep their own parameters, while the segmentation backbone contributes one additional threshold Dthr and improves feature preservation.&lt;/p&gt;
+&lt;h2 id=&#34;quantitative-results&#34;&gt;Quantitative results&lt;/h2&gt;
+&lt;p&gt;The experiments use synthetic Gaussian noise and compare face-normal error and vertex-position error. The paper reports MAE for normal accuracy and Ev for vertex-based mesh-to-mesh error. Across six benchmark shapes, the segmentation-driven backbone achieves the best Ev on all tested shapes and competitive MAE. The largest visual and numerical gains appear on CAD-like shapes, where preserving polyhedral edges is critical.&lt;/p&gt;
+&lt;img src=&#34;figure-4.webp&#34; alt=&#34;Quantitative mesh denoising comparisons on CAD-like synthetic-noise models&#34; loading=&#34;lazy&#34;&gt;
+&lt;p&gt;&lt;em&gt;Quantitative comparison. Region guidance reduces edge error and improves multiple denoising backbones, especially on CAD and polyhedral models.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;visual-results&#34;&gt;Visual results&lt;/h2&gt;
+&lt;p&gt;On synthetic models, the method recovers features that are easily blurred by ordinary denoising. Octaflower keeps its sharp tip and curved regions; Fandisk remains robust under heavy noise; and Nicolo preserves fine details around the eye and ear.&lt;/p&gt;
+&lt;img src=&#34;figure-5.webp&#34; alt=&#34;Synthetic noisy mesh denoising visual comparisons&#34; loading=&#34;lazy&#34;&gt;
+&lt;p&gt;&lt;em&gt;Synthetic visual results. The segmentation-guided results preserve local features while reducing noise across smooth regions.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;The method also works on raw scanned meshes, where noise is not a clean Gaussian perturbation. The Angel, Wilhelm, Iron, and Rabbit examples show that scan artifacts can be reduced while retaining feathers, facial details, holes, and local surface structures.&lt;/p&gt;
+&lt;img src=&#34;figure-6.webp&#34; alt=&#34;Raw scanned mesh denoising visual comparisons&#34; loading=&#34;lazy&#34;&gt;
+&lt;p&gt;&lt;em&gt;Raw scan results. The method preserves visible details on scanned meshes while reducing acquisition noise.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;stability-and-limitation&#34;&gt;Stability and limitation&lt;/h2&gt;
+&lt;p&gt;A useful finding is that segmentation also improves parameter stability. When the backbone is embedded into UNF or GNF, the resulting denoising is less sensitive to threshold or range-kernel parameter changes. Pre-filtering also helps high-noise cases by producing cleaner segmentation.&lt;/p&gt;
+&lt;p&gt;The limitation is sparse and irregular triangulation. If the mesh is extremely sparse, the segmentation may still identify reasonable geometric regions, but the denoising stage may not fully recover the original shape because folded or undersampled triangles leave too little local support.&lt;/p&gt;
+&lt;img src=&#34;figure-7.webp&#34; alt=&#34;Stability ablation and sparse triangulation limitation&#34; loading=&#34;lazy&#34;&gt;
+&lt;p&gt;&lt;em&gt;Stability and limitation. The segmentation backbone improves robustness to denoising parameters, but extremely sparse irregular triangulation remains difficult.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;takeaway&#34;&gt;Takeaway&lt;/h2&gt;
+&lt;p&gt;The practical value is that segmentation turns mesh denoising from a purely local filtering problem into a region-aware operation. By preventing anisotropic neighbors from disturbing each other, the method improves existing denoisers without replacing them, making it suitable for CAD-like meshes, raw scanned parts, and other geometry processing workflows where feature preservation matters.&lt;/p&gt;
+&lt;!-- publication-auto-details:end --&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

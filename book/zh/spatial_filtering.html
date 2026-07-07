@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; 空间滤波 – 机器视觉算法——原理与工业实践</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./thresholding.html" rel="next">
+<link href="./part_enhancement.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_enhancement.html">图像增强</a></li><li class="breadcrumb-item"><a href="./spatial_filtering.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">空间滤波</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">机器视觉算法——原理与工业实践</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">符号约定</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">基础</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">数字图像基础</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">数学预备</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">成像与标定</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">相机与镜头</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">光源与照明</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">相机标定</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">图像增强</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">空间滤波</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">阈值分割</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">形态学</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">灰度变换与直方图</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">几何变换</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">频域处理与 FFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">高级增强</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">定位</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">边缘检测</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">几何基元检测</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">霍夫变换</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">模板匹配</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">形状匹配</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">特征匹配与颜色匹配</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI 生成与位置补正</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">测量</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">卡尺测量与亚像素定位</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">几何测量</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">亮度、颜色与间隙测量</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">检测</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob 分析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">轮廓分析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">形状特征</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">缺陷检测专题</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">识别</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">一维码与二维码识别</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">OCR 字符识别</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">经典分类器</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D 成像</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">三维成像概论</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">双目立体视觉</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">结构光三维成像</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">激光三角测量</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">光度立体</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">相位偏折术</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">共聚焦成像与聚焦法测高</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D 处理</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">点云基础</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">点云预处理</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP 配准与 3D 校正</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D 匹配</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D 测量</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D 检测</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#sec-sf-noise-models" id="toc-sec-sf-noise-models" class="nav-link active" data-scroll-target="#sec-sf-noise-models"><span class="header-section-number">6.1</span> 图像噪声模型</a></li>
+  <li><a href="#sec-sf-linear" id="toc-sec-sf-linear" class="nav-link" data-scroll-target="#sec-sf-linear"><span class="header-section-number">6.2</span> 线性滤波与卷积</a></li>
+  <li><a href="#sec-sf-nonlinear" id="toc-sec-sf-nonlinear" class="nav-link" data-scroll-target="#sec-sf-nonlinear"><span class="header-section-number">6.3</span> 非线性滤波</a></li>
+  <li><a href="#sec-sf-experiments" id="toc-sec-sf-experiments" class="nav-link" data-scroll-target="#sec-sf-experiments"><span class="header-section-number">6.4</span> 实验对比</a></li>
+  <li><a href="#sec-sf-scivision" id="toc-sec-sf-scivision" class="nav-link" data-scroll-target="#sec-sf-scivision"><span class="header-section-number">6.5</span> SciVision 实现</a></li>
+  <li><a href="#sec-sf-summary" id="toc-sec-sf-summary" class="nav-link" data-scroll-target="#sec-sf-summary"><span class="header-section-number">6.6</span> 小结</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_enhancement.html">图像增强</a></li><li class="breadcrumb-item"><a href="./spatial_filtering.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">空间滤波</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-spatial_filtering" class="quarto-section-identifier"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">空间滤波</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>如果你把工业相机对准一块静止的、被均匀照亮的灰板，连续采集两帧图像并相减，你会发现差值并不是零：每个像素都在一个小范围内随机跳动。这就是图像噪声（image noise）。它来自传感器的暗电流与读出电路、来自为弥补照度不足而调高的模拟增益、来自电源纹波引起的照明波动，有时还来自镜头或保护玻璃上的灰尘。在实验室里这些扰动也许无伤大雅，但在产线上，噪声会直接撼动后续算法的根基：边缘定位会在噪声处产生虚假响应，阈值分割会冒出成片的碎斑，亚像素测量的重复精度会随之恶化。因此，<strong>空间滤波（spatial filtering）几乎总是定位与测量之前的第一道工序</strong>——在像素邻域内做一次恰当的”平均”，把随机扰动压下去，同时尽量保住我们真正关心的结构。</p>
+<p>本章使用一幅合成的测试场景来贯穿所有实验：均匀的亮背景上有一个暗矩形（提供阶跃边缘），上方还有一条仅 2 个像素宽的细亮线（模拟细小结构，例如一道划痕或一根引线）。<a href="#fig-sf-noise" class="quarto-xref">图&nbsp;<span>6.1</span></a> 展示了原始场景，以及叠加两种典型噪声后的样子。</p>
+<div id="fig-sf-noise" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sf-noise-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-noise" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-sf-noise-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-noise-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/clean.png" class="lightbox" data-gallery="fig-sf-noise" title="图&nbsp;6.1&nbsp;(a): 原始场景"><img src="figures/spatial_filtering/clean.png" class="img-fluid figure-img" data-ref-parent="fig-sf-noise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-noise-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) 原始场景
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-noise" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-sf-noise-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-noise-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/noisy_gauss.png" class="lightbox" data-gallery="fig-sf-noise" title="图&nbsp;6.1&nbsp;(b): 高斯噪声"><img src="figures/spatial_filtering/noisy_gauss.png" class="img-fluid figure-img" data-ref-parent="fig-sf-noise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-noise-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) 高斯噪声
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-noise" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-sf-noise-c" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-noise-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/noisy_sp.png" class="lightbox" data-gallery="fig-sf-noise" title="图&nbsp;6.1&nbsp;(c): 椒盐噪声"><img src="figures/spatial_filtering/noisy_sp.png" class="img-fluid figure-img" data-ref-parent="fig-sf-noise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-noise-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) 椒盐噪声
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sf-noise-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;6.1: 合成测试场景及两种典型噪声。(a) 干净场景：亮背景、暗矩形与一条 2 px 宽的细亮线；(b) 叠加标准差 <span class="math inline">\(\sigma=18\)</span> 的高斯噪声，整幅图像呈现细密的颗粒感；(c) 叠加 4% 的椒盐噪声，散布着孤立的纯黑与纯白坏点，其余像素完好。
+</figcaption>
+</figure>
+</div>
+<section id="sec-sf-noise-models" class="level2 page-columns page-full" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="sec-sf-noise-models"><span class="header-section-number">6.1</span> 图像噪声模型</h2>
+<p>要选对滤波器，先要弄清楚噪声长什么样。机器视觉中最常见的模型是<strong>加性高斯噪声（additive Gaussian noise）</strong>：观测图像 <span class="math inline">\(g\)</span> 等于真实图像 <span class="math inline">\(f\)</span> 加上一个随机扰动，</p>
+<p><span class="math display">\[
+g[n,m] = f[n,m] + \eta[n,m], \qquad \eta \sim \mathcal{N}(0, \sigma^2).
+\]</span></p>
+<p>每个像素都被污染，但污染量通常不大——大部分扰动落在 <span class="math inline">\(\pm 2\sigma\)</span> 以内。它的物理来源是传感器的暗电流噪声、读出噪声以及放大增益带来的电子噪声：这些因素是大量微小独立扰动的叠加，按中心极限定理，其总和趋于高斯分布。<a href="#fig-sf-noise-b" class="quarto-xref">图&nbsp;<span>6.1 (b)</span></a> 正是这种情形——图像处处”起毛”，但没有哪个像素被彻底破坏。</p>
+<p>另一类常见噪声是<strong>椒盐噪声（salt-and-pepper noise）</strong>，又称脉冲噪声（impulse noise）：少数像素被随机替换成最小值（“胡椒”，0）或最大值（“盐”，255），其余像素完全不受影响。它的来源包括传感器坏点、相机到工控机之间的传输误码，以及某些强反光表面上镜面反射造成的孤立过曝点。<a href="#fig-sf-noise-c" class="quarto-xref">图&nbsp;<span>6.1 (c)</span></a> 中那些散落的黑白小点就是典型的椒盐噪声——注意被污染的像素与真实值毫无关系，误差幅度可以高达整个灰度范围。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>为什么两种噪声需要不同的滤波器？高斯噪声是”人人都错一点点”，把邻域<strong>平均</strong>起来即可让误差互相抵消；椒盐噪声是”少数人错得离谱”，平均反而会把离谱的值扩散给邻居，正确的做法是把离群值<strong>剔除</strong>——这正是中值滤波所做的事。</p>
+</div></div><p>这两种模型的差别绝不只是数学趣味：它直接决定了滤波器的选择。对高斯噪声而言，每个像素的观测值都”大致正确”，把邻域内的值平均起来，独立的零均值误差会相互抵消，估计随之改善——线性滤波是天然的选择。对椒盐噪声而言，被污染的像素携带的不是”带误差的信息”而是纯粹的垃圾，把垃圾纳入平均只会污染原本干净的邻居；我们需要的是能识别并丢弃离群值的<strong>非线性</strong>手段。本章后面的实验会反复印证这一点。</p>
+</section>
+<section id="sec-sf-linear" class="level2 page-columns page-full" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="sec-sf-linear"><span class="header-section-number">6.2</span> 线性滤波与卷积</h2>
+<p>线性空间滤波的统一数学形式是<strong>卷积（convolution）</strong>。给定输入图像 <span class="math inline">\(f\)</span> 和一个小的权重模板——称为<strong>卷积核（kernel）</strong><span class="math inline">\(h\)</span>，输出图像为</p>
+<p><span class="math display">\[
+g[n,m] = \sum_{k,l} f[n-k,\, m-l]\, h[k,l].
+\]</span></p>
+<p>直观地说，输出在 <span class="math inline">\((n,m)\)</span> 处的值，是以该点为中心的一小块输入邻域与核权重的加权和。核决定了滤波器的全部性格。</p>
+<p>最朴素的核是<strong>均值滤波（mean filter）</strong>核：一个 <span class="math inline">\(K\times K\)</span> 的窗口，每个权重都等于 <span class="math inline">\(1/K^2\)</span>。例如 <span class="math inline">\(3\times 3\)</span> 均值核为</p>
+<p><span class="math display">\[
+h = \frac{1}{9}
+\begin{bmatrix}
+1 &amp; 1 &amp; 1\\
+1 &amp; 1 &amp; 1\\
+1 &amp; 1 &amp; 1
+\end{bmatrix}.
+\]</span></p>
+<p>注意系数前的归一化因子：核所有权重之和称为滤波器的<strong>直流增益（DC gain）</strong>。把权重归一化使其和为 1，意味着滤波一幅恒定灰度的图像会原样输出——图像的平均亮度不被改变。这一点在测量场合尤其重要：如果滤波顺手把整体灰度抬高或压低了，后续依赖灰度阈值或灰度插值的算法都会被牵连。</p>
+<p>均值核对窗口内所有像素一视同仁，而<strong>高斯滤波（Gaussian filter）</strong>按距离递减地分配权重——离中心越远的像素，对输出的影响越小：</p>
+<p><span class="math display">\[
+h[n,m] = \frac{1}{2\pi\sigma^2}\exp\!\Big(-\frac{n^2+m^2}{2\sigma^2}\Big).
+\]</span></p>
+<p>参数 <span class="math inline">\(\sigma\)</span> 控制平滑的空间尺度：<span class="math inline">\(\sigma\)</span> 越大，参与平均的有效邻域越宽，去噪越强，但图像也越模糊。与均值核相比，高斯核的频率响应单调下降、没有旁瓣振铃，平滑效果更”干净”，因此是线性去噪的默认选择。在离散实现中，我们对连续高斯函数采样后再除以采样值之和，以保证直流增益恰好为 1。</p>
+<p>实践中还有两个工程要点。第一，<strong>核尺寸与 <span class="math inline">\(\sigma\)</span> 要匹配</strong>。高斯函数理论上无限延伸，但在 <span class="math inline">\(3\sigma\)</span> 之外幅值仅约为中心值的 1%，故通常按 <span class="math inline">\(K \approx 6\sigma\)</span>（取最近的奇数）截断：<span class="math inline">\(\sigma=1.2\)</span> 配 <span class="math inline">\(7\times 7\)</span> 左右的核就足够了。核取得太小会把高斯”削肩”，太大则白白浪费计算。第二，<strong>高斯核是可分离的（separable）</strong>：二维高斯恰好等于一维水平高斯与一维垂直高斯的乘积，因此一次二维卷积可以拆成先做一遍水平一维卷积、再做一遍垂直一维卷积，结果完全相同。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>可分离性的收益：<span class="math inline">\(K\times K\)</span> 的二维核每个像素要做 <span class="math inline">\(O(K^2)\)</span> 次乘加，拆成两个一维核后只需 <span class="math inline">\(O(2K)\)</span> 次。<span class="math inline">\(K=7\)</span> 时是 49 比 14，<span class="math inline">\(K=15\)</span> 时是 225 比 30——核越大省得越多。商用视觉库的高斯滤波内部几乎都这样实现。</p>
+</div></div></section>
+<section id="sec-sf-nonlinear" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="sec-sf-nonlinear"><span class="header-section-number">6.3</span> 非线性滤波</h2>
+<p>线性滤波有一个绕不过去的局限：它无法区分”噪声”与”边缘”——两者都是高频成分，要压制前者就必然钝化后者。非线性滤波器跳出了加权平均的框架，从而获得了线性方法做不到的能力。</p>
+<p><strong>中值滤波（median filter）</strong>是其中最重要的一员。它不做加权和，而是把窗口内的像素值排序，取<strong>中位数</strong>作为输出：</p>
+<pre class="text"><code>对输出图像的每个像素 (n, m)：
+    取以 (n, m) 为中心的 K×K 邻域内全部像素值
+    将这些值从小到大排序
+    输出 ← 排序后位于正中间的那个值（中位数）</code></pre>
+<p>中位数对离群值天然免疫：窗口里混入几个 0 或 255 的坏点，只要它们占不到半数，排序后就被挤到队列两端，根本轮不到当输出。这正是椒盐噪声的克星。同时，中值滤波跨过一条阶跃边缘时，窗口内多数像素来自边缘的某一侧，输出直接取那一侧的代表值——边缘保持锐利，不会像线性滤波那样被拖出一条过渡带。它的代价我们留到实验一节再揭示。</p>
+<p><strong>双边滤波（bilateral filter）</strong><span class="citation" data-cites="Tomasi1998Bilateral">(<a href="references.html#ref-Tomasi1998Bilateral" role="doc-biblioref">Tomasi 和 Manduchi 1998</a>)</span> 则把”保边”的思想引入了加权平均的框架。它给每个邻居 <span class="math inline">\(\mathbf q\)</span> 分配的权重是两个高斯因子的乘积：</p>
+<p><span class="math display">\[
+g[\mathbf p] = \frac{1}{W_{\mathbf p}} \sum_{\mathbf q \in S} G_{\sigma_s}\!\big(\|\mathbf p-\mathbf q\|\big)\; G_{\sigma_r}\!\big(|f[\mathbf p]-f[\mathbf q]|\big)\; f[\mathbf q],
+\]</span></p>
+<p>其中 <span class="math inline">\(W_{\mathbf p}\)</span> 是权重之和（保证直流增益为 1），<span class="math inline">\(G_{\sigma_s}\)</span> 是空间域高斯，<span class="math inline">\(G_{\sigma_r}\)</span> 是灰度域（range）高斯。直觉非常清楚：一个邻居要想对输出有发言权，必须同时满足两个条件——<strong>离得近</strong>（空间高斯给高权）<strong>且长得像</strong>（灰度与中心像素接近，灰度高斯给高权）。在平坦区域，邻居们灰度相近，双边滤波退化为普通高斯平滑，噪声被有效抑制；在边缘附近，对侧像素灰度差大，灰度高斯把它们的权重压到近零，平均只在边缘同侧进行——边缘因此原封不动。<span class="math inline">\(\sigma_r\)</span> 划定了”自己人”的界线：灰度差小于约 <span class="math inline">\(2\sigma_r\!\sim\!3\sigma_r\)</span> 的邻居参与平均，超过的被视为”另一侧”而排除。</p>
+</section>
+<section id="sec-sf-experiments" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="sec-sf-experiments"><span class="header-section-number">6.4</span> 实验对比</h2>
+<p>现在让四种滤波器同台竞技。先看高斯噪声（<a href="#fig-sf-noise-b" class="quarto-xref">图&nbsp;<span>6.1 (b)</span></a>）下的表现，四种滤波结果见 <a href="#fig-sf-gnoise" class="quarto-xref">图&nbsp;<span>6.2</span></a>。</p>
+<div id="fig-sf-gnoise" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sf-gnoise-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-gnoise" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-sf-gnoise-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-gnoise-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/gnoise_mean5.png" class="lightbox" data-gallery="fig-sf-gnoise" title="图&nbsp;6.2&nbsp;(a): 5×5 均值滤波"><img src="figures/spatial_filtering/gnoise_mean5.png" class="img-fluid figure-img" data-ref-parent="fig-sf-gnoise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-gnoise-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) 5×5 均值滤波
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-gnoise" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-sf-gnoise-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-gnoise-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/gnoise_gauss5.png" class="lightbox" data-gallery="fig-sf-gnoise" title="图&nbsp;6.2&nbsp;(b): 5×5 高斯滤波（\sigma=1.2）"><img src="figures/spatial_filtering/gnoise_gauss5.png" class="img-fluid figure-img" data-ref-parent="fig-sf-gnoise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-gnoise-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) 5×5 高斯滤波（<span class="math inline">\(\sigma=1.2\)</span>）
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-gnoise" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-sf-gnoise-c" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-gnoise-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/gnoise_median5.png" class="lightbox" data-gallery="fig-sf-gnoise" title="图&nbsp;6.2&nbsp;(c): 5×5 中值滤波"><img src="figures/spatial_filtering/gnoise_median5.png" class="img-fluid figure-img" data-ref-parent="fig-sf-gnoise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-gnoise-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) 5×5 中值滤波
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-gnoise" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-sf-gnoise-d" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-gnoise-d-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/gnoise_bilateral.png" class="lightbox" data-gallery="fig-sf-gnoise" title="图&nbsp;6.2&nbsp;(d): 双边滤波（d=9, \sigma_s=3, \sigma_r=30）"><img src="figures/spatial_filtering/gnoise_bilateral.png" class="img-fluid figure-img" data-ref-parent="fig-sf-gnoise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-gnoise-d-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(d) 双边滤波（<span class="math inline">\(d=9\)</span>, <span class="math inline">\(\sigma_s=3\)</span>, <span class="math inline">\(\sigma_r=30\)</span>）
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sf-gnoise-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;6.2: 高斯噪声图像经四种滤波器处理的结果。均值与高斯滤波有效压噪但边缘和细线均被钝化；中值滤波保住了矩形边缘，细亮线却几乎消失；双边滤波在压噪的同时把阶跃边缘和细亮线都保得最好。
+</figcaption>
+</figure>
+</div>
+<p>均值与高斯滤波都明显压低了颗粒感，验证了”平均抵消独立误差”的原理；代价同样明显——矩形边缘被拖出一圈灰色过渡带，那条 2 px 的细亮线也变暗、变粗了，因为它的亮度被摊给了周围的背景像素。两者相比，相同尺寸下高斯滤波的边缘退化稍轻，这是其权重向中心集中的结果。中值滤波把矩形边缘保持得相当锐利，但请注意细亮线：它几乎被抹掉了——这个现象我们马上单独讨论。表现最均衡的是双边滤波：背景噪声被抚平，矩形边缘干脆利落，细亮线也完好保留，因为线与背景的灰度差（约 70 个灰度级）远超 <span class="math inline">\(\sigma_r=30\)</span> 的”自己人”门槛，线上像素只与线上像素平均。<strong>对高斯噪声而言，双边滤波是保边去噪的最佳选择。</strong></p>
+<p>换成椒盐噪声（<a href="#fig-sf-noise-c" class="quarto-xref">图&nbsp;<span>6.1 (c)</span></a>），结论几乎完全反转，见 <a href="#fig-sf-spnoise" class="quarto-xref">图&nbsp;<span>6.3</span></a>。</p>
+<div id="fig-sf-spnoise" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sf-spnoise-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-spnoise" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-sf-spnoise-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-spnoise-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/spnoise_mean5.png" class="lightbox" data-gallery="fig-sf-spnoise" title="图&nbsp;6.3&nbsp;(a): 5×5 均值滤波"><img src="figures/spatial_filtering/spnoise_mean5.png" class="img-fluid figure-img" data-ref-parent="fig-sf-spnoise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-spnoise-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) 5×5 均值滤波
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-spnoise" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-sf-spnoise-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-spnoise-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/spnoise_gauss5.png" class="lightbox" data-gallery="fig-sf-spnoise" title="图&nbsp;6.3&nbsp;(b): 5×5 高斯滤波（\sigma=1.2）"><img src="figures/spatial_filtering/spnoise_gauss5.png" class="img-fluid figure-img" data-ref-parent="fig-sf-spnoise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-spnoise-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) 5×5 高斯滤波（<span class="math inline">\(\sigma=1.2\)</span>）
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-spnoise" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-sf-spnoise-c" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-spnoise-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/spnoise_median5.png" class="lightbox" data-gallery="fig-sf-spnoise" title="图&nbsp;6.3&nbsp;(c): 5×5 中值滤波"><img src="figures/spatial_filtering/spnoise_median5.png" class="img-fluid figure-img" data-ref-parent="fig-sf-spnoise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-spnoise-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) 5×5 中值滤波
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-sf-spnoise" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-sf-spnoise-d" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-sf-spnoise-d-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/spatial_filtering/spnoise_bilateral.png" class="lightbox" data-gallery="fig-sf-spnoise" title="图&nbsp;6.3&nbsp;(d): 双边滤波（d=9, \sigma_s=3, \sigma_r=30）"><img src="figures/spatial_filtering/spnoise_bilateral.png" class="img-fluid figure-img" data-ref-parent="fig-sf-spnoise"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-sf-spnoise-d-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(d) 双边滤波（<span class="math inline">\(d=9\)</span>, <span class="math inline">\(\sigma_s=3\)</span>, <span class="math inline">\(\sigma_r=30\)</span>）
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sf-spnoise-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;6.3: 椒盐噪声图像经四种滤波器处理的结果。均值与高斯滤波把脉冲”抹开”成灰斑；中值滤波几乎完全清除了椒盐噪声、边缘依旧锐利，但细亮线也被一并清除；双边滤波对椒盐噪声几乎无效，孤立坏点被当作”边缘”保护了下来。
+</figcaption>
+</figure>
+</div>
+<p>均值与高斯滤波的结果令人失望：脉冲没有消失，而是被”抹开”了——每个 0 或 255 的坏点把自己的极端值分摊给整个窗口，变成一个个直径约 5 px 的浅色或深色软斑，整幅图像反而显得脏兮兮的。中值滤波则展现出压倒性优势：黑白坏点被悉数剔除，背景恢复均匀，矩形边缘依旧锐利，结果干净得近乎原图。这正是 <a href="#sec-sf-noise-models" class="quarto-xref"><span>小节 6.1</span></a> 末尾论断的直观印证——对离群值，要剔除，不要平均。</p>
+<p>最值得记住的是双边滤波的表现：<strong>它对椒盐噪声几乎无效</strong>。对照 <a href="#fig-sf-spnoise-d" class="quarto-xref">图&nbsp;<span>6.3 (d)</span></a> 与 <a href="#fig-sf-noise-c" class="quarto-xref">图&nbsp;<span>6.1 (c)</span></a>，坏点几乎原封不动地留在原地。原因并不神秘，却常被误解：一个值为 255 的盐点与周围灰度约 180 的背景相差 75 个灰度级，远超 <span class="math inline">\(\sigma_r=30\)</span> 的相似性门槛——于是在双边滤波眼里，这个坏点是一块”与众不同的小结构”，邻居们都不是它的”自己人”，它只与自己平均，自然保持原值。<strong>双边滤波的保边机制恰好成了脉冲噪声的保护伞。</strong>遇到椒盐噪声，请直接选中值滤波。</p>
+<p>不过中值滤波也有自己的账单。再仔细对照 <a href="#fig-sf-noise-a" class="quarto-xref">图&nbsp;<span>6.1 (a)</span></a> 的原图看 <a href="#fig-sf-spnoise-c" class="quarto-xref">图&nbsp;<span>6.3 (c)</span></a> 和 <a href="#fig-sf-gnoise-c" class="quarto-xref">图&nbsp;<span>6.2 (c)</span></a>：那条 2 px 宽的细亮线在两幅中值结果里都消失了。道理与坏点被剔除一模一样——在 5×5 的窗口里，细线最多贡献 <span class="math inline">\(2\times 5=10\)</span> 个像素，不足 25 个像素的半数，排序后永远占不到中位，于是被当成”较大的噪声”清除了。<strong>中值滤波保边，但不保细结构</strong>：凡是宽度小于窗口半宽的线状或点状结构，无论是噪声还是真实目标，一律被抹除。由此得出一条硬性约束：<strong>中值核的尺寸必须小于需要保留的最小结构宽度（的两倍）</strong>——若细线宽 2 px，3×3 的中值核尚可保它一命，5×5 就会把它连同噪声一起带走。滤波器不认识”缺陷”与”噪声”，它只认识尺寸。</p>
+</section>
+<section id="sec-sf-scivision" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="sec-sf-scivision"><span class="header-section-number">6.5</span> SciVision 实现</h2>
+<p>本章四种滤波器在 SciVision SDK 中由 <code>SCIMV::SciSvFilter</code> 类提供，调用方式如下：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvFilter f<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SciImage dst<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>f<span class="op">.</span>Mean<span class="op">(</span>src<span class="op">,</span> roi<span class="op">,</span> <span class="op">&amp;</span>dst<span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">5</span><span class="op">);</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>f<span class="op">.</span>Gaussian<span class="op">(</span>src<span class="op">,</span> roi<span class="op">,</span> <span class="op">&amp;</span>dst<span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="fl">1.2</span><span class="op">,</span> <span class="fl">1.2</span><span class="op">);</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>f<span class="op">.</span>Median<span class="op">(</span>src<span class="op">,</span> roi<span class="op">,</span> <span class="op">&amp;</span>dst<span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">5</span><span class="op">);</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Bilateral(核直径9, 空间σ=3.0, 灰度σ=30.0)：灰度差超过≈3σ的邻居权重趋零，因而保边</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>f<span class="op">.</span>Bilateral<span class="op">(</span>src<span class="op">,</span> roi<span class="op">,</span> <span class="op">&amp;</span>dst<span class="op">,</span> <span class="dv">9</span><span class="op">,</span> <span class="fl">3.0</span><span class="op">,</span> <span class="fl">30.0</span><span class="op">);</span></span></code><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>各接口的公共参数中，<code>src</code> 为输入图像，<code>roi</code> 限定处理区域（产线程序通常只滤波检测区域以节省时间），<code>dst</code> 接收输出。滤波器专有参数的含义如下。</p>
+<ul>
+<li><code>Mean</code> / <code>Median</code> 的 <code>kernelSizeX</code>、<code>kernelSizeY</code>（上例均为 5）分别是窗口的宽与高，须为奇数以保证窗口有中心；两者可以不同，例如用 <code>(9, 3)</code> 的扁窗口对水平条纹噪声做方向性抑制。</li>
+<li><code>Gaussian</code> 在窗口尺寸之外还接受 <code>sigmaX</code>、<code>sigmaY</code>（上例均为 1.2），即水平与垂直方向的高斯标准差。记住 <a href="#sec-sf-linear" class="quarto-xref"><span>小节 6.2</span></a> 的匹配法则：窗口边长宜约等于 <span class="math inline">\(6\sigma\)</span>，上例 <span class="math inline">\(\sigma=1.2\)</span> 配 5×5 属于略紧的截断，工程上可接受。</li>
+<li><code>Bilateral</code> 的三个参数依次是 <code>kernelSize</code>（邻域直径，上例为 9）、<code>space_sigma</code>（空间域 <span class="math inline">\(\sigma_s\)</span>，控制”离得近”的尺度，上例 3.0 与直径 9 满足 <span class="math inline">\(d\approx 3\sigma_s\)</span> 的常用配比）和 <code>color_sigma</code>（灰度域 <span class="math inline">\(\sigma_r\)</span>，控制”长得像”的门槛，上例 30.0 意味着灰度差超过约 90 的邻居权重趋零，因而 70 级以上的阶跃边缘被几乎完整保留）。</li>
+</ul>
+<p>生成本章全部实验图像的完整可运行工程位于 <code>code/spatial_filtering/</code>，读者可以修改噪声强度与滤波参数自行复现。</p>
+<div class="industry-case">
+<p><span class="case-title">工业案例：金属件划痕检测的预处理</span></p>
+<p>某金属冲压件检测项目中，喷砂工件表面形成大量孤立高亮反光点，统计特性接近椒盐噪声。初期用高斯滤波做预处理，反光点被抹成浅灰软斑，与划痕难以区分，误检率高；改用 3×3 中值滤波后，反光点被干净剔除，划痕边缘保持锐利，误检率大幅下降。后续”优化”将中值核扩大到 7×7，产线随即漏检细划痕——划痕宽度仅 2～3 px，小于窗口半数占比，被当成噪声移除，这正是本章细亮线实验的现场翻版。经验法则：<strong>核取噪声颗粒直径的 2～3 倍，且必须小于最小缺陷宽度的两倍</strong>；两者冲突时优先保缺陷，残余噪声交给后续面积筛选处理。</p>
+</div>
+</section>
+<section id="sec-sf-summary" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="sec-sf-summary"><span class="header-section-number">6.6</span> 小结</h2>
+<p>本章的要点可以浓缩为以下几条。</p>
+<ul>
+<li><strong>先认噪声，再选滤波器。</strong>高斯噪声是”人人小错”，适合平均类的线性滤波；椒盐噪声是”少数大错”，必须用中值类的剔除手段。</li>
+<li><strong>线性滤波的核应归一化为直流增益 1</strong>，以保持图像平均亮度不变；高斯核按 <span class="math inline">\(K\approx 6\sigma\)</span> 截断，并利用可分离性把计算量从 <span class="math inline">\(O(K^2)\)</span> 降到 <span class="math inline">\(O(2K)\)</span>。</li>
+<li><strong>双边滤波 = 空间邻近 × 灰度相似的双重加权</strong>，是高斯噪声下保边去噪的最佳选择；但孤立脉冲会被它当作”边缘”保护起来，对椒盐噪声几乎无效。</li>
+<li><strong>中值滤波保边但不保细结构</strong>：宽度不足窗口半数占比的细线与小点会被连同噪声一起抹除，核尺寸必须小于需要保留的最小结构宽度的两倍。</li>
+<li><strong>滤波参数是测量精度的一部分</strong>：核的尺寸、<span class="math inline">\(\sigma\)</span> 的大小都应根据噪声尺度与最小目标尺寸来定，而不是”越大越干净”。</li>
+</ul>
+<p>空间滤波的系统理论（线性滤波、统计排序滤波及其与频域的联系）可参阅 Gonzalez 与 Woods 的经典教材 <span class="citation" data-cites="GonzalezWoods2018">(<a href="references.html#ref-GonzalezWoods2018" role="doc-biblioref">Gonzalez 和 Woods 2018</a>)</span>；双边滤波的原始构造见 Tomasi 与 Manduchi 的论文 <span class="citation" data-cites="Tomasi1998Bilateral">(<a href="references.html#ref-Tomasi1998Bilateral" role="doc-biblioref">Tomasi 和 Manduchi 1998</a>)</span>，本章正文已多次引用；各向异性扩散这一保边平滑的代表性进阶方法，源头是 Perona 与 Malik 的工作 <span class="citation" data-cites="PeronaMalik1990">(<a href="references.html#ref-PeronaMalik1990" role="doc-biblioref">Perona 和 Malik 1990</a>)</span>。关于平滑滤波器在工业检测流水线中更系统的讨论，可进一步阅读 Steger 等人的著作 <span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, 和 Wiedemann 2018</a>)</span>。</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-GonzalezWoods2018" class="csl-entry" role="listitem">
+Gonzalez, Rafael C., 和 Richard E. Woods. 2018. <em>Digital Image Processing</em>. 4 本. Pearson.
+</div>
+<div id="ref-PeronaMalik1990" class="csl-entry" role="listitem">
+Perona, Pietro, 和 Jitendra Malik. 1990. <span>《Scale-Space and Edge Detection Using Anisotropic Diffusion》</span>. <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em> 12 (7): 629–39.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, 和 Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2 本. Wiley-VCH.
+</div>
+<div id="ref-Tomasi1998Bilateral" class="csl-entry" role="listitem">
+Tomasi, Carlo, 和 Roberto Manduchi. 1998. <span>《Bilateral Filtering for Gray and Color Images》</span>. 收入 <em>Proc. IEEE International Conference on Computer Vision (ICCV)</em>, 839–46.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./part_enhancement.html" class="pagination-link" aria-label="图像增强">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">图像增强</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./thresholding.html" class="pagination-link" aria-label="阈值分割">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">阈值分割</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

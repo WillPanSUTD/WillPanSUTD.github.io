@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>39&nbsp; ICP Registration and 3D Rectification – Machine Vision Algorithms: Principles and Industrial Practice</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./3d_matching.html" rel="next">
+<link href="./point_cloud_preprocessing.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_3d_processing.html">3D Processing</a></li><li class="breadcrumb-item"><a href="./icp_registration.html"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP Registration and 3D Rectification</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Machine Vision Algorithms: Principles and Industrial Practice</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Digital Image Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Preliminaries</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Imaging and Calibration</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Cameras and Lenses</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Illumination</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Camera Calibration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Image Enhancement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Spatial Filtering</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Thresholding</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Morphology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Gray-Level Transforms and Histograms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Geometric Transforms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Frequency Domain Processing and the FFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Advanced Enhancement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Locating</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Edge Detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Template Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Shape Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Feature and Color Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI Generation and Fixturing</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Caliper Measurement and Subpixel Localization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Geometric Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Intensity, Color, and Gap Measurement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inspection</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Contour Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Shape Features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Defect Detection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recognition</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1D and 2D Barcode Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Optical Character Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Classical Classifiers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Imaging</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Overview of 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Stereo Vision</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Structured Light 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Laser Triangulation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Photometric Stereo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Phase Measuring Deflectometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Confocal Imaging and Focus Variation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Processing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Point Cloud Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Point Cloud Preprocessing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP Registration and 3D Rectification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D Inspection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-icp-problem" id="toc-sec-icp-problem" class="nav-link active" data-scroll-target="#sec-icp-problem"><span class="header-section-number">39.1</span> The Registration Problem and ICP</a></li>
+  <li><a href="#sec-icp-convergence" id="toc-sec-icp-convergence" class="nav-link" data-scroll-target="#sec-icp-convergence"><span class="header-section-number">39.2</span> Convergence and Accuracy</a></li>
+  <li><a href="#sec-icp-local-minima" id="toc-sec-icp-local-minima" class="nav-link" data-scroll-target="#sec-icp-local-minima"><span class="header-section-number">39.3</span> Local Minima: ICP’s Achilles Heel</a></li>
+  <li><a href="#sec-icp-point-to-plane" id="toc-sec-icp-point-to-plane" class="nav-link" data-scroll-target="#sec-icp-point-to-plane"><span class="header-section-number">39.4</span> The Point-to-Plane Variant</a></li>
+  <li><a href="#sec-icp-correction" id="toc-sec-icp-correction" class="nav-link" data-scroll-target="#sec-icp-correction"><span class="header-section-number">39.5</span> 3D Rectification</a></li>
+  <li><a href="#sec-icp-scivision" id="toc-sec-icp-scivision" class="nav-link" data-scroll-target="#sec-icp-scivision"><span class="header-section-number">39.6</span> SciVision Implementation</a></li>
+  <li><a href="#sec-icp-summary" id="toc-sec-icp-summary" class="nav-link" data-scroll-target="#sec-icp-summary"><span class="header-section-number">39.7</span> Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_3d_processing.html">3D Processing</a></li><li class="breadcrumb-item"><a href="./icp_registration.html"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP Registration and 3D Rectification</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-icp_registration" class="quarto-section-identifier"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP Registration and 3D Rectification</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Scan the same workpiece once from each of two viewpoints and you get two point clouds; to stitch them into a complete surface, you first have to align them. To compare a scanned physical object against its designed CAD model and judge whether assembly is correct, you first have to “place” the measured cloud into the model’s coordinate frame. Before a robot can grasp a part from a bin, it first has to know that part’s precise pose relative to the gripper — three seemingly unrelated tasks that share one and the same skeleton: <strong>rigidly transform one point cloud onto another so that the two coincide as closely as possible</strong>. This is three-dimensional <strong>registration</strong>, and ICP (iterative closest point) is the workhorse algorithm that carries registration on the industrial floor.</p>
+<p>This chapter runs all of its experiments on a single synthetic scene (<a href="#fig-icp-initial" class="quarto-xref">Figure&nbsp;<span>39.1</span></a>): a <strong>model cloud (model)</strong> — a square box and a spherical cap sitting on a conveyor plane, 5678 points in all; and a <strong>scan cloud (scan)</strong> — obtained by applying a known rigid transform to the model (rotation of <span class="math inline">\(12°\)</span> about the axis <span class="math inline">\((1,2,2)\)</span>, translation <span class="math inline">\((5,-3,2)\,\text{mm}\)</span>), adding measurement noise with <span class="math inline">\(\sigma=0.1\,\text{mm}\)</span>, then cropping away one side and patching in, on the right, an “intruder wall” that does not exist in the model at all — 6497 points in all. Only 4310 points of the two clouds truly correspond; another 2187 points (<strong>33.7%</strong>) are non-overlapping with no correspondence. In the figure the model is blue and the scan is red, clearly misaligned at the start; that isolated red vertical wall on the right is the intruder structure — it has no corresponding point in the model, yet the algorithm must identify and exclude it. This “not fully overlapping” setup is not self-sabotage: in real scans, non-overlap from the camera’s field-of-view boundary, neighboring parts, and bin walls is almost the norm.</p>
+<div id="fig-icp-initial" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-icp-initial-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/icp_registration/clouds_initial.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;39.1: Initial poses of the model cloud (blue) and scan cloud (red), XZ orthographic side view. The two clouds are clearly misaligned; the isolated red vertical wall on the right is an intruder structure present only in the scan (an abstraction of a bin wall), with no corresponding point in the model."><img src="figures/icp_registration/clouds_initial.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-icp-initial-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;39.1: Initial poses of the model cloud (blue) and scan cloud (red), XZ orthographic side view. The two clouds are clearly misaligned; the isolated red vertical wall on the right is an intruder structure present only in the scan (an abstraction of a bin wall), with no corresponding point in the model.
+</figcaption>
+</figure>
+</div>
+<section id="sec-icp-problem" class="level2 page-columns page-full" data-number="39.1">
+<h2 data-number="39.1" class="anchored" data-anchor-id="sec-icp-problem"><span class="header-section-number">39.1</span> The Registration Problem and ICP</h2>
+<p>What rigid registration must solve for is a <strong>rotation matrix <span class="math inline">\(\mathbf R\)</span></strong> (<span class="math inline">\(3\times 3\)</span>, orthogonal with <span class="math inline">\(\det\mathbf R=1\)</span>) and a <strong>translation vector <span class="math inline">\(\mathbf t\)</span></strong>, such that transforming each point <span class="math inline">\(\mathbf p_i\)</span> of the source cloud makes it coincide with the target cloud: <span class="math inline">\(\mathbf R\mathbf p_i+\mathbf t \approx \mathbf q_i\)</span>. This is the same problem as solving for the planar pose <span class="math inline">\((x,y,\theta)\)</span> in 2D position correction in <a href="roi_and_fixturing.html" class="quarto-xref"><span>Chapter 19</span></a>, upgraded to three dimensions — 2D has 3 degrees of freedom, a 3D rigid transform has 6 (3 rotational + 3 translational).</p>
+<p>The difficulty is that we do not know which point of the source cloud corresponds to which point of the target cloud. The <strong>correspondence</strong> and the <strong>transform</strong> are each other’s cause and effect — knowing the correspondence lets you solve the transform, and knowing the transform lets you find the correspondence. ICP breaks this chicken-and-egg deadlock with a naive but effective iteration, doing three things each round:</p>
+<ol type="1">
+<li><strong>Find correspondences by nearest neighbor</strong>: transform the source cloud by the current estimate <span class="math inline">\((\mathbf R,\mathbf t)\)</span>, then for each source point find its <strong>nearest-neighbor correspondence</strong> in the target cloud. This step is ICP’s computational bottleneck and must use a <strong>kd-tree</strong> to reduce the brute-force <span class="math inline">\(O(NM)\)</span> nearest-neighbor query to <span class="math inline">\(O(N\log M)\)</span> (<a href="point_cloud_basics.html" class="quarto-xref"><span>Chapter 37</span></a>).</li>
+<li><strong>Reject far correspondences</strong>: a nearest neighbor is not guaranteed to be a “true” correspondence — a point on the intruder wall also gets assigned a closest model point, but that correspondence is false. Rejecting outlier pairs by correspondence distance is ICP’s key gate for handling non-overlap. This chapter uses the median method: take the median <span class="math inline">\(\tilde d\)</span> of all correspondence distances and keep correspondences with distance <span class="math inline">\(\le 2.5\,\tilde d\)</span>, shutting out large-distance correspondences such as the intruder wall.</li>
+<li><strong>Solve for the optimal rigid transform</strong>: on the filtered correspondences, solve for the rigid transform that minimizes the sum of squared distances between corresponding point pairs. This step has a closed-form solution, namely the <strong>Kabsch / Umeyama algorithm</strong>.</li>
+</ol>
+<p>The mathematics of the third step is worth unpacking; it is a beautiful application of the SVD from <a href="math_preliminaries.html" class="quarto-xref"><span>Chapter 2</span></a>. Suppose after filtering there are <span class="math inline">\(n\)</span> correspondence pairs <span class="math inline">\(\{(\mathbf p_i,\mathbf q_i)\}\)</span>, and we want to minimize</p>
+<p><span class="math display">\[
+E(\mathbf R,\mathbf t)=\sum_{i=1}^{n}\bigl\|\mathbf R\mathbf p_i+\mathbf t-\mathbf q_i\bigr\|^2 .
+\]</span></p>
+<p>First subtract the centroid from each of the two point sets: <span class="math inline">\(\bar{\mathbf p}=\frac1n\sum_i\mathbf p_i\)</span>, <span class="math inline">\(\bar{\mathbf q}=\frac1n\sum_i\mathbf q_i\)</span>, and let <span class="math inline">\(\mathbf p_i'=\mathbf p_i-\bar{\mathbf p}\)</span>, <span class="math inline">\(\mathbf q_i'=\mathbf q_i-\bar{\mathbf q}\)</span>. One can prove that the optimal translation aligns the two centroids, while the rotation depends only on the centered points. Construct the <span class="math inline">\(3\times3\)</span> <strong>cross-covariance matrix</strong></p>
+<p><span class="math display">\[
+\mathbf H=\sum_{i=1}^{n}\mathbf p_i'\,\mathbf q_i'^{\,\top},
+\]</span></p>
+<p>take its singular value decomposition <span class="math inline">\(\mathbf H=\mathbf U\boldsymbol\Sigma\mathbf V^\top\)</span>, and then the optimal rotation and translation are</p>
+<p><span class="math display">\[
+\mathbf R=\mathbf V\,\mathrm{diag}(1,1,d)\,\mathbf U^\top,\quad d=\operatorname{sign}\!\bigl(\det(\mathbf V\mathbf U^\top)\bigr),\qquad
+\mathbf t=\bar{\mathbf q}-\mathbf R\,\bar{\mathbf p}.
+\]</span></p>
+<p>That middle <span class="math inline">\(\mathrm{diag}(1,1,d)\)</span> is the crucial stroke: a plain <span class="math inline">\(\mathbf V\mathbf U^\top\)</span> may yield a “mirror” with determinant <span class="math inline">\(-1\)</span> (a reflection rather than a rotation), and flipping the last column with <span class="math inline">\(d\)</span> forces it back into the legitimate rotation group <span class="math inline">\(SO(3)\)</span>. Once <span class="math inline">\((\mathbf R,\mathbf t)\)</span> is found, compose it onto the current estimate and proceed to the next iteration, until convergence.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Why centering + SVD? Expand <span class="math inline">\(E\)</span>, and after centering the translation term and the rotation term decouple: the optimal translation necessarily lands the transformed source centroid on the target centroid, and the remaining rotation term <span class="math inline">\(\sum_i\|\mathbf R\mathbf p_i'-\mathbf q_i'\|^2\)</span> is equivalent to maximizing <span class="math inline">\(\operatorname{tr}(\mathbf R^\top\mathbf H)\)</span>, which under the orthogonality constraint is given optimally in one step by the SVD of <span class="math inline">\(\mathbf H\)</span>. This is precisely the direct realization of “SVD gives the optimal orthogonal approximation” from <a href="math_preliminaries.html" class="quarto-xref"><span>Chapter 2</span></a>.</p>
+</div></div></section>
+<section id="sec-icp-convergence" class="level2 page-columns page-full" data-number="39.2">
+<h2 data-number="39.2" class="anchored" data-anchor-id="sec-icp-convergence"><span class="header-section-number">39.2</span> Convergence and Accuracy</h2>
+<p>Give ICP a <strong>good initial value</strong> — here simply the identity matrix (at synthesis time the rotation is only <span class="math inline">\(12°\)</span> and the translation a few millimeters, so the identity already lies within the convergence basin) — and run point-to-point ICP. The result: <strong>convergence in 58 iterations, final correspondence RMS 0.6443 mm</strong>, recovered rotation angle <span class="math inline">\(10.69°\)</span> (GT is <span class="math inline">\(12°\)</span>, rotation-angle error <span class="math inline">\(1.97°\)</span>), and translation error <span class="math inline">\(0.233\,\text{mm}\)</span>. <a href="#fig-icp-converged" class="quarto-xref">Figure&nbsp;<span>39.2</span></a> shows the red scan cloud snugly hugging the blue model after alignment, while that intruder wall on the right still stands alone where it was — correspondence rejection correctly judged it non-overlapping and kept it from contaminating the transform estimate.</p>
+<div id="fig-icp-converged" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-icp-converged-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/icp_registration/icp_converged.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;39.2: Point-to-point ICP after convergence (good initial value). The red scan cloud coincides with the blue model cloud; the intruder wall on the right is rejected for excessive correspondence distance and correctly took no part in the alignment."><img src="figures/icp_registration/icp_converged.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-icp-converged-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;39.2: Point-to-point ICP after convergence (good initial value). The red scan cloud coincides with the blue model cloud; the intruder wall on the right is rejected for excessive correspondence distance and correctly took no part in the alignment.
+</figcaption>
+</figure>
+</div>
+<p>What is worth pondering is this <span class="math inline">\(0.6443\,\text{mm}\)</span>: it converged correctly (the pose is right) yet clearly stopped above the <span class="math inline">\(0.1\,\text{mm}\)</span> noise floor. The reason hides in the cloud’s geometry — this cloud is dominated by a large expanse of conveyor plane, and the <strong>point-to-point</strong> metric has a congenital weakness on planes: a source point sliding along the <strong>tangential</strong> direction of the target surface barely changes its distance to the nearest target point, so the objective is nearly flat in the tangential direction. Each iteration can therefore move only a little, and convergence is slow and prone to stalling in a shallow minimum. The red curve in <a href="#fig-icp-curve" class="quarto-xref">Figure&nbsp;<span>39.3</span></a> depicts this plainly: after the RMS drops quickly, it drags a long, nearly flat tail, crawling slowly toward the plateau over 58 iterations rather than crisply slamming into the noise floor.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p><strong>Termination criterion</strong>: ICP usually stops when “the RMS change between two consecutive rounds falls below a threshold” or when “the maximum number of iterations is reached”. This chapter’s implementation stops when the RMS change is <span class="math inline">\(&lt;10^{-5}\,\text{mm}\)</span>, with a 60-iteration cap as a backstop. Too loose a criterion quits early with insufficient accuracy; too tight a one spins idly near the noise floor — the long tail of point-to-point on a plane-dominated cloud is exactly the kind of scene where the criterion is hard to tune.</p>
+</div></div><div id="fig-icp-curve" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-icp-curve-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/icp_registration/rms_curve.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;39.3: Three RMS convergence curves: red = point-to-point (good init), crawling along a long tail after dropping to a plateau; green = point-to-point (bad init), lingering high at a wrong minimum; blue = point-to-plane (good init), slamming fastest into a near-zero noise floor."><img src="figures/icp_registration/rms_curve.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-icp-curve-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;39.3: Three RMS convergence curves: red = point-to-point (good init), crawling along a long tail after dropping to a plateau; green = point-to-point (bad init), lingering high at a wrong minimum; blue = point-to-plane (good init), slamming fastest into a near-zero noise floor.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-icp-local-minima" class="level2" data-number="39.3">
+<h2 data-number="39.3" class="anchored" data-anchor-id="sec-icp-local-minima"><span class="header-section-number">39.3</span> Local Minima: ICP’s Achilles Heel</h2>
+<p>ICP only guarantees <strong>local convergence</strong> — it dutifully rolls down to the valley bottom nearest the initial value, but does not guarantee that this is the globally optimal valley bottom. To verify this, deliberately spoil the initial value: on top of the good initial value, add a further <span class="math inline">\(40°\)</span> rotation about the <span class="math inline">\(Z\)</span> axis, leave everything else unchanged, and rerun the same point-to-point ICP. The result is startling: <strong>the full 60 iterations are used up, with final RMS 2.0824 mm, rotation-angle error 29.3°, and translation error 8.20 mm</strong>. The green “aligned” result in <a href="#fig-icp-badinit" class="quarto-xref">Figure&nbsp;<span>39.4</span></a> is offset from the model as a whole — ICP converged, but converged to a <strong>wrong local minimum</strong>. The green curve in <a href="#fig-icp-curve" class="quarto-xref">Figure&nbsp;<span>39.3</span></a> lingers high the whole way and never comes back down: the nearest-neighbor correspondences are mismatched from the start, the wrong correspondences solve a wrong transform, the wrong transform reinforces the wrong correspondences, and it sinks ever deeper.</p>
+<div id="fig-icp-badinit" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-icp-badinit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/icp_registration/icp_badinit.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;39.4: Under a bad initial value (an extra 40° rotation about Z), point-to-point ICP converges to a wrong local minimum. Green is the converged result, offset from the blue model as a whole; this is intuitive evidence that “ICP needs a good initial value”."><img src="figures/icp_registration/icp_badinit.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-icp-badinit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;39.4: Under a bad initial value (an extra <span class="math inline">\(40°\)</span> rotation about Z), point-to-point ICP converges to a wrong local minimum. Green is the converged result, offset from the blue model as a whole; this is intuitive evidence that “ICP needs a good initial value”.
+</figcaption>
+</figure>
+</div>
+<p>This leads to the first iron rule of ICP in engineering practice: <strong>ICP is a refiner, not a searcher</strong>. It can polish a “roughly correct” pose to sub-millimeter accuracy, but it is powerless to search out the correct answer from a pose that is “far off”. Every local minimum has its own <strong>convergence basin</strong>; whichever basin the initial value falls into, ICP rolls toward that valley bottom; only when it falls into the basin of the global optimum is the result correct.</p>
+<p>Industrial 3D localization therefore almost always adopts a <strong>coarse-to-fine pipeline</strong>: first use a <strong>coarse registration</strong> algorithm that is insensitive to the initial pose — based on feature descriptors or point pair features (PPF) from <a href="3d_matching.html" class="quarto-xref"><span>Chapter 40</span></a> — to obtain a rough initial value that, though coarse, lands in the correct basin, then hand it to ICP for refinement. Coarse registration is responsible for “finding the right basin”, ICP for “rolling to the bottom”, each playing its part.</p>
+</section>
+<section id="sec-icp-point-to-plane" class="level2 page-columns page-full" data-number="39.4">
+<h2 data-number="39.4" class="anchored" data-anchor-id="sec-icp-point-to-plane"><span class="header-section-number">39.4</span> The Point-to-Plane Variant</h2>
+<p>The point-to-point weakness exposed in <a href="#sec-icp-convergence" class="quarto-xref"><span>Section 39.2</span></a> — slow convergence because tangential sliding is unpenalized — has a tailored remedy: the <strong>point-to-plane</strong> variant. Instead of minimizing the straight-line distance from a source point to a target point, it minimizes the distance from a source point to the <strong>tangent plane at the target point</strong>. Let the surface normal at target point <span class="math inline">\(\mathbf q_i\)</span> be <span class="math inline">\(\mathbf n_i\)</span> (obtained by taking the <span class="math inline">\(k\)</span> nearest neighbors of each point in the target cloud, doing PCA, and taking the eigenvector for the smallest eigenvalue), and each round solves</p>
+<p><span class="math display">\[
+\min_{\mathbf R,\mathbf t}\sum_{i}\Bigl(\bigl(\mathbf R\mathbf p_i+\mathbf t-\mathbf q_i\bigr)\cdot\mathbf n_i\Bigr)^2 .
+\]</span></p>
+<p>Penalizing only the deviation along the normal and letting tangential sliding pass — this is exactly what loosens the shackle that jams point-to-point. Each round linearizes the small-angle rotation as <span class="math inline">\(\boldsymbol\alpha=(\alpha_x,\alpha_y,\alpha_z)\)</span>, combines it with the translation into a 6-dimensional unknown, and solves a <span class="math inline">\(6\times6\)</span> normal equation.</p>
+<p>The effect is immediate. With the same good initial value and the same data, the point-to-plane variant <strong>converges in just 9 iterations to RMS 0.0991 mm</strong>, with rotation-angle error <span class="math inline">\(0.016°\)</span> and translation error <span class="math inline">\(0.005\,\text{mm}\)</span> — slamming straight into the <span class="math inline">\(0.1\,\text{mm}\)</span> noise floor, whereas point-to-point takes 58 iterations and still stops at <span class="math inline">\(0.6443\,\text{mm}\)</span>. The blue curve in <a href="#fig-icp-curve" class="quarto-xref">Figure&nbsp;<span>39.3</span></a> plunges steeply and reaches bottom in a few steps, a sharp contrast to the red one’s long tail.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>An intuitive grasp of this 9-versus-58 gap: on a planar region, point-to-point is like making a source point “ice-skate” on the target surface, compacting only a little normal distance per step while the tangential freedom is wasted; point-to-plane hands the tangential degrees of freedom straight back to the optimizer, so every step is spent on the cutting edge (the normal). The cost is having to compute target-cloud normals and being sensitive to the quality of normal estimation. Precisely because it is faster and more accurate, <strong>most industrial ICP implementations default to point-to-plane</strong>, with point-to-point serving more as a teaching baseline and a fallback when normals are unreliable.</p>
+</div></div></section>
+<section id="sec-icp-correction" class="level2" data-number="39.5">
+<h2 data-number="39.5" class="anchored" data-anchor-id="sec-icp-correction"><span class="header-section-number">39.5</span> 3D Rectification</h2>
+<p>A close relative of registration is <strong>3D correction</strong>: “straightening” a workpiece from the casually placed pose it happens to be in into a reference coordinate frame. <a href="camera_calibration.html" class="quarto-xref"><span>Chapter 5</span></a> calibrates pixels to a physical coordinate frame; 3D correction aligns the measured workpiece pose to a design reference — before measuring flatness, checking tilt, or making subsequent measurements, you often first have to level the reference surface.</p>
+<p>The most common kind is <strong>plane correction</strong>: a workpiece that should lie horizontal actually carries a little tilt, and needs to be rotated upright to the <span class="math inline">\(z=0\)</span> reference plane. The procedure is direct — do a <strong>least-squares plane fit</strong> to the workpiece surface points to get the normal <span class="math inline">\(\mathbf n\)</span>, then solve for a rotation matrix that rotates <span class="math inline">\(\mathbf n\)</span> to the <span class="math inline">\(+Z\)</span> axis, and apply it to the whole cloud. There is a ready-made construction for the rotation that “turns the unit vector <span class="math inline">\(\mathbf n\)</span> to <span class="math inline">\(\mathbf z\)</span>”: take the rotation axis as <span class="math inline">\(\mathbf n\times\mathbf z\)</span> and the rotation angle as the angle between the two, and plug into the Rodrigues formula.</p>
+<p>The experiment makes a plane with a <span class="math inline">\(7°\)</span> compound tilt (about a slightly oblique axis) plus noise. After fitting the normal and rotating upright, the residual tilt angle drops from <strong><span class="math inline">\(6.9999°\)</span> to <span class="math inline">\(0.0000°\)</span></strong> — one fit plus one rotation seats the workpiece flush. <a href="#fig-icp-corrected" class="quarto-xref">Figure&nbsp;<span>39.5</span></a> draws the before-and-after comparison in YZ side view: the red tilted point band is rotated upright into the green flat band that hugs the <span class="math inline">\(z=0\)</span> reference line.</p>
+<div id="fig-icp-corrected" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-icp-corrected-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/icp_registration/surface_corrected.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;39.5: 3D plane correction, YZ orthographic side view. Red is the 7° tilted plane point band before correction; green is the result after fitting the normal and rotating upright to +Z, with residual tilt angle 0.0000°, hugging the z=0 reference line (gray)."><img src="figures/icp_registration/surface_corrected.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-icp-corrected-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;39.5: 3D plane correction, YZ orthographic side view. Red is the 7° tilted plane point band before correction; green is the result after fitting the normal and rotating upright to +Z, with residual tilt angle 0.0000°, hugging the z=0 reference line (gray).
+</figcaption>
+</figure>
+</div>
+<p>Looking one layer deeper, <strong>correction is registration against an “ideal pose”</strong>: the target it aligns to is not another measured point cloud but an analytically defined reference (here the <span class="math inline">\(z=0\)</span> plane). It therefore needs no nearest-neighbor iteration — the target geometry is closed-form, and a single fit yields the transform. Generalize this idea, and aligning to CAD reference planes, reference axes, and reference holes are all the same class of “align to ideal geometry” correction problems.</p>
+</section>
+<section id="sec-icp-scivision" class="level2" data-number="39.6">
+<h2 data-number="39.6" class="anchored" data-anchor-id="sec-icp-scivision"><span class="header-section-number">39.6</span> SciVision Implementation</h2>
+<p>The geometry and mathematics of this chapter — kd-tree, Kabsch (SVD), point-to-point / point-to-plane iteration, plane fitting and rotating upright — are <strong>all hand-written</strong>, and this is precisely the core of the chapter; the SciVision SDK here only plays the supporting role of point-cloud IO and cross-validation evidence. This choice has measured backing: several of this machine’s SDK 3D entry points are simply unreliable in registration scenarios — some overloads of <code>Sci3DKdtree::CreateKdTree</code> return error code <code>121106105</code>, and <code>Sci3DAxisTransform::Transform3DPointArray</code> crashes outright with <code>0xC0000005</code>; only <code>SciSv3DSurfaceCorrection::ApplyPlaneCorrection</code> is usable, and this chapter uses it to corroborate the plane-correction result. The sample project runs each SDK probe in a separate subprocess to isolate potential crashes without affecting the main flow’s figure output.</p>
+<p>The main loop of nearest neighbor + correspondence rejection (median threshold):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> src<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    cur<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> mul<span class="op">(</span>res<span class="op">.</span>R<span class="op">,</span> src<span class="op">[</span>i<span class="op">])</span> <span class="op">+</span> res<span class="op">.</span>t<span class="op">;</span>   <span class="co">// transform source point by current pose</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    nn<span class="op">[</span>i<span class="op">]</span>  <span class="op">=</span> kd<span class="op">.</span>nearest<span class="op">(</span>cur<span class="op">[</span>i<span class="op">],</span> d2<span class="op">[</span>i<span class="op">]);</span>    <span class="co">// hand-written kd-tree nearest neighbor</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>sort<span class="op">(</span>sorted<span class="op">.</span>begin<span class="op">(),</span> sorted<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> med    <span class="op">=</span> sorted<span class="op">[</span>sorted<span class="op">.</span>size<span class="op">()</span> <span class="op">/</span> <span class="dv">2</span><span class="op">];</span>           <span class="co">// median of correspondence distances</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> thresh <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>med <span class="op">*</span> <span class="fl">2.5</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">);</span>            <span class="co">// median-method rejection threshold</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// keep only correspondences with dist &lt;= thresh for Kabsch -- large-distance intruder-wall pairs are blocked</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The filtered correspondences are handed to Kabsch to solve the closed-form rigid transform (centering + cross-covariance SVD + determinant correction), corresponding line by line to the formulas in <a href="#sec-icp-problem" class="quarto-xref"><span>Section 39.1</span></a>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>Mat3 H <span class="op">=</span> <span class="co">/* Σ p_i' q_i'^T */</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>symEig3<span class="op">(</span>mul<span class="op">(</span>transpose<span class="op">(</span>H<span class="op">),</span> H<span class="op">),</span> w<span class="op">,</span> V<span class="op">);</span>                 <span class="co">// eigendecomposition of H^T H -&gt; right singular vectors</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// columns of U = H v_i / σ_i; σ_i = sqrt(λ_i)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>Mat3 VUt <span class="op">=</span> mul<span class="op">(</span>V<span class="op">,</span> transpose<span class="op">(</span>U<span class="op">));</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> d  <span class="op">=</span> det<span class="op">(</span>VUt<span class="op">)</span> <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">?</span> <span class="op">-</span><span class="fl">1.0</span> <span class="op">:</span> <span class="fl">1.0</span><span class="op">;</span>               <span class="co">// prevent reflection, force det(R)=+1</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>R <span class="op">=</span> mul<span class="op">(</span>mul<span class="op">(</span>V<span class="op">,</span> Mat3<span class="op">{{</span><span class="dv">1</span><span class="op">,</span><span class="dv">0</span><span class="op">,</span><span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span><span class="dv">1</span><span class="op">,</span><span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span><span class="dv">0</span><span class="op">,</span>d<span class="op">}}),</span> transpose<span class="op">(</span>U<span class="op">));</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> ct <span class="op">-</span> mul<span class="op">(</span>R<span class="op">,</span> cs<span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The point-to-plane variant linearizes each correspondence into a <span class="math inline">\(6\times6\)</span> normal equation, with the unknowns being the small-angle rotation <span class="math inline">\(\boldsymbol\alpha\)</span> and the translation:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> r <span class="op">=</span> dot<span class="op">(</span>s <span class="op">-</span> q<span class="op">,</span> nrm<span class="op">);</span>          <span class="co">// signed distance from point to target tangent plane</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>Vec3   c <span class="op">=</span> cross<span class="op">(</span>s<span class="op">,</span> nrm<span class="op">);</span>            <span class="co">// Jacobian of the rotation part</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> a<span class="op">[</span><span class="dv">6</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span>c<span class="op">.</span>x<span class="op">,</span> c<span class="op">.</span>y<span class="op">,</span> c<span class="op">.</span>z<span class="op">,</span> nrm<span class="op">.</span>x<span class="op">,</span> nrm<span class="op">.</span>y<span class="op">,</span> nrm<span class="op">.</span>z<span class="op">};</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> u <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> u <span class="op">&lt;</span> <span class="dv">6</span><span class="op">;</span> <span class="op">++</span>u<span class="op">)</span> <span class="op">{</span>        <span class="co">// accumulate the normal equations A x = b</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> v <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> v <span class="op">&lt;</span> <span class="dv">6</span><span class="op">;</span> <span class="op">++</span>v<span class="op">)</span> A<span class="op">[</span>u<span class="op">][</span>v<span class="op">]</span> <span class="op">+=</span> a<span class="op">[</span>u<span class="op">]</span> <span class="op">*</span> a<span class="op">[</span>v<span class="op">];</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    bb<span class="op">[</span>u<span class="op">]</span> <span class="op">+=</span> <span class="op">-</span>r <span class="op">*</span> a<span class="op">[</span>u<span class="op">];</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Plane correction uses <code>fitPlane</code> (least-squares solution of <span class="math inline">\(z=ax+by+c\)</span>) to find the normal, then <code>rotateVecToZ</code> (rotation axis <span class="math inline">\(\mathbf n\times\mathbf z\)</span> + Rodrigues) to rotate upright — two hand-written functions, with <code>SciSv3DSurfaceCorrection</code> as corroboration. The complete runnable project is in <code>code/icp_registration/</code>.</p>
+<div class="industry-case">
+<p><span class="case-title">Industry Case: Point Cloud Registration for Robotic Picking</span></p>
+<p>Parts to be picked lie scattered in a bin; the robot relies on a 3D camera to scan a point cloud, register it to the CAD model, solve the 6DoF pose, and then plan the grasp. An early approach used pure ICP directly, and the line crashed again and again — with the parts’ initial poses in disarray, ICP kept falling into wrong local minima, the pose drifted off, and the manipulator grabbed off-target or even grabbed nothing. The key to the overhaul was to add the coarse-registration link: first use the point pair features of 3D matching (<a href="3d_matching.html" class="quarto-xref"><span>Chapter 40</span></a>) to compute a rough pose, then hand it to ICP to refine to sub-millimeter accuracy, and only then did the pose stabilize. Another unavoidable pitfall is non-overlap: bin walls and neighboring parts both enter the field of view, and these points have no correspondence on the target model and must be blocked one by one by correspondence rejection (distance threshold), or they will drag the pose outward. The lesson: <strong>ICP is a refiner, not a searcher; there must always be a coarse registration in front to feed it an initial value.</strong></p>
+</div>
+</section>
+<section id="sec-icp-summary" class="level2" data-number="39.7">
+<h2 data-number="39.7" class="anchored" data-anchor-id="sec-icp-summary"><span class="header-section-number">39.7</span> Summary</h2>
+<ul>
+<li><strong>Registration = solving for the rigid transform <span class="math inline">\((\mathbf R,\mathbf t)\)</span> that makes two point clouds coincide</strong>, the 3D upgrade of 2D position correction (<a href="roi_and_fixturing.html" class="quarto-xref"><span>Chapter 19</span></a>); ICP uses the loop “find correspondences by nearest neighbor → reject far correspondences → solve the optimal transform by SVD → iterate” to break the deadlock in which correspondence and transform are each other’s cause and effect.</li>
+<li><strong>Kabsch / Umeyama gives the closed-form optimal rigid transform</strong>: subtract the centroid, construct the cross-covariance matrix <span class="math inline">\(\mathbf H\)</span>, take its SVD, <span class="math inline">\(\mathbf R=\mathbf V\,\mathrm{diag}(1,1,d)\,\mathbf U^\top\)</span>, where <span class="math inline">\(d\)</span> prevents degeneration into a reflection — this is a direct application of the SVD from <a href="math_preliminaries.html" class="quarto-xref"><span>Chapter 2</span></a>.</li>
+<li><strong>ICP only guarantees local convergence and is highly sensitive to the initial value</strong>: with a good initial value it converges in 58 iterations to RMS 0.6443 mm; with a bad initial value (an extra <span class="math inline">\(40°\)</span> rotation) it falls into a wrong local minimum, with rotation error 29.3°. Industry must go coarse-to-fine — first use 3D matching (<a href="3d_matching.html" class="quarto-xref"><span>Chapter 40</span></a>) for coarse registration to supply the initial value, then use ICP to refine.</li>
+<li><strong>The point-to-plane variant is far faster than point-to-point</strong>: penalizing only normal deviation and letting tangential sliding pass, this chapter’s experiment reaches RMS 0.0991 mm in 9 iterations (point-to-point still stops at 0.6443 mm after 58), so industrial ICP mostly adopts point-to-plane.</li>
+<li><strong>3D correction is registration against an “ideal pose”</strong>: fit a reference plane + rotate upright to <span class="math inline">\(+Z\)</span>, dropping a 7° tilt to 0.0000° in one step; non-overlap (intruder walls, bin walls) must be blocked by correspondence rejection, a prerequisite for registration to land reliably.</li>
+</ul>
+<p>For a more systematic treatment of ICP, point cloud registration, and 3D pose estimation, see the book by Steger et al. <span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, and Wiedemann 2018</a>)</span>. The ICP algorithm itself has two classic origins: Besl and McKay gave the point-to-point formulation based on iterating to the closest point <span class="citation" data-cites="BeslMcKay1992">(<a href="references.html#ref-BeslMcKay1992" role="doc-biblioref">Besl and McKay 1992</a>)</span>, while Chen and Medioni, registering multiple range images, proposed the faster-converging point-to-plane error metric <span class="citation" data-cites="ChenMedioni1992">(<a href="references.html#ref-ChenMedioni1992" role="doc-biblioref">Chen and Medioni 1992</a>)</span> — exactly the 58-vs-9-iteration difference in this chapter’s experiments; a systematic comparison of the sampling, matching, and rejection variants is given in the survey by Rusinkiewicz and Levoy <span class="citation" data-cites="RusinkiewiczLevoy2001">(<a href="references.html#ref-RusinkiewiczLevoy2001" role="doc-biblioref">Rusinkiewicz and Levoy 2001</a>)</span>. Each round’s closed-form optimal rigid transform, obtained by the SVD of the cross-covariance matrix after centroid subtraction (Kabsch/Umeyama), was first rigorously derived in the paper by Arun, Huang, and Blostein <span class="citation" data-cites="Arun1987">(<a href="references.html#ref-Arun1987" role="doc-biblioref">Arun, Huang, and Blostein 1987</a>)</span>. </p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Arun1987" class="csl-entry" role="listitem">
+Arun, K. S., Thomas S. Huang, and Steven D. Blostein. 1987. <span>“Least-Squares Fitting of Two 3-d Point Sets.”</span> <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em> PAMI-9 (5): 698–700.
+</div>
+<div id="ref-BeslMcKay1992" class="csl-entry" role="listitem">
+Besl, Paul J., and Neil D. McKay. 1992. <span>“A Method for Registration of 3-d Shapes.”</span> <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em> 14 (2): 239–56.
+</div>
+<div id="ref-ChenMedioni1992" class="csl-entry" role="listitem">
+Chen, Yang, and Gérard Medioni. 1992. <span>“Object Modelling by Registration of Multiple Range Images.”</span> <em>Image and Vision Computing</em> 10 (3): 145–55.
+</div>
+<div id="ref-RusinkiewiczLevoy2001" class="csl-entry" role="listitem">
+Rusinkiewicz, Szymon, and Marc Levoy. 2001. <span>“Efficient Variants of the <span>ICP</span> Algorithm.”</span> In <em>Proceedings of the Third International Conference on 3-d Digital Imaging and Modeling (3DIM)</em>, 145–52. Quebec City, Canada.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, and Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2nd ed. Wiley-VCH.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./point_cloud_preprocessing.html" class="pagination-link" aria-label="Point Cloud Preprocessing">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Point Cloud Preprocessing</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./3d_matching.html" class="pagination-link" aria-label="3D Matching">
+        <span class="nav-page-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D Matching</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

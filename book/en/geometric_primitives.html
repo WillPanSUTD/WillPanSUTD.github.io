@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>14&nbsp; Detecting Geometric Primitives – Machine Vision Algorithms: Principles and Industrial Practice</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./hough_transform.html" rel="next">
+<link href="./edge_detection.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_locating.html">Locating</a></li><li class="breadcrumb-item"><a href="./geometric_primitives.html"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Machine Vision Algorithms: Principles and Industrial Practice</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Digital Image Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Preliminaries</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Imaging and Calibration</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Cameras and Lenses</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Illumination</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Camera Calibration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Image Enhancement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Spatial Filtering</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Thresholding</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Morphology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Gray-Level Transforms and Histograms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Geometric Transforms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Frequency Domain Processing and the FFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Advanced Enhancement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Locating</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Edge Detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Template Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Shape Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Feature and Color Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI Generation and Fixturing</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Caliper Measurement and Subpixel Localization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Geometric Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Intensity, Color, and Gap Measurement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inspection</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Contour Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Shape Features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Defect Detection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recognition</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1D and 2D Barcode Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Optical Character Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Classical Classifiers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Imaging</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Overview of 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Stereo Vision</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Structured Light 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Laser Triangulation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Photometric Stereo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Phase Measuring Deflectometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Confocal Imaging and Focus Variation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Processing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Point Cloud Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Point Cloud Preprocessing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP Registration and 3D Rectification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D Inspection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-gp-edge-points" id="toc-sec-gp-edge-points" class="nav-link active" data-scroll-target="#sec-gp-edge-points"><span class="header-section-number">14.1</span> Extracting Edge Points</a></li>
+  <li><a href="#sec-gp-line-fitting" id="toc-sec-gp-line-fitting" class="nav-link" data-scroll-target="#sec-gp-line-fitting"><span class="header-section-number">14.2</span> Line Fitting: Least Squares and Robust Methods</a></li>
+  <li><a href="#sec-gp-circle-fitting" id="toc-sec-gp-circle-fitting" class="nav-link" data-scroll-target="#sec-gp-circle-fitting"><span class="header-section-number">14.3</span> Fitting Circles and Ellipses</a></li>
+  <li><a href="#sec-gp-scivision" id="toc-sec-gp-scivision" class="nav-link" data-scroll-target="#sec-gp-scivision"><span class="header-section-number">14.4</span> SciVision Implementation</a></li>
+  <li><a href="#sec-gp-summary" id="toc-sec-gp-summary" class="nav-link" data-scroll-target="#sec-gp-summary"><span class="header-section-number">14.5</span> Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_locating.html">Locating</a></li><li class="breadcrumb-item"><a href="./geometric_primitives.html"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-geometric_primitives" class="quarto-section-identifier"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Place a part under the camera, and the first class of questions industrial vision must answer is often surprisingly plain: where is this edge? Where is the center of this hole? Alignment and placement close their motion loops on edge positions, dimensional inspection measures the distance between two edges, and robotic pick-up needs hole-center coordinates — in the end they all reduce to the same thing: <strong>locating points, lines, circles, and other geometric primitives in the image with subpixel accuracy</strong>. “Subpixel” is not a marketing word: in an imaging system at 10 μm/pixel, if localization is only accurate to whole pixels, the measurement resolution is nailed down at 10 μm; proper subpixel localization can reliably reach 1/10 pixel or better — equivalent to improving the system’s accuracy by an order of magnitude without changing a single piece of hardware.</p>
+<p>This chapter runs all of its experiments on one real industrial image (<a href="#fig-gp-scene" class="quarto-xref">Figure&nbsp;<span>14.1</span></a>): an oblong metal connector part on a dark background (2448×2048 single-channel grayscale, taken from Smart3’s standard “find point / find line / find circle” solution). The part’s outer contour has a roughly horizontal straight edge along the top — flat in the middle, rounding off at both ends — and inside it are two left-right symmetric bored holes, each with a circular bore mouth exposing the dark background at its center and a bright annular step around it. We will first extract a string of edge points along the top straight edge and fit a line to them, then cover each hole with a circular ROI and fit a circle — the rounded shoulders at the two ends of the straight edge will play the troublemakers, forcing out the full value of robust fitting.</p>
+<div id="fig-gp-scene" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gp-scene-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/geometric_primitives/scene.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;14.1: The real test image: an oblong metal connector part on a dark background. The outer contour’s top edge is a roughly horizontal straight edge, flat in the middle and rounding off at both ends; inside the part are two left-right symmetric bored holes whose centers serve mating alignment and pick-up."><img src="figures/geometric_primitives/scene.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gp-scene-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14.1: The real test image: an oblong metal connector part on a dark background. The outer contour’s top edge is a roughly horizontal straight edge, flat in the middle and rounding off at both ends; inside the part are two left-right symmetric bored holes whose centers serve mating alignment and pick-up.
+</figcaption>
+</figure>
+</div>
+<section id="sec-gp-edge-points" class="level2" data-number="14.1">
+<h2 data-number="14.1" class="anchored" data-anchor-id="sec-gp-edge-points"><span class="header-section-number">14.1</span> Extracting Edge Points</h2>
+<p>To locate an edge, you do not need to run edge detection over the whole image (that is the subject of <a href="edge_detection.html" class="quarto-xref"><span>Chapter 13</span></a>). The industrial approach is far more direct: inside an ROI that roughly frames the target edge, lay down <span class="math inline">\(N\)</span> mutually parallel <strong>search lines</strong>, splitting the two-dimensional localization problem into <span class="math inline">\(N\)</span> one-dimensional ones. The processing along every search line is identical:</p>
+<ol type="1">
+<li><strong>Take a gray profile</strong>: read the gray values point by point along the search line, yielding a one-dimensional curve.</li>
+<li><strong>Projection averaging</strong>: average over several pixels in the direction perpendicular to the search line (the projection within the projection width), using the average to suppress single-pixel noise — the same reasoning as in <a href="spatial_filtering.html" class="quarto-xref"><span>Chapter 6</span></a>: independent zero-mean noise cancels under averaging.</li>
+<li><strong>First-derivative localization</strong>: take the first derivative of the averaged profile; an edge corresponds to an extremum of the derivative magnitude. Extrema whose magnitude falls below a threshold are treated as noise and not reported.</li>
+<li><strong>Subpixel interpolation</strong>: let the magnitudes at the discrete extremum of the derivative and at its left and right neighbors be <span class="math inline">\(g_0\)</span>, <span class="math inline">\(g_{-1}\)</span>, <span class="math inline">\(g_{+1}\)</span>; fit a parabola through these three points, and the offset of its vertex relative to the extremum is</li>
+</ol>
+<p><span class="math display">\[
+\delta = \frac{g_{-1}-g_{+1}}{2\,(g_{-1}-2g_0+g_{+1})},
+\]</span></p>
+<p><span class="math inline">\(\delta\)</span> falls within <span class="math inline">\(\pm 1/2\)</span> pixel, and the subpixel edge position is “the whole-pixel extremum position <span class="math inline">\(+\ \delta\)</span>”. Three samples determine one parabola, the vertex formula is closed-form, and the computational cost is negligible — subpixel accuracy is almost free.</p>
+<p>This machinery comes with a set of parameters that can only be configured well if you understand the principle. The <strong>edge strength threshold</strong> (e.g.&nbsp;<code>strengthThresh</code>) is the admission gate on the first-derivative magnitude: set it too low and noise wiggles get counted as edges; too high, and genuine low-contrast edges are missed. <strong>Polarity</strong> specifies which kind of gray transition is accepted — black→white (rising), white→black (falling), or both: in this example we scan from top to bottom, crossing from the dark background into the bright part, a textbook black→white edge; locking the polarity immediately filters out half of the false edges. The <strong>edge width</strong> is the expected width of the gray transition band and determines the differencing span of the derivative: too small and it is noise-sensitive, too large and two adjacent edges get smeared into one. The <strong>projection width</strong> is a trade-off between noise suppression and blurring: the wider the projection, the more noise is averaged away and the more stable the edge strength estimate; but if the edge is not strictly perpendicular to the search line, too wide a projection “smears” the tilted edge sideways and the localization actually shifts — in practice 3 to 7 pixels is most common. The <strong>edge type</strong> decides which edge to report when a search line finds multiple candidates: the first, the last, or the one with the best strength; “best” is the most robust against weak false edges caused by oil stains and reflections.</p>
+<p><a href="#fig-gp-line-points" class="quarto-xref">Figure&nbsp;<span>14.2</span></a> shows the extraction result with 60 search lines laid across the top-edge ROI: the ROI deliberately overruns the flat segment and reaches into the rounded shoulders at both ends, so among the 60 white crosses — the ones in the middle line up neatly along the true straight edge, while the ones at the two ends shift downward following the rounded corners. The search lines faithfully report the edge position they “see”, and that is how the shoulder points sneak into the point set (18 of them, by the criterion of distance <span class="math inline">\(|d|&gt;5\)</span> px to the fitted line). How not to be dragged off course by them is the subject of the next section.</p>
+<div id="fig-gp-line-points" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gp-line-points-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/geometric_primitives/line_edge_points.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;14.2: Edge points extracted along the top by 60 search lines (white crosses). The middle ones line up along the true straight edge, while the points that overrun into the rounded shoulders shift downward following the contour, becoming the outliers in the subsequent fit."><img src="figures/geometric_primitives/line_edge_points.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gp-line-points-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14.2: Edge points extracted along the top by 60 search lines (white crosses). The middle ones line up along the true straight edge, while the points that overrun into the rounded shoulders shift downward following the contour, becoming the outliers in the subsequent fit.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-gp-line-fitting" class="level2 page-columns page-full" data-number="14.2">
+<h2 data-number="14.2" class="anchored" data-anchor-id="sec-gp-line-fitting"><span class="header-section-number">14.2</span> Line Fitting: Least Squares and Robust Methods</h2>
+<p>With a string of edge points in hand, the next step is to estimate a line from them. <strong>Least squares (LSQ)</strong> fitting minimizes the sum of squared perpendicular distances from all points to the line</p>
+<p><span class="math display">\[
+\min_{L} \sum_{i} r_i^2, \qquad r_i = \operatorname{dist}(\mathbf p_i,\, L),
+\]</span></p>
+<p>and the solution is closed-form (the line passes through the centroid of the point set, with its direction given by the principal eigenvector of the scatter matrix) — fast and free of hyperparameters. When all points are “roughly correct” it is optimal — the same statistical fact that makes averaging optimal under Gaussian noise. But it is extremely sensitive to <strong>outliers</strong>, and the reason hides in that square: residuals are squared before they are summed, so a shoulder point off by 30 px contributes 3600 times as much to the objective as a normal point off by 0.5 px. To appease a handful of large-residual points, the fitted line would rather rotate as a whole and let the majority of good points each be a little more wrong — the squared penalty being dominated by large residuals is the root cause of LSQ’s instability.</p>
+<p>The idea of <strong>robust estimation</strong> is to replace the squared penalty with one that is more forgiving of large residuals. Huber’s scheme <span class="citation" data-cites="Huber1964">(<a href="references.html#ref-Huber1964" role="doc-biblioref">Huber 1964</a>)</span> is equivalent to giving each point a weight that varies with its residual:</p>
+<p><span class="math display">\[
+w(r)=\begin{cases}1 &amp; |r|\le \kappa\\[2pt] \kappa/|r| &amp; |r|&gt;\kappa\end{cases}
+\]</span></p>
+<p>Points whose residual does not exceed the tuning constant <span class="math inline">\(\kappa\)</span> enjoy a full say; points beyond it have their weight decay as <span class="math inline">\(\kappa/|r|\)</span> — the larger the residual, the smaller the voice, but never a one-vote veto. Since the weights depend on the residuals and the residuals depend on the fit, the solution uses <strong>iteratively reweighted least squares (IRLS)</strong>:</p>
+<pre class="text"><code>Input: edge point set {p_i}, tuning constant κ
+1. Fit an initial line by ordinary least squares, all weights w_i ← 1
+2. Repeat until convergence (line parameters change little enough,
+   or the maximum number of iterations is reached):
+   a. Compute each point's distance r_i to the current line
+   b. Update weights by the Huber rule: if |r_i| ≤ κ then w_i ← 1,
+      otherwise w_i ← κ/|r_i|
+   c. Do a weighted least-squares fit with weights w_i, updating the line
+3. Output the line and each point's final residual</code></pre>
+<p>In each iteration the outliers’ weights are pushed further down and the line steps closer to the “majority of good points”; convergence typically takes three to five rounds.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>The other famous robust route is RANSAC (random sample consensus) <span class="citation" data-cites="Fischler1981RANSAC">(<a href="references.html#ref-Fischler1981RANSAC" role="doc-biblioref">Fischler and Bolles 1981</a>)</span>: repeatedly draw a minimal sample at random (a line needs only 2 points), fit it, count the “consensus” points falling within a tolerance band, and keep the model with the largest consensus. IRLS starts from all the points and converges by <strong>reweighting</strong>; RANSAC relies on <strong>random sampling</strong> to stumble upon an outlier-free sample. When the outlier fraction is very high (approaching or even exceeding half), RANSAC is more reliable; when outliers are few and the normal points carry continuous noise, IRLS is more accurate, faster, and its result is repeatable (no randomness) — industrial edge fitting mostly belongs to the latter case.</p>
+</div></div><p>Talk is cheap, so let us run a controlled experiment on the 60 edge points from the previous section. The ROI overruns a stretch of rounded shoulder at each end, and the search lines falling into those stretches produce a small clutch of outliers shifted downward as a group (18 in total, three tenths of the 60 points). On the LSQ side, outlier rejection is deliberately switched off (<code>rejectRatio=1</code>, <code>rejectDist=20</code> — a rejection threshold of 20 px lets every shoulder outlier participate in the fit); the Huber side uses <code>rejectRatio=10</code>, <code>rejectDist=5</code>. We evaluate both fitted lines under one uniform rule — the root-mean-square error (RMSE) over only the inliers whose distance to the respective fitted line satisfies <span class="math inline">\(|d|\le 5\)</span> px: <strong>2.793 px for LSQ, 1.456 px for Huber</strong>, nearly a twofold difference. Geometrically, the LSQ line is dragged down as a whole by the two shoulders and tilted by their asymmetric distribution, while the Huber line hugs the middle straight edge firmly.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>A common evaluation trap: the RMSE returned by an SDK’s fitting interface is the <strong>all-point</strong> RMSE — 5.908 px on the LSQ side of this experiment, the bulk of which is the shoulder outliers’ own residuals. That number is unsuitable for comparing the accuracy of two fits: outliers have large residuals against any “correct” line, so all-point RMSE punishes the data, not the fit. A fair comparison must use a uniform inlier rule (such as <span class="math inline">\(|d|\le 5\)</span> px in this example).</p>
+</div></div></section>
+<section id="sec-gp-circle-fitting" class="level2 page-columns page-full" data-number="14.3">
+<h2 data-number="14.3" class="anchored" data-anchor-id="sec-gp-circle-fitting"><span class="header-section-number">14.3</span> Fitting Circles and Ellipses</h2>
+<p>When locating a circular hole, the search lines switch from a parallel layout to a <strong>radial layout</strong>: cover the hole with a circular ROI and lay out search lines uniformly over angle, each scanning along the radial direction (from inside outward); everything else — projection averaging, first derivative, subpixel interpolation — is exactly the same as in the line case. The radial layout adds two key parameters: the <strong>expected radius</strong> <code>expectRadius</code> and the <strong>radius tolerance</strong> <code>radiusRange</code>, which constrain the search to an annular search band <span class="math inline">\([\,\text{expectRadius}-\text{radiusRange},\ \text{expectRadius}+\text{radiusRange}\,]\)</span>. In this example <code>expectRadius=45</code> and <code>radiusRange=30</code>, giving a search band of 15–75 px. Constraining the search band wins twice: the bore mouth inside the hole and the annular step outside it are both excluded, so false edges drop sharply; and each search line’s scan length shrinks accordingly, saving time.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Circle fitting comes in two families, <strong>algebraic fitting</strong> and <strong>geometric fitting</strong>: the former minimizes the algebraic residual of the circle equation — closed-form and extremely fast, but its implicit weighting introduces bias; the latter minimizes the true Euclidean distance from each point to the circle — iterative but unbiased. The common practice in industrial libraries is to use the algebraic solution as the initial value and finish with geometric iteration, getting both speed and accuracy.</p>
+</div></div><p>The experiment runs the circle finder once per hole: all 48 radial search lines hit the hole rim, yielding 48 edge points per hole (the white crosses in the two subfigures of <a href="#fig-gp-circle" class="quarto-xref">Figure&nbsp;<span>14.3</span></a>), with a black cross marking the fitted center. The left hole fits to <strong>center (1143.83, 1085.32), radius 44.60 px</strong>, the right hole to <strong>center (1586.00, 1077.59), radius 44.93 px</strong>, and the inter-hole center distance (pitch) is <strong>442.06 px</strong>. All 48 edge points of each hole are effective points, with zero rejections — the part’s hole rims are intact, with no point deviating from the reference circle beyond the rejection threshold. The hole-center coordinates and the pitch are exactly the core quantities needed for connector mating and robotic pick-up: the pin-hole positions fix the pick target, the pitch locks the mating orientation.</p>
+<div id="fig-gp-circle" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gp-circle-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-gp-circle" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-gp-circle-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-gp-circle-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/geometric_primitives/circle_edge_points.png" class="lightbox" data-gallery="fig-gp-circle" title="Figure&nbsp;14.3&nbsp;(a): Left hole: 48 edge points (white crosses) + fitted center (black cross)"><img src="figures/geometric_primitives/circle_edge_points.png" class="img-fluid figure-img" data-ref-parent="fig-gp-circle"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-gp-circle-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) Left hole: 48 edge points (white crosses) + fitted center (black cross)
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-gp-circle" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-gp-circle-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-gp-circle-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/geometric_primitives/circle_reject_points.png" class="lightbox" data-gallery="fig-gp-circle" title="Figure&nbsp;14.3&nbsp;(b): Right hole: 48 edge points (white crosses) + fitted center (black cross)"><img src="figures/geometric_primitives/circle_reject_points.png" class="img-fluid figure-img" data-ref-parent="fig-gp-circle"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-gp-circle-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) Right hole: 48 edge points (white crosses) + fitted center (black cross)
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gp-circle-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14.3: Radial edge-point extraction and circle fitting on the two bored holes. (a) the left hole and (b) the right hole each have their rim edge points extracted by 48 radial search lines, and the robust fit gives the center (black cross) and radius; both holes have zero rejected points, their rims intact.
+</figcaption>
+</figure>
+</div>
+<p>The robust fit hides one more “by-product” worth pointing out here: <strong>while delivering the reference circle, it also hands over a rejection list of “which points refuse to obey the reference.”</strong> On this part the hole rims are intact and the rejection list is empty; but the moment a rim develops a protruding burr, a chip-out, or boring-tool chatter marks, the corresponding edge points deviate from the reference circle and get screened out by the rejection threshold, and the position and clustering of the rejected points become markers of the defect directly. In other words, taking the fitted circle as the nominal contour and checking each edge point’s radial deviation, or the distribution of rejected points, accomplishes measurement and defect judgment in one and the same fit. <a href="defect_detection.html" class="quarto-xref"><span>Chapter 26</span></a> will develop this idea systematically.</p>
+</section>
+<section id="sec-gp-scivision" class="level2" data-number="14.4">
+<h2 data-number="14.4" class="anchored" data-anchor-id="sec-gp-scivision"><span class="header-section-number">14.4</span> SciVision Implementation</h2>
+<p>Edge-point extraction and line fitting are provided by <code>SCIMV::SciSvLineLocator</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvLineLocator lineLoc<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SciPointArray edgePts<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> rc <span class="op">=</span> lineLoc<span class="op">.</span>LinePointsLocator<span class="op">(</span>src<span class="op">,</span> lineROI<span class="op">,</span> emptyRegion<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*strengthThresh*/</span> <span class="dv">25</span><span class="op">,</span> <span class="co">/*direction top-&gt;bottom*/</span> <span class="dv">0</span><span class="op">,</span> <span class="co">/*polarity black-&gt;white*/</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*edgeWidth*/</span> <span class="dv">3</span><span class="op">,</span> <span class="co">/*projectWidth*/</span> <span class="dv">5</span><span class="op">,</span> <span class="co">/*edgeType best*/</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*searchLineCount*/</span> <span class="dv">60</span><span class="op">,</span> <span class="co">/*findPointType first derivative*/</span> <span class="dv">1</span><span class="op">,</span> <span class="op">&amp;</span>edgePts<span class="op">);</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> lineLoc<span class="op">.</span>FitLine<span class="op">(</span>edgePts<span class="op">,</span> <span class="co">/*fitMethod Huber*/</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="op">&amp;</span>lineHuber<span class="op">,</span> <span class="op">&amp;</span>rmseHuber<span class="op">,</span> <span class="op">&amp;</span>distHuber<span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The parameters of <code>LinePointsLocator</code> map one-to-one onto the principles of <a href="#sec-gp-edge-points" class="quarto-xref"><span>Section 14.1</span></a>: <code>strengthThresh=25</code> is the gate on the first-derivative magnitude; <code>direction=0</code> specifies scanning from top to bottom; <code>polarity=0</code> accepts only black→white transitions (here we enter the bright part from the dark background); <code>edgeWidth=3</code> and <code>projectWidth=5</code> are the differencing span and the projection averaging width; <code>edgeType=2</code> takes the candidate with the best strength; <code>searchLineCount=60</code> search lines; <code>findPointType=1</code> localizes by the first-derivative extremum. The output <code>edgePts</code> is the 60 subpixel edge points. In <code>FitLine</code>, <code>fitMethod</code> is 0 for least squares and 1 for Huber, and the following <code>rejectRatio</code> and <code>rejectDist</code> control outlier rejection during the fit (the number of rejection rounds and the distance threshold) — in the experiment of <a href="#sec-gp-line-fitting" class="quarto-xref"><span>Section 14.2</span></a>, the LSQ side used exactly the pair <code>1, 20</code> to effectively switch rejection off.</p>
+<p>Circle finding is done in one step (search + fit) by <code>SCIMV::SciSvEllipseLocator</code>, called once per hole, reading the center and radius out of the output shape <code>circleShape</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvEllipseLocator circleLoc<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>SciROI circleROI<span class="op">;</span> SciPoint center<span class="op">(</span>holeCx<span class="op">,</span> holeCy<span class="op">);</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>circleROI<span class="op">.</span>GenCircle<span class="op">(</span>center<span class="op">,</span> <span class="dv">80</span><span class="op">);</span>   <span class="co">// circular ROI covering the rim search band</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>SciOverlay circleShape<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>SciPointArray circlePts<span class="op">,</span> circleEffect<span class="op">,</span> circleReject<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> circleLoc<span class="op">.</span>EllipseLocator<span class="op">(</span>src<span class="op">,</span> circleROI<span class="op">,</span> emptyRegion<span class="op">,</span> <span class="co">/*isEllipse*/</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*strengthThresh*/</span> <span class="dv">25</span><span class="op">,</span> <span class="co">/*direction inside-&gt;outside*/</span> <span class="dv">0</span><span class="op">,</span> <span class="co">/*polarity black-&gt;white*/</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*edgeWidth*/</span> <span class="dv">3</span><span class="op">,</span> <span class="co">/*projectWidth*/</span> <span class="dv">5</span><span class="op">,</span> <span class="co">/*edgeType best*/</span> <span class="dv">2</span><span class="op">,</span> <span class="co">/*fitMethod LSQ*/</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*searchLineCount*/</span> <span class="dv">48</span><span class="op">,</span> <span class="co">/*rejectRatio*/</span> <span class="dv">10</span><span class="op">,</span> <span class="co">/*rejectDist*/</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*expectRadius*/</span> <span class="dv">45</span><span class="op">,</span> <span class="co">/*radiusRange*/</span> <span class="dv">30</span><span class="op">,</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">&amp;</span>circleShape<span class="op">,</span> <span class="op">&amp;</span>circlePts<span class="op">,</span> <span class="op">&amp;</span>circleEffect<span class="op">,</span> <span class="op">&amp;</span>circleReject<span class="op">);</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>SciPoint fc<span class="op">;</span> <span class="dt">double</span> fr <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> circleShape<span class="op">.</span>GetCircle<span class="op">(&amp;</span>fc<span class="op">,</span> <span class="op">&amp;</span>fr<span class="op">);</span>   <span class="co">// hole center and radius</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>isEllipse=false</code> means fitting a circle rather than an ellipse; <code>direction=0</code> makes the search lines scan from the hole center outward; <code>polarity=0</code> accepts only black→white transitions (crossing from the dark bore mouth into the bright step); <code>fitMethod=0</code> is least-squares fitting, and <code>rejectRatio=10</code> controls its outlier-rejection rounds; <code>expectRadius=45</code> and <code>radiusRange=30</code> delimit the 15–75 px annular search band (the circular ROI radius in this example is correspondingly set to 80). The four outputs are, in order: the fitted circle shape <code>circleShape</code>, all edge points <code>circlePts</code>, the effective points that participated in the fit <code>circleEffect</code>, and the rejected points <code>circleReject</code> — the two subfigures of <a href="#fig-gp-circle" class="quarto-xref">Figure&nbsp;<span>14.3</span></a> plot each hole’s <code>circlePts</code> and fitted center. <code>GetCircle</code> extracts the hole’s center coordinates and radius from <code>circleShape</code>.</p>
+<p>An honest disclosure: in the current SDK version, when <code>fitMethod=1</code> (Huber), the RMSE output parameter of <code>FitLine</code> returns an invalid value (NaN). The companion project therefore uniformly computes the inlier RMSE itself from the array of point-to-line distances (the last output parameter of <code>FitLine</code>) — that is where the two numbers 2.793/1.456 in <a href="#sec-gp-line-fitting" class="quarto-xref"><span>Section 14.2</span></a> come from. Commercial SDKs occasionally have such blemishes, and the engineering countermeasure is: recompute key metrics from the raw outputs (points, distances) wherever possible, instead of trusting summary values unconditionally. The complete runnable project that generates all of this chapter’s experimental images and numbers lives in <code>code/geometric_primitives/</code>, with its sample image self-contained at <code>code/geometric_primitives/sample/connector.jpg</code>.</p>
+<div class="industry-case">
+<p><span class="case-title">Industry Case: Battery Electrode Edge Locating</span></p>
+<p>The winding process in lithium battery manufacturing requires the anode and cathode electrode sheets to align with the separator to the 0.1 mm level, and the alignment loop depends on real-time locating of the electrode sheet edges. The difficulty is that slit electrode sheets almost universally carry burrs along their edges: with ordinary least-squares fitting, the burr points drag the edge line off, and the winding alignment inherits a systematic bias — robust fitting such as Huber (or piecewise local fits followed by a median) is mandatory to keep it down. The number of search lines is a direct trade-off between accuracy and cycle time: more lines, higher statistical accuracy of the fit, and linearly more time; production lines commonly use 30–100 lines, taking the upper end as the cycle-time margin allows. Another field-proven point is setting <code>edgeType</code> to “best edge”: oil stains on the electrode surface and reflections off the rollers create weaker false edges, so choosing “the first edge” easily locks onto the wrong target, while choosing the one with the best strength is essentially immune.</p>
+</div>
+</section>
+<section id="sec-gp-summary" class="level2" data-number="14.5">
+<h2 data-number="14.5" class="anchored" data-anchor-id="sec-gp-summary"><span class="header-section-number">14.5</span> Summary</h2>
+<ul>
+<li><strong>The standard industrial localization pipeline is “search-line sampling → 1D edge localization → subpixel interpolation → geometric fitting”</strong>: split the 2D problem into <span class="math inline">\(N\)</span> 1D problems; on each search line, projection averaging suppresses noise, the first-derivative extremum pins the edge, and parabolic vertex interpolation yields the subpixel position.</li>
+<li><strong>Subpixel is almost free, but with preconditions</strong>: parabolic interpolation only delivers its accuracy when the profile is clean enough; the projection width (denoising vs.&nbsp;blurring), the edge strength threshold, the polarity, and the edge type must all be configured for the scene rather than left at defaults.</li>
+<li><strong>The root of least squares’ outlier sensitivity is the squared penalty</strong>: large residuals dominate the objective, and a handful of shoulder outliers is enough to drag the whole line off. Huber weighting + IRLS down-weights large-residual points by <span class="math inline">\(\kappa/|r|\)</span>; in this chapter’s experiment the inlier RMSE improved from 2.793 px to 1.456 px.</li>
+<li><strong>Comparing fitting accuracy requires a uniform inlier rule</strong>: all-point RMSE charges the outliers’ own residuals to the fit’s account — a common evaluation trap.</li>
+<li><strong>Robust circle fitting delivers measurement and defect clues in one pass</strong>: this chapter fits the center and radius of each of the two bored holes (a pitch of 442.06 px, directly usable for mating and pick-up), with zero rejected points on the intact rims; the moment a rim develops a defect, the rejection list becomes a position marker of it — the reference geometry serves measurement, the outlier list serves defect judgment.</li>
+</ul>
+<p>For more accurate direct fitting of circles and ellipses, two classics on the algebraic solution are worth consulting: Taubin’s estimation of implicit curves and surfaces <span class="citation" data-cites="Taubin1991">(<a href="references.html#ref-Taubin1991" role="doc-biblioref">Taubin 1991</a>)</span>, and Fitzgibbon et al.’s ellipse-specific direct least-squares method <span class="citation" data-cites="Fitzgibbon1999">(<a href="references.html#ref-Fitzgibbon1999" role="doc-biblioref">Fitzgibbon, Pilu, and Fisher 1999</a>)</span>. For a more systematic treatment of subpixel edge extraction and geometric primitive fitting (including ellipses, circular arcs, and uncertainty analysis), see the book by Steger et al. <span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, and Wiedemann 2018</a>)</span>.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Fischler1981RANSAC" class="csl-entry" role="listitem">
+Fischler, Martin A., and Robert C. Bolles. 1981. <span>“Random Sample Consensus: A Paradigm for Model Fitting.”</span> <em>Communications of the ACM</em> 24 (6).
+</div>
+<div id="ref-Fitzgibbon1999" class="csl-entry" role="listitem">
+Fitzgibbon, Andrew W., Maurizio Pilu, and Robert B. Fisher. 1999. <span>“Direct Least Square Fitting of Ellipses.”</span> <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em> 21 (5): 476–80.
+</div>
+<div id="ref-Huber1964" class="csl-entry" role="listitem">
+Huber, Peter J. 1964. <span>“Robust Estimation of a Location Parameter.”</span> <em>Annals of Mathematical Statistics</em> 35: 73–101.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, and Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2nd ed. Wiley-VCH.
+</div>
+<div id="ref-Taubin1991" class="csl-entry" role="listitem">
+Taubin, Gabriel. 1991. <span>“Estimation of Planar Curves, Surfaces, and Nonplanar Space Curves Defined by Implicit Equations with Applications to Edge and Range Image Segmentation.”</span> <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em> 13 (11): 1115–38.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./edge_detection.html" class="pagination-link" aria-label="Edge Detection">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Edge Detection</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./hough_transform.html" class="pagination-link" aria-label="The Hough Transform">
+        <span class="nav-page-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

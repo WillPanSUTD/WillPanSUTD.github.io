@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>21&nbsp; 几何测量 – 机器视觉算法——原理与工业实践</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./intensity_color_gap_measurement.html" rel="next">
+<link href="./caliper_measurement.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_measurement.html">测量</a></li><li class="breadcrumb-item"><a href="./geometric_measurement.html"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">几何测量</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">机器视觉算法——原理与工业实践</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">符号约定</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">基础</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">数字图像基础</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">数学预备</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">成像与标定</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">相机与镜头</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">光源与照明</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">相机标定</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">图像增强</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">空间滤波</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">阈值分割</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">形态学</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">灰度变换与直方图</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">几何变换</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">频域处理与 FFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">高级增强</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">定位</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">边缘检测</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">几何基元检测</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">霍夫变换</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">模板匹配</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">形状匹配</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">特征匹配与颜色匹配</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI 生成与位置补正</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">测量</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">卡尺测量与亚像素定位</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">几何测量</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">亮度、颜色与间隙测量</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">检测</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob 分析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">轮廓分析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">形状特征</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">缺陷检测专题</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">识别</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">一维码与二维码识别</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">OCR 字符识别</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">经典分类器</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D 成像</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">三维成像概论</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">双目立体视觉</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">结构光三维成像</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">激光三角测量</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">光度立体</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">相位偏折术</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">共聚焦成像与聚焦法测高</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D 处理</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">点云基础</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">点云预处理</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP 配准与 3D 校正</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D 匹配</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D 测量</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D 检测</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#sec-gm-chain" id="toc-sec-gm-chain" class="nav-link active" data-scroll-target="#sec-gm-chain"><span class="header-section-number">21.1</span> 测量链与误差传递</a></li>
+  <li><a href="#sec-gm-basic" id="toc-sec-gm-basic" class="nav-link" data-scroll-target="#sec-gm-basic"><span class="header-section-number">21.2</span> 距离、角度与交点</a></li>
+  <li><a href="#sec-gm-gdt" id="toc-sec-gm-gdt" class="nav-link" data-scroll-target="#sec-gm-gdt"><span class="header-section-number">21.3</span> 平行度、圆度与直线度</a></li>
+  <li><a href="#sec-gm-scivision" id="toc-sec-gm-scivision" class="nav-link" data-scroll-target="#sec-gm-scivision"><span class="header-section-number">21.4</span> SciVision 实现</a></li>
+  <li><a href="#sec-gm-summary" id="toc-sec-gm-summary" class="nav-link" data-scroll-target="#sec-gm-summary"><span class="header-section-number">21.5</span> 小结</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_measurement.html">测量</a></li><li class="breadcrumb-item"><a href="./geometric_measurement.html"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">几何测量</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-geometric_measurement" class="quarto-section-identifier"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">几何测量</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><a href="geometric_primitives.html" class="quarto-xref"><span>章节 14</span></a> 拟合出的直线与圆，在产线眼中只是中间产物。质检报告上签字认可的从来不是”直线方向向量”或”圆的参数”，而是<strong>摄像头孔到顶边 47.8 px、孔的圆度 0.25 px、盖板四角是否方正（直角误差 0.09°）</strong> 这类可与图纸公差直接比对、可判定合格与否的数。从基元到这些数还要再走一级：<strong>几何测量（geometric measurement）</strong>——对拟合得到的点、线、圆套用精确的几何公式求距离、角度与交点，再按几何公差的定义评定平行度、圆度与直线度。完整的测量链是：<strong>图像 → 边缘点 → 几何基元 → 几何量 → 判定</strong>。本章关心两件事：每一级的误差如何传递到最终的数上；以及”带宽”类的几何公差量与”位置”类的尺寸量在统计性质上有何根本不同。</p>
+<p>实验对象（<a href="#fig-gm-scene" class="quarto-xref">图&nbsp;<span>21.1</span></a>）是一块真实的<strong>手机盖板玻璃</strong>（Smart3「几何关系示例方案」样图，2592×1944 单通道灰度）：白色背景上一块竖置矩形盖板，外轮廓是暗色边框（bezel），四条干净的直边在四角以<strong>真实倒圆角</strong>相接；顶部边框内嵌一个圆形摄像头孔与一条听筒条形孔，底部有一块 Home 键贴合区。这是一类极常见的消费电子来料检测件——产线要测的正是孔位、边距、盖板内外尺寸、四角方正度与孔的圆度。本章把 <a href="#sec-gm-basic" class="quarto-xref"><span>小节 21.2</span></a> 的全套几何公式在这块真实零件上跑一遍；与合成场景不同，真实零件没有解析真值，所以下文一律按<strong>实测值</strong>叙述，并以零件自身的几何自洽性（四边应构成近似矩形）作为测量正确性的交叉验证。</p>
+<div id="fig-gm-scene" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gm-scene-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/geometric_measurement/scene.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="图&nbsp;21.1: 真实手机盖板玻璃样图（2592×1944）：白底上的暗色矩形盖板，四条直边经真实倒圆角相接；顶部边框含圆形摄像头孔与听筒条形孔，底部为 Home 键贴合区。本章测量其边、孔、角点之间的几何关系。"><img src="figures/geometric_measurement/scene.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gm-scene-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;21.1: 真实手机盖板玻璃样图（2592×1944）：白底上的暗色矩形盖板，四条直边经真实倒圆角相接；顶部边框含圆形摄像头孔与听筒条形孔，底部为 Home 键贴合区。本章测量其边、孔、角点之间的几何关系。
+</figcaption>
+</figure>
+</div>
+<section id="sec-gm-chain" class="level2 page-columns page-full" data-number="21.1">
+<h2 data-number="21.1" class="anchored" data-anchor-id="sec-gm-chain"><span class="header-section-number">21.1</span> 测量链与误差传递</h2>
+<p>把测量链逐级摊开：<strong>边缘点级</strong>的误差来自图像噪声与边缘模型的失配；<strong>基元级</strong>靠多点拟合做统计平均；<strong>几何量级</strong>是确定性的封闭公式，本身<strong>不产生新误差</strong>——输入基元差多少，输出几何量就差多少；<strong>判定级</strong>把几何量与图纸公差比较，前三级累积的误差预算直接决定判定的置信度（以及该在公差上留多少保护带）。所以分析一套视觉量测系统的精度，功夫全在前两级的<strong>误差传递（error propagation）</strong>上。</p>
+<p>第一级是边缘点。经投影平均与抛物线插值（机制见 <a href="geometric_primitives.html" class="quarto-xref"><span>章节 14</span></a> 与 <a href="caliper_measurement.html" class="quarto-xref"><span>章节 20</span></a>）之后，单个边缘点沿法向的残余噪声记为 <span class="math inline">\(\sigma_e\)</span>。本例可从拟合残差直接量出它的上界：顶边 60 个边缘点对 <code>FitLine</code> 最小二乘直线的全点 RMSE 仅 <strong>0.103 px</strong>（左、右长边分别 0.137、0.211 px）。这条 RMSE 里既有传感器噪声、也含真实直边自身的微小形状起伏，因此 <span class="math inline">\(\sigma_e \lesssim 0.1\)</span> px 是一个保守上界——经过整条流水线，像素级的成像噪声被压到了十分之一像素以内。</p>
+<p>第二级是拟合。<span class="math inline">\(N\)</span> 个独立点拟合一条直线，参数误差按 <span class="math inline">\(1/\sqrt N\)</span> 缩小；而对<strong>方向</strong>而言还有第二个杠杆——点集跨度 <span class="math inline">\(L\)</span>。对均匀散布在跨度 <span class="math inline">\(L\)</span> 上的 <span class="math inline">\(N\)</span> 个点，最小二乘直线的方向标准差约为</p>
+<p><span class="math display">\[
+\sigma_\theta \approx \frac{\sigma_e}{L}\sqrt{\frac{12}{N}},
+\]</span></p>
+<p><span class="math inline">\(L\)</span> 在分母上：同样的点，量得越长，角度越准。代入本例的长边（<span class="math inline">\(\sigma_e\lesssim0.1\)</span> px、<span class="math inline">\(N=90\)</span>、<span class="math inline">\(L\approx1060\)</span> px）得单条线 <span class="math inline">\(\sigma_\theta\approx 0.002^\circ\)</span>，两条独立线的夹角再乘 <span class="math inline">\(\sqrt2\)</span>，<strong>测量噪声底约 <span class="math inline">\(0.003^\circ\)</span></strong>。这个底很关键：实测左右两长边的夹角为 <strong>0.065°</strong>、上下两短边为 <strong>0.237°</strong>——都远高于 <span class="math inline">\(0.003^\circ\)</span> 的噪声底，说明它们是<strong>真实零件</strong>的边并不严格平行（盖板冲切/贴合的真实几何偏差），而非测量噪声的随机抖动。测量把零件的真实形状分辨了出来，这正是误差预算分析的用途：先知道噪声底在哪，才能判断一个读数是真信号还是噪声。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p><strong>像素与物理量</strong>：本章全部读数以<strong>像素（px）</strong>为单位。换算到毫米要再乘相机标定的比例因子（每像素对应的物理尺寸），那是 <a href="camera_calibration.html" class="quarto-xref"><span>章节 5</span></a> 的内容。真实样图未附标定，故本章只在像素域内做几何关系与公差带宽的相对评定，不编造物理真值。</p>
+</div></div><p>基元提取本身沿用 <a href="geometric_primitives.html" class="quarto-xref"><span>章节 14</span></a> 的流水线：顶、底两短边各用 60 条搜索线提点后 <code>FitLine</code> 最小二乘拟合；左、右两长边各用 90 条搜索线，并采用 x/y 交换工作法拟合（原因见 <a href="#sec-gm-scivision" class="quarto-xref"><span>小节 21.4</span></a>）；四条边的 ROI 都避开了四角圆角段，只落在直边主体上。摄像头孔用 <code>EllipseLocator</code> 沿 48 条径向搜索线一步定出，孔缘为白孔（内）暗框（外）的亮→暗跳变。</p>
+</section>
+<section id="sec-gm-basic" class="level2" data-number="21.2">
+<h2 data-number="21.2" class="anchored" data-anchor-id="sec-gm-basic"><span class="header-section-number">21.2</span> 距离、角度与交点</h2>
+<p>基础几何量只需三个公式。点 <span class="math inline">\(\mathbf p\)</span> 到过 <span class="math inline">\(\mathbf a\)</span>、<span class="math inline">\(\mathbf b\)</span> 两点直线 <span class="math inline">\(L\)</span> 的<strong>点线距离</strong>：</p>
+<p><span class="math display">\[
+d(\mathbf p, L)=\frac{\lvert(\mathbf p-\mathbf a)\times(\mathbf b-\mathbf a)\rvert}{\lVert\mathbf b-\mathbf a\rVert};
+\]</span></p>
+<p>方向向量为 <span class="math inline">\(\mathbf u\)</span>、<span class="math inline">\(\mathbf v\)</span> 的两条直线的<strong>夹角</strong>（直线无向，取锐角）：</p>
+<p><span class="math display">\[
+\theta=\arccos\frac{\lvert\mathbf u\cdot\mathbf v\rvert}{\lVert\mathbf u\rVert\,\lVert\mathbf v\rVert}\in[0^\circ,90^\circ];
+\]</span></p>
+<p><strong>交点</strong>则是两条直线参数方程联立的 2×2 线性方程组，系数行列式趋零意味着两线近平行、求交病态——工程接口因此都带一个平行判定门槛。</p>
+<p>其中”角点”值得多说一句。这块盖板的四角是<strong>真实的倒圆角</strong>，图像里根本不存在一个尖锐的角点像素可供直接定位；工业上的标准做法是把角点定义为两条拟合直边的<strong>虚拟交点（virtual intersection）</strong>——它不必真的存在于工件上，倒圆角后的理论角点照样可测。两条边各由几十个边缘点平均而来，交点完整继承它们的精度。本例把这套公式在盖板上用了个遍：上下短边夹角、左右长边夹角、顶边与左边求交得左上角点、摄像头孔心到顶边与右边的边距、角点到孔心的跨件距离，以及由点集到对边距离均值给出的盖板内外宽高（<a href="#fig-gm-overlay" class="quarto-xref">图&nbsp;<span>21.2</span></a>）。全部实测值见 <a href="#tbl-gm-results" class="quarto-xref">表&nbsp;<span>21.1</span></a>。</p>
+<div id="fig-gm-overlay" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gm-overlay-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/geometric_measurement/measure_overlay.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="图&nbsp;21.2: 测量叠加图（对比描绘，亮处画黑、暗处画白）：四条拟合边线沿盖板外轮廓延伸；顶部右侧为摄像头拟合圆（含圆心十字）；左上角的十字是顶边与左边的虚拟交点（角点）；自孔心引出的短线段为孔心→顶边、孔心→右边的垂距，长对角线为角点→孔心的跨件距离。"><img src="figures/geometric_measurement/measure_overlay.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gm-overlay-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;21.2: 测量叠加图（对比描绘，亮处画黑、暗处画白）：四条拟合边线沿盖板外轮廓延伸；顶部右侧为摄像头拟合圆（含圆心十字）；左上角的十字是顶边与左边的虚拟交点（角点）；自孔心引出的短线段为孔心→顶边、孔心→右边的垂距，长对角线为角点→孔心的跨件距离。
+</figcaption>
+</figure>
+</div>
+<div id="tbl-gm-results" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-gm-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;21.1: 真实盖板玻璃的几何测量结果（实测值，零件无解析真值；单位 px / °）
+</figcaption>
+<div aria-describedby="tbl-gm-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">几何量</th>
+<th style="text-align: right;">实测</th>
+<th style="text-align: left;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">上下短边夹角（°）</td>
+<td style="text-align: right;">0.2365</td>
+<td style="text-align: left;">真实非平行（≫0.003° 噪声底）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">左右长边夹角（°）</td>
+<td style="text-align: right;">0.0647</td>
+<td style="text-align: left;">真实非平行</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">顶边⊥左边直角误差（°）</td>
+<td style="text-align: right;">0.0947</td>
+<td style="text-align: left;">90°−89.9053°，左上角方正度</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">左上角点（px）</td>
+<td style="text-align: right;">(957.475, 121.435)</td>
+<td style="text-align: left;">两直边虚拟交点</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">孔心→顶边距离（px）</td>
+<td style="text-align: right;">47.769</td>
+<td style="text-align: left;">摄像头上边距</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">孔心→右边距离（px）</td>
+<td style="text-align: right;">129.780</td>
+<td style="text-align: left;">摄像头右边距</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">角点→孔心距离（px）</td>
+<td style="text-align: right;">765.908</td>
+<td style="text-align: left;">跨件点点距离</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">摄像头孔心（px）</td>
+<td style="text-align: right;">(1721.930, 168.594)</td>
+<td style="text-align: left;">48 点拟合圆心</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">摄像头孔半径（px）</td>
+<td style="text-align: right;">17.051</td>
+<td style="text-align: left;">拟合圆半径</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">盖板宽 左↔︎右（px）</td>
+<td style="text-align: right;">893.020</td>
+<td style="text-align: left;">点集到对边距离均值</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">盖板高 顶↔︎底（px）</td>
+<td style="text-align: right;">1744.362</td>
+<td style="text-align: left;">点集到对边距离均值</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>这张表的可信度来自<strong>几何自洽</strong>：四条边两两测得的夹角——上下 0.24°、左右 0.06°、顶⊥左直角误差 0.09°、顶⊥右 0.16°——都在零点几度内，确认四条独立拟合的边的确围成一个近似矩形；盖板宽 893 px、高 1744 px 也与轮廓暗区跨度一致。距离量则是真实的来料尺寸：摄像头孔上边距 47.8 px、右边距 129.8 px，正是这类盖板装配时摄像头开窗对位要卡的关键间隙。所有读数都停在像素域——换算物理尺寸要乘相机标定比例因子（<a href="camera_calibration.html" class="quarto-xref"><span>章节 5</span></a>）。值得强调的是：几何测量这一级是<strong>精确公式</strong>，表里每一个数的不确定度全部由边缘点噪声 <span class="math inline">\(\sigma_e\)</span> 经拟合传递而来，公式本身一字不差。</p>
+</section>
+<section id="sec-gm-gdt" class="level2 page-columns page-full" data-number="21.3">
+<h2 data-number="21.3" class="anchored" data-anchor-id="sec-gm-gdt"><span class="header-section-number">21.3</span> 平行度、圆度与直线度</h2>
+<p>尺寸之外，图纸上还有另一类要求，写在几何尺寸与公差（GD&amp;T，geometric dimensioning and tolerancing）的框格里。它们的语言不是”测出多少”，而是<strong>公差带（tolerance zone）</strong>：被测要素必须完整落在某个给定宽度的区域内——<strong>平行度（parallelism）</strong>的带是与基准线平行的两条直线之间，<strong>直线度（straightness）</strong>的带是两条平行直线之间，<strong>圆度（roundness）</strong>的带是两个同心圆之间的环带。这套语言的出发点是装配功能：只要被测要素整体落在带内，不管它的具体形状长什么样，与配合件的装配就有保证。视觉测量评定它们的通用配方是同一个：取被测要素的边缘点集，对评定基准计算偏差，<strong>max−min 即为包容点集所需的最小带宽</strong>。真实零件的妙处在于：这些带宽里装的是<strong>货真价实的形状偏差</strong>，无需人为注入缺陷。</p>
+<p><strong>平行度。</strong>以左长边拟合线为基准，右长边 90 个边缘点到基准线的距离 max−min 为 <strong>1.487 px</strong>（跨度约 1060 px）；以顶边为基准，底边的平行度为 <strong>2.790 px</strong>（跨度约 670 px）。这两个数可以拆开来读：上下短边的平行度几乎全部来自那 0.237° 的真实夹角——<span class="math inline">\(670\times\tan(0.237^\circ)\approx2.77\)</span> px，与实测 2.790 px 仅差 0.02 px，余下的才是底边自身的形状起伏；左右长边的 1.487 px 里，夹角贡献 <span class="math inline">\(1060\times\tan(0.0647^\circ)\approx1.20\)</span> px，余下约 0.29 px 来自长边自身的弯曲。<strong>平行度是系统性倾斜与局部形状之和</strong>，且按 max−min 取极值，对基准的拟合误差也照单全收。</p>
+<p><strong>圆度。</strong>孔径与圆度是装配类工件最常见的一对判定项：前者决定配合间隙，后者决定开窗对位与受力是否均匀。本例摄像头孔的 48 个孔缘边缘点对拟合圆（半径 17.05 px）的径向偏差 max−min 为 <strong>0.252 px</strong>——这是一个真实的微小失圆量，并非合成缺陷。<a href="#fig-gm-roundness" class="quarto-xref">图&nbsp;<span>21.3</span></a> 把径向偏差放大 60 倍画在名义圆上，可以看到真实孔缘并非完美圆：偏差以低阶起伏为主（轻微椭化加局部凸凹），下方与左下弧段略微外凸。这种”低阶为主”的失圆形状，正是冲切/激光开孔工艺的典型印记。需要提醒的是评定基准的角色：最小二乘圆对采样噪声最稳健，但其基准会被任何局部凸凹整体拉动，使失圆量的”账”以不均匀的方式摊到各段弧上——若某弧段有明显压伤，邻近完好弧段会相对新基准外鼓、正对面弧段内收（<a href="#sec-gm-scivision" class="quarto-xref"><span>小节 21.4</span></a> 的工业案例详述了由此引发的判定纠纷）。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>ISO 圆度评定有多种基准圆：<strong>最小二乘圆（least-squares circle，LSC）</strong>、<strong>最小区域（minimum zone）圆</strong>、最小外接圆与最大内切圆。最小区域圆按定义给出最小带宽，是 GD&amp;T 语义的本体；最小二乘圆计算最稳健、对采样噪声最不敏感，但带宽系统性偏大且基准会被局部缺陷拉动。报告圆度必须注明用的是哪一种。</p>
+</div></div><p><strong>直线度。</strong>左长边的法向偏差 max−min 为 <strong>0.624 px</strong>，右长边为 <strong>0.872 px</strong>（均为 90 点、跨度约 1060 px）。<a href="#fig-gm-straightness" class="quarto-xref">图&nbsp;<span>21.4</span></a> 的偏差剖面（×40）显示两条边的真实形状：左边（上）较直、只有小幅高频起伏；右边（下）则带一道平缓的弓形弯曲外加一处局部小凸。这两条都是零件的真实边形，没有任何人为台阶——右边更弯也直接解释了上一段里”左右平行度 1.487 px 中有约 0.29 px 来自边形”的那部分。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>带宽量是<strong>极值统计</strong>：采样点越多，噪声的极差期望越大，max−min 也随之缓慢增长——这与中心、角度等平均类量”点数越多越准”恰好相反。所以圆度、直线度的检测协议必须写明采样点数，否则两台设备的数没有可比性。</p>
+</div></div><div class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-gm-roundness" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gm-roundness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/geometric_measurement/roundness_plot.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="图&nbsp;21.3: 圆度极坐标偏差图（径向偏差 ×60 叠加于名义圆）：灰色为名义圆，黑色为真实摄像头孔缘（max−min = 0.252 px，48 点）；失圆以低阶起伏为主，下方与左下弧段略外凸。"><img src="figures/geometric_measurement/roundness_plot.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gm-roundness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;21.3: 圆度极坐标偏差图（径向偏差 ×60 叠加于名义圆）：灰色为名义圆，黑色为真实摄像头孔缘（max−min = 0.252 px，48 点）；失圆以低阶起伏为主，下方与左下弧段略外凸。
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-gm-straightness" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gm-straightness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/geometric_measurement/straightness_profile.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="图&nbsp;21.4: 直线度偏差剖面（法向偏差 ×40，横轴为沿边的位置）：上为左长边（0.624 px、较直），下为右长边（0.872 px、带平缓弓形弯曲与一处局部小凸）。"><img src="figures/geometric_measurement/straightness_profile.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gm-straightness-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;21.4: 直线度偏差剖面（法向偏差 ×40，横轴为沿边的位置）：上为左长边（0.624 px、较直），下为右长边（0.872 px、带平缓弓形弯曲与一处局部小凸）。
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-gm-scivision" class="level2" data-number="21.4">
+<h2 data-number="21.4" class="anchored" data-anchor-id="sec-gm-scivision"><span class="header-section-number">21.4</span> SciVision 实现</h2>
+<p>基础几何量由 <code>SCIMV::SciSvGeometryMeasure</code> 提供，每个 API 对应 <a href="#sec-gm-basic" class="quarto-xref"><span>小节 21.2</span></a> 的一个公式：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvGeometryMeasure gm<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> angleDeg <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> d <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> gm<span class="op">.</span>IncludedAngle<span class="op">(</span>t1<span class="op">,</span> t2<span class="op">,</span> l1<span class="op">,</span> l2<span class="op">,</span> <span class="co">/*mode 直线夹角*/</span><span class="dv">1</span><span class="op">,</span> <span class="op">&amp;</span>angleDeg<span class="op">);</span>  <span class="co">// 顶⊥左方正度</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> gm<span class="op">.</span>PointToLineDistance<span class="op">(</span>holeCenter<span class="op">,</span> t1<span class="op">,</span> t2<span class="op">,</span> <span class="op">&amp;</span>d<span class="op">);</span>                  <span class="co">// 孔心-&gt;顶边</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>SciPoint corner<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> gm<span class="op">.</span>LinesIntersection<span class="op">(</span>t1<span class="op">,</span> t2<span class="op">,</span> <span class="co">/*lineType 直线*/</span><span class="dv">0</span><span class="op">,</span> l1<span class="op">,</span> l2<span class="op">,</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                          <span class="co">/*parallelThresh*/</span><span class="dv">7</span><span class="op">,</span> <span class="op">&amp;</span>corner<span class="op">);</span>              <span class="co">// 倒圆角处的虚拟角点</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> dMin <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> dMax <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> SciPoint pNear<span class="op">,</span> pFar<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> gm<span class="op">.</span>PointsToLineDistance<span class="op">(</span>rightPts<span class="op">,</span> l1<span class="op">,</span> l2<span class="op">,</span> <span class="op">&amp;</span>dMin<span class="op">,</span> <span class="op">&amp;</span>dMax<span class="op">,</span> <span class="op">&amp;</span>pNear<span class="op">,</span> <span class="op">&amp;</span>pFar<span class="op">);</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> width <span class="op">=</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="op">(</span>dMin <span class="op">+</span> dMax<span class="op">);</span>    <span class="co">// 盖板宽（均值）</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> parallelism <span class="op">=</span> dMax <span class="op">-</span> dMin<span class="op">;</span>      <span class="co">// 左|右平行度带宽</span></span></code><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>直线一律用两个端点（<code>SciPoint</code> 对）表示。<code>IncludedAngle</code> 的 <code>mode=1</code> 取直线间夹角，结果落在 [0°, 90°]——顶边与左边近乎垂直时返回约 89.9°，方正度即 90° 与之之差。<code>LinesIntersection</code> 的 <code>parallelThresh=7</code> 是平行判定门槛：两线方向过于接近时求交病态，接口直接拒绝输出交点——本例顶边与左边近乎垂直，远离该门槛。<code>PointsToLineDistance</code> 一次返回点集到直线距离的最小值、最大值及对应点：均值即对边的名义距离（盖板宽/高），max−min 即平行度带宽。圆孔由 <code>SciSvEllipseLocator::EllipseLocator</code> 一步定位，四个输出点数组（拟合点/有效点/剔除点）都必须传实体，否则 rc=120001015。</p>
+<p>两条工程提醒。其一，<strong><code>SciSvGDTTools</code> 的 <code>Roundness</code>/<code>Straightness</code> 返回的是归一化 [0,1] 分数</strong>（越接近 1 越”好”），不是 GD&amp;T 公差带宽：本章实测摄像头孔的圆度分数为 <strong>0.9964</strong>；而左、右两长边的直线度分数<strong>都是 1.000000</strong>——尽管它们的真实带宽明明是 0.624 px 与 0.872 px、相差近 40%，归一化分数却把二者抹成了同一个饱和值，根本无从据此对着图纸上”直线度 ≤0.02 mm”设阈值。分数与带宽之间也没有公开换算公式，只能作同型工件的相对趋势参考；若一定要用它做监控，须先拿一组已知带宽的标准样件标定出”分数—带宽”对应曲线。<strong>判公差的带宽值则一律从点数组自行计算 max−min</strong>（即本章正文的全部数字）。其二，<code>FitLine</code> 的输出距离数组 <code>dstPtPositionArr</code> <strong>不是各点到所返回直线的带符号垂距</strong>，语义不透明，直线度必须自己写”点到直线带符号距离”（<code>devToLine</code>）再取极差。另有一个老坑顺带说明：<code>FitLine</code> 对严格竖直的点集会返回退化结果，左、右两条竖直长边因此先把所有点的 x/y 交换后拟合，再把所得直线端点换回。生成本章全部图像与数字的完整工程位于 <code>code/geometric_measurement/</code>。</p>
+<div class="industry-case">
+<p><span class="case-title">工业案例：圆度评定的基准之争</span></p>
+<p>某轴承厂的滚道圆度判定曾陷入僵局：客户入厂检验用圆度仪密集采样数千点、按最小区域法评定；产线视觉系统用几十个边缘点、按最小二乘圆评定。同一工件两个数——产线值系统性偏小约 15%（稀疏采样漏掉峰谷使测值偏小，其影响盖过了最小二乘基准本身偏大的反向效应），产线判合格的件被客户判退，双方各执一词数月。最终的解决方案不在算法而在协议：检测协议中明确写入评定方法（最小区域 vs 最小二乘）与采样点数，并为产线值设定经标定的折算余量。教训只有一句：圆度、直线度这类带宽量没有脱离评定方法的”真值”，<strong>报告几何量必须连同评定方法与采样条件一起报告</strong>。</p>
+</div>
+</section>
+<section id="sec-gm-summary" class="level2" data-number="21.5">
+<h2 data-number="21.5" class="anchored" data-anchor-id="sec-gm-summary"><span class="header-section-number">21.5</span> 小结</h2>
+<ul>
+<li><strong>测量链是”图像 → 边缘点 → 基元 → 几何量 → 判定”</strong>：几何测量一级是精确公式、不产生新误差，最终精度全部由边缘点噪声 <span class="math inline">\(\sigma_e\)</span> 经拟合（<span class="math inline">\(1/\sqrt N\)</span>）传递而来；本章在真实盖板上测得边缘拟合 RMSE ≲0.1~0.28 px。</li>
+<li><strong>先定噪声底，再判真信号</strong>：长边方向误差 <span class="math inline">\(\sigma_\theta\approx(\sigma_e/L)\sqrt{12/N}\approx0.003^\circ\)</span>；实测左右边非平行 0.065°、上下边 0.24° 都远在噪声底之上，是真实零件的几何偏差，不是抖动。</li>
+<li><strong>虚拟交点测倒圆角的角点</strong>：盖板四角是真实倒圆角，角点由顶边与左边的虚拟交点 (957.5, 121.4) 给出，并继承两边各几十点平均的精度。</li>
+<li><strong>带宽量（平行度/圆度/直线度）是极值统计且形状真实</strong>：左右平行度 1.487 px 可拆为夹角贡献 1.20 px + 边形 0.29 px；摄像头孔真实圆度 0.252 px、左右长边真实直线度 0.624/0.872 px——全部来自零件本身，无需合成缺陷。</li>
+<li><strong>关键量从原始点数组自行复算</strong>：SDK 的 GD&amp;T 工具返回归一化分数（两条带宽差 40% 的边都得 1.000000），<code>FitLine</code> 的距离数组也非真实垂距——公差判定的数必须自己从点算起。</li>
+</ul>
+<p>关于几何量的不确定度分析与亚像素测量的系统论述，可进一步阅读 Steger 等人的著作 <span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, 和 Wiedemann 2018</a>)</span>。本章用到的平行度、圆度、直线度等几何公差，其符号语言与公差带定义由几何尺寸与公差（GD&amp;T）标准规定：国际体系见 ISO 1101，给出形状、方向、位置与跳动公差的标注与解释规则 <span class="citation" data-cites="ISO1101_2017">(<a href="references.html#ref-ISO1101_2017" role="doc-biblioref">International Organization for Standardization 2017</a>)</span>；北美体系见 ASME Y14.5，是同一套语义在工程图上的另一权威表述 <span class="citation" data-cites="ASME_Y14_5_2018">(<a href="references.html#ref-ASME_Y14_5_2018" role="doc-biblioref">American Society of Mechanical Engineers 2018</a>)</span>。<a href="#sec-gm-gdt" class="quarto-xref"><span>小节 21.3</span></a> 与工业案例反复触及的”评定基准之争”——最小二乘圆与最小区域圆给出不同带宽——在形状误差拟合文献中有专门讨论，Moroni 与 Petrò 比较了各类最小区域拟合算法的原理与代价，可作为把本章 max−min 带宽接到规范化评定方法的入口 <span class="citation" data-cites="MoroniPetro2008">(<a href="references.html#ref-MoroniPetro2008" role="doc-biblioref">Moroni 和 Petrò 2008</a>)</span>。</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-ASME_Y14_5_2018" class="csl-entry" role="listitem">
+American Society of Mechanical Engineers. 2018. <em>ASME Y14.5-2018 Dimensioning and Tolerancing</em>. New York, NY: American Society of Mechanical Engineers (ASME).
+</div>
+<div id="ref-ISO1101_2017" class="csl-entry" role="listitem">
+International Organization for Standardization. 2017. <em>ISO 1101:2017 Geometrical Product Specifications (GPS) — Geometrical Tolerancing — Tolerances of Form, Orientation, Location and Run-out</em>. Geneva, Switzerland: International Organization for Standardization.
+</div>
+<div id="ref-MoroniPetro2008" class="csl-entry" role="listitem">
+Moroni, Giovanni, 和 Stefano Petrò. 2008. <span>《Geometric Tolerance Evaluation: A Discussion on Minimum Zone Fitting Algorithms》</span>. <em>Precision Engineering</em> 32 (3): 232–37.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, 和 Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2 本. Wiley-VCH.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./caliper_measurement.html" class="pagination-link" aria-label="卡尺测量与亚像素定位">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">卡尺测量与亚像素定位</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./intensity_color_gap_measurement.html" class="pagination-link" aria-label="亮度、颜色与间隙测量">
+        <span class="nav-page-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">亮度、颜色与间隙测量</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>13&nbsp; Edge Detection – Machine Vision Algorithms: Principles and Industrial Practice</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./geometric_primitives.html" rel="next">
+<link href="./part_locating.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_locating.html">Locating</a></li><li class="breadcrumb-item"><a href="./edge_detection.html"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Edge Detection</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Machine Vision Algorithms: Principles and Industrial Practice</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Digital Image Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Preliminaries</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Imaging and Calibration</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Cameras and Lenses</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Illumination</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Camera Calibration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Image Enhancement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Spatial Filtering</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Thresholding</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Morphology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Gray-Level Transforms and Histograms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Geometric Transforms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Frequency Domain Processing and the FFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Advanced Enhancement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Locating</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Edge Detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Template Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Shape Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Feature and Color Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI Generation and Fixturing</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Caliper Measurement and Subpixel Localization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Geometric Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Intensity, Color, and Gap Measurement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inspection</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Contour Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Shape Features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Defect Detection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recognition</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1D and 2D Barcode Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Optical Character Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Classical Classifiers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Imaging</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Overview of 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Stereo Vision</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Structured Light 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Laser Triangulation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Photometric Stereo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Phase Measuring Deflectometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Confocal Imaging and Focus Variation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Processing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Point Cloud Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Point Cloud Preprocessing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP Registration and 3D Rectification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D Inspection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-ed-gradient" id="toc-sec-ed-gradient" class="nav-link active" data-scroll-target="#sec-ed-gradient"><span class="header-section-number">13.1</span> The Gradient and First-Order Operators</a></li>
+  <li><a href="#sec-ed-laplace" id="toc-sec-ed-laplace" class="nav-link" data-scroll-target="#sec-ed-laplace"><span class="header-section-number">13.2</span> A Second-Order Operator: Laplace</a></li>
+  <li><a href="#sec-ed-canny" id="toc-sec-ed-canny" class="nav-link" data-scroll-target="#sec-ed-canny"><span class="header-section-number">13.3</span> The Canny Pipeline</a></li>
+  <li><a href="#sec-ed-thresholds" id="toc-sec-ed-thresholds" class="nav-link" data-scroll-target="#sec-ed-thresholds"><span class="header-section-number">13.4</span> Choosing the Thresholds in Practice</a></li>
+  <li><a href="#sec-ed-subpixel" id="toc-sec-ed-subpixel" class="nav-link" data-scroll-target="#sec-ed-subpixel"><span class="header-section-number">13.5</span> Subpixel and Outlook</a></li>
+  <li><a href="#sec-ed-scivision" id="toc-sec-ed-scivision" class="nav-link" data-scroll-target="#sec-ed-scivision"><span class="header-section-number">13.6</span> SciVision Implementation</a></li>
+  <li><a href="#sec-ed-summary" id="toc-sec-ed-summary" class="nav-link" data-scroll-target="#sec-ed-summary"><span class="header-section-number">13.7</span> Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_locating.html">Locating</a></li><li class="breadcrumb-item"><a href="./edge_detection.html"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Edge Detection</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-edge_detection" class="quarto-section-identifier"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Edge Detection</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>The most information-dense places in an industrial image are where the gray value becomes <strong>discontinuous</strong>: the boundary between workpiece and background, the contour of a hole, the strokes of a character, the two sides of a scratch — nearly all the geometric information needed for locating and measurement is carried by these <strong>edges</strong>. The gray value of a flat region drifts with the illumination, but the position of an edge stays comparatively stable — which is why visual measurement places its trust in edges. <a href="geometric_primitives.html" class="quarto-xref"><span>Chapter 14</span></a> solved the one-dimensional problem of “we roughly know where the edge is; localize it precisely along a search line”; this chapter answers the more fundamental question — when we do not know in advance where the edges are, how do we find all of them in the entire image and obtain a two-dimensional <strong>edge map</strong>? The edge map is the standard input to downstream algorithms such as contour analysis, shape matching, and the Hough transform of <a href="hough_transform.html" class="quarto-xref"><span>Chapter 15</span></a>.</p>
+<p>The experiments of this chapter run on a single 480×360 synthetic scene (<a href="#fig-ed-scene" class="quarto-xref">Figure&nbsp;<span>13.1</span></a>): on a background of gray value 80, the upper part holds a pair of high-contrast shapes — a rectangle and a circle at gray value 180 (contrast 100); the lower part holds a pair of low-contrast shapes at gray value 100 (contrast only 20); squeezed between the two columns of shapes is a vertical texture band, a two-dimensional sinusoidal texture of amplitude ±5 and period 12 px (simulating surface textures such as brushed metal or woven fabric); the whole image is overlaid with Gaussian noise of standard deviation <span class="math inline">\(\sigma=8\)</span> (random seed fixed for reproducibility). Strong edges, weak edges, texture, and noise compete in the same arena — a good edge detector should report the first two and reject the last two.</p>
+<div id="fig-ed-scene" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ed-scene-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/scene.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;13.1: The synthetic test scene (480×360): background gray value 80; on top, a high-contrast rectangle and circle (gray value 180, contrast 100); below, a low-contrast rectangle and circle (gray value 100, contrast 20); the vertical band in the middle is a sinusoidal texture of amplitude ±5 and period 12 px; the whole image is overlaid with Gaussian noise of \sigma=8."><img src="figures/edge_detection/scene.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ed-scene-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.1: The synthetic test scene (480×360): background gray value 80; on top, a high-contrast rectangle and circle (gray value 180, contrast 100); below, a low-contrast rectangle and circle (gray value 100, contrast 20); the vertical band in the middle is a sinusoidal texture of amplitude ±5 and period 12 px; the whole image is overlaid with Gaussian noise of <span class="math inline">\(\sigma=8\)</span>.
+</figcaption>
+</figure>
+</div>
+<section id="sec-ed-gradient" class="level2 page-columns page-full" data-number="13.1">
+<h2 data-number="13.1" class="anchored" data-anchor-id="sec-ed-gradient"><span class="header-section-number">13.1</span> The Gradient and First-Order Operators</h2>
+<p>An edge is a rapid change of gray value along some direction, and “rate of change” is precisely the derivative. For a two-dimensional image, combining the horizontal and vertical partial derivatives gives the <strong>gradient</strong> <span class="math inline">\(\nabla f = (g_x, g_y)\)</span>: its direction points where the gray value rises fastest, and its magnitude measures how violent the change is. A discrete image has no true derivatives; we can only approximate them by differences of neighboring pixels. The most widely used approximation is the <strong>Sobel operator</strong> — a pair of <span class="math inline">\(3\times 3\)</span> convolution kernels:</p>
+<p><span class="math display">\[
+h_x = \begin{bmatrix} -1 &amp; 0 &amp; 1\\ -2 &amp; 0 &amp; 2\\ -1 &amp; 0 &amp; 1 \end{bmatrix},
+\qquad
+h_y = \begin{bmatrix} -1 &amp; -2 &amp; -1\\ 0 &amp; 0 &amp; 0\\ 1 &amp; 2 &amp; 1 \end{bmatrix}.
+\]</span></p>
+<p><span class="math inline">\(h_x\)</span> takes a central difference in the horizontal direction and a <span class="math inline">\([1\ 2\ 1]\)</span>-weighted smoothing in the vertical direction; <span class="math inline">\(h_y\)</span> does exactly the opposite. Differencing and smoothing run perpendicular to each other — differentiation itself amplifies noise, so averaging first in the direction perpendicular to the derivative is a way of using the tools of <a href="spatial_filtering.html" class="quarto-xref"><span>Chapter 6</span></a> to “insure” the difference.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>The Sobel kernels are separable: <span class="math inline">\(h_x = [1\ 2\ 1]^{\mathsf T} \otimes [-1\ 0\ 1]\)</span>, i.e.&nbsp;“vertical smoothing × horizontal differencing.” Replace the smoothing part with <span class="math inline">\([1\ 1\ 1]\)</span> and you get the Prewitt operator; replace it with <span class="math inline">\([3\ 10\ 3]\)</span> and you get the Scharr operator with better rotational symmetry — the skeleton is always “smooth in one direction, difference in the other.”</p>
+</div></div><p>The two components yield the gradient’s <strong>magnitude</strong> and <strong>direction</strong>:</p>
+<p><span class="math display">\[
+A = \sqrt{g_x^2 + g_y^2}, \qquad \theta = \operatorname{atan2}(g_y,\, g_x).
+\]</span></p>
+<p>The magnitude answers “how edge-like is this,” the direction answers “which way does the edge run” (the gradient direction is perpendicular to the edge’s course), and the Canny pipeline will need both.</p>
+<p>First, observe the <strong>directional selectivity</strong> of the components. <a href="#fig-ed-sobel-xy" class="quarto-xref">Figure&nbsp;<span>13.2</span></a> shows the two signed components of a <span class="math inline">\(3\times 3\)</span> Sobel applied to the test scene (displayed with an offset of 128 and a scale of 1/4: brighter than mid-gray is positive, darker is negative). <span class="math inline">\(g_x\)</span> lights up only the vertical edges: the rectangle’s left edge is positive (crossing from 80 into 180, gray value rising) and its right edge negative; the circle’s ring is bright on the left and dark on the right — the same circle, opposite gradient directions on its two sides; the rectangle’s top and bottom edges vanish completely in <span class="math inline">\(g_x\)</span>. The behavior of <span class="math inline">\(g_y\)</span> is exactly the transpose: it sees only horizontal edges, positive on top, negative on the bottom. The responses of the low-contrast shapes are only 1/5 of the strong ones and look dim in both images — the edge response is proportional to contrast, and this plain fact is the root of every thresholding problem to come.</p>
+<div id="fig-ed-sobel-xy" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ed-sobel-xy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ed-sobel-xy" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-ed-sobel-xy-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ed-sobel-xy-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/sobel_x.png" class="lightbox" data-gallery="fig-ed-sobel-xy" title="Figure&nbsp;13.2&nbsp;(a): Horizontal component g_x"><img src="figures/edge_detection/sobel_x.png" class="img-fluid figure-img" data-ref-parent="fig-ed-sobel-xy"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ed-sobel-xy-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) Horizontal component <span class="math inline">\(g_x\)</span>
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ed-sobel-xy" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-ed-sobel-xy-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ed-sobel-xy-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/sobel_y.png" class="lightbox" data-gallery="fig-ed-sobel-xy" title="Figure&nbsp;13.2&nbsp;(b): Vertical component g_y"><img src="figures/edge_detection/sobel_y.png" class="img-fluid figure-img" data-ref-parent="fig-ed-sobel-xy"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ed-sobel-xy-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) Vertical component <span class="math inline">\(g_y\)</span>
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ed-sobel-xy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.2: The signed components of the <span class="math inline">\(3\times 3\)</span> Sobel (displayed with offset 128, scale 1/4). (a) <span class="math inline">\(g_x\)</span> responds only to vertical edges; the rectangle’s left edge is positive (bright), its right edge negative (dark), and the circle’s ring has opposite signs on its left and right sides; (b) <span class="math inline">\(g_y\)</span> responds only to horizontal edges. The responses of the low-contrast shapes are merely 1/5 of the strong ones.
+</figcaption>
+</figure>
+</div>
+<p>Combining the two components into the magnitude, the directional information disappears and all edges brighten alike, giving <a href="#fig-ed-sobel-amp" class="quarto-xref">Figure&nbsp;<span>13.3</span></a> — this is the direct output of the SDK’s <code>SobelAmplitude</code>. The strong contours are crisp and bright, the weak contours faintly discernible, and the background is carpeted with the granular response of noise: differentiation amplified the noise, and with a first-order operator alone we obtain only a grayscale map of “edge likelihood” — still several crucial steps away from a clean edge map.</p>
+<div id="fig-ed-sobel-amp" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ed-sobel-amp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/sobel_amp.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;13.3: Sobel gradient magnitude (SDK SobelAmplitude, SUM_SQRT combination). Strong contours bright, weak contours dim, and the background carpeted with the granular response caused by noise."><img src="figures/edge_detection/sobel_amp.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ed-sobel-amp-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.3: Sobel gradient magnitude (SDK <code>SobelAmplitude</code>, SUM_SQRT combination). Strong contours bright, weak contours dim, and the background carpeted with the granular response caused by noise.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-ed-laplace" class="level2 page-columns page-full" data-number="13.2">
+<h2 data-number="13.2" class="anchored" data-anchor-id="sec-ed-laplace"><span class="header-section-number">13.2</span> A Second-Order Operator: Laplace</h2>
+<p>The other line of attack is the second derivative. The <strong>Laplacian</strong> is the sum of the second derivatives in the two directions, <span class="math inline">\(\nabla^2 f = \partial^2 f/\partial x^2 + \partial^2 f/\partial y^2\)</span>, with the 8-neighborhood discrete kernel</p>
+<p><span class="math display">\[
+h = \begin{bmatrix} 1 &amp; 1 &amp; 1\\ 1 &amp; -8 &amp; 1\\ 1 &amp; 1 &amp; 1 \end{bmatrix}.
+\]</span></p>
+<p>Its selling point is localization by <strong>zero crossing</strong>: across a step edge, the first derivative is a single peak, while the second derivative has one extremum on each side of the peak and passes through zero exactly at the edge position — detecting the zero crossings should, in theory, yield naturally closed, single-pixel-wide edge contours with no direction to choose.</p>
+<p>The measurements, however, pour cold water on this idea. <a href="#fig-ed-laplace" class="quarto-xref">Figure&nbsp;<span>13.4</span></a> shows the response of the SDK’s <code>Laplace</code> (<span class="math inline">\(3\times 3\)</span>, 8-neighborhood kernel, absolute-value output) on the test scene: the entire image is drowned in noise grain, and the strong contours survive only as faintly visible <strong>double lines</strong> — the second derivative has one extremum on each side of the edge, which under absolute-value display becomes two parallel streaks of response flanking the true zero-crossing position in between. The weak contours sink into the noise entirely. Two causes compound: first, second-order differencing amplifies high-frequency noise far more than first-order differencing does, and once the <span class="math inline">\(\sigma=8\)</span> noise has been churned through it, the useful signal is gone; second, the Laplacian provides no directional information, so downstream processing cannot refine along the edge normal the way the gradient allows. This is why <strong>first-order operators dominate absolutely</strong> in industrial practice — the theoretical elegance of the second-order operator is no match for its fragility to noise.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>The classic remedy that makes second-order operators practical is LoG (Laplacian of Gaussian): smooth with a Gaussian first, then take the Laplacian, which is equivalent to a single convolution with a “Mexican hat”-shaped kernel; its difference approximation, DoG (the difference of two Gaussians with different <span class="math inline">\(\sigma\)</span>), remains alive and well in blob detection and SIFT features.</p>
+</div></div><div id="fig-ed-laplace" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ed-laplace-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/laplace.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;13.4: Laplace response (3\times 3, 8-neighborhood kernel, absolute-value output). The noise is fiercely amplified by the second-order differencing; the strong contours retain only a faint double-line response, and the weak contours are completely submerged."><img src="figures/edge_detection/laplace.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ed-laplace-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.4: Laplace response (<span class="math inline">\(3\times 3\)</span>, 8-neighborhood kernel, absolute-value output). The noise is fiercely amplified by the second-order differencing; the strong contours retain only a faint double-line response, and the weak contours are completely submerged.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-ed-canny" class="level2" data-number="13.3">
+<h2 data-number="13.3" class="anchored" data-anchor-id="sec-ed-canny"><span class="header-section-number">13.3</span> The Canny Pipeline</h2>
+<p>The acknowledged standard answer for turning the output of a first-order operator into a clean, single-pixel-wide, connected edge map is the Canny algorithm <span class="citation" data-cites="Canny1986">(<a href="references.html#ref-Canny1986" role="doc-biblioref">Canny 1986</a>)</span>. Canny formulated “good edge detection” as three criteria — good detection (no misses, no false alarms), good localization, and single response (one edge reported once) — and derived a near-optimal realization: a four-step pipeline.</p>
+<p><strong>Step 1: Gaussian smoothing.</strong> Differentiation amplifies noise, so first press the noise down with a Gaussian filter (here <span class="math inline">\(3\times 3\)</span>, <span class="math inline">\(\sigma=0.8\)</span>). <span class="math inline">\(\sigma\)</span> is the knob of detection scale: larger means more noise-resistant, but neighboring edges get blurred together and localization grows less precise.</p>
+<p><strong>Step 2: Gradient computation.</strong> Apply Sobel to the smoothed image to obtain the magnitude <span class="math inline">\(A\)</span> and direction <span class="math inline">\(\theta\)</span> (<a href="#fig-ed-canny-steps-a" class="quarto-xref">Figure&nbsp;<span>13.5 (a)</span></a>). Note that the strong contours are now bright bands several pixels wide — smoothing has spread the step out, and the gradient peak has widened with it.</p>
+<p><strong>Step 3: Non-maximum suppression (NMS).</strong> The gradient magnitude forms a ridge in the direction perpendicular to the edge, and the true edge should lie only on the ridge line. NMS works as follows: quantize each pixel’s gradient direction into 4 sectors (horizontal, 45°, vertical, 135°), compare the magnitude with one neighbor on each side along the gradient direction, and keep the center only if it is no smaller than one side <strong>and strictly greater than</strong> the other; otherwise set it to zero. The asymmetry of the comparison (<span class="math inline">\(\ge\)</span> on one side, <span class="math inline">\(&gt;\)</span> on the other) is deliberate: when a flat plateau appears at the ridge top, only one side is kept, guaranteeing that the thinned result is single-pixel. In <a href="#fig-ed-canny-steps-b" class="quarto-xref">Figure&nbsp;<span>13.5 (b)</span></a>, the bands several pixels wide have been pared down to a thin ridge — but the local maxima of the noise have survived just the same; NMS handles “thin,” not “true.”</p>
+<p><strong>Step 4: Hysteresis thresholding with two thresholds.</strong> Separating edges from noise with a single threshold is doomed to sacrifice one side or the other, so Canny uses two: pixels with magnitude <span class="math inline">\(\ge\)</span> the high threshold are <strong>seeds</strong> — strong enough to be trusted as edges; pixels with magnitude between the low and high thresholds are <strong>candidates</strong> — insufficient evidence on their own, but if 8-connected to a seed, they are accepted as the continuation of an edge. The implementation performs region growing from all seeds, expanding into every connected pixel whose magnitude is <span class="math inline">\(\ge\)</span> the low threshold. The intuition is clear: a weak response hugging a strong edge is most likely the part of the same edge where the contrast fades; an isolated weak response is most likely noise. The strong vouch and the weak follow — only this way can a contour whose contrast waxes and wanes be preserved complete and connected.</p>
+<div id="fig-ed-canny-steps" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ed-canny-steps-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ed-canny-steps" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-ed-canny-steps-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ed-canny-steps-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/grad_mag.png" class="lightbox" data-gallery="fig-ed-canny-steps" title="Figure&nbsp;13.5&nbsp;(a): Gradient magnitude"><img src="figures/edge_detection/grad_mag.png" class="img-fluid figure-img" data-ref-parent="fig-ed-canny-steps"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ed-canny-steps-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) Gradient magnitude
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ed-canny-steps" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-ed-canny-steps-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ed-canny-steps-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/nms.png" class="lightbox" data-gallery="fig-ed-canny-steps" title="Figure&nbsp;13.5&nbsp;(b): After non-maximum suppression"><img src="figures/edge_detection/nms.png" class="img-fluid figure-img" data-ref-parent="fig-ed-canny-steps"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ed-canny-steps-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) After non-maximum suppression
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ed-canny-steps" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-ed-canny-steps-c" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ed-canny-steps-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/canny.png" class="lightbox" data-gallery="fig-ed-canny-steps" title="Figure&nbsp;13.5&nbsp;(c): After hysteresis thresholding (20, 60)"><img src="figures/edge_detection/canny.png" class="img-fluid figure-img" data-ref-parent="fig-ed-canny-steps"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ed-canny-steps-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) After hysteresis thresholding (20, 60)
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ed-canny-steps-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.5: Step-by-step results of the Canny pipeline. (a) Gradient magnitude after Gaussian smoothing; the strong contours are bright bands several pixels wide; (b) NMS pares the bands down to single-pixel thin ridges, with the noise maxima still present; (c) hysteresis thresholding (low 20, high 60) outputs a clean, connected, single-pixel edge map in which the contours of all four shapes are preserved.
+</figcaption>
+</figure>
+</div>
+<p>The final result, <a href="#fig-ed-canny-steps-c" class="quarto-xref">Figure&nbsp;<span>13.5 (c)</span></a>, contains <strong>2163</strong> edge pixels: the contours of all four shapes are <strong>fully preserved</strong>, single-pixel wide, and almost completely connected, with even the low-contrast rectangle and circle closing up intact. As a control, skipping NMS and hysteresis linking and binarizing the gradient magnitude directly with a single threshold (the same value, 60) yields <a href="#fig-ed-sobel-thresh" class="quarto-xref">Figure&nbsp;<span>13.6</span></a>: <strong>4064</strong> edge pixels, nearly twice as many. Every extra pixel is waste — the strong contours become coarse bands 2–4 px thick (the gradient peak has width, and a single threshold scoops in the entire peak top), while the weak contours shatter into broken dashed lines (the magnitude oscillates about the threshold; what crosses stays, what doesn’t breaks). An edge map of uneven thickness and intermittent gaps is terrible input for downstream contour tracing and geometric fitting; NMS cures the “coarse,” hysteresis linking cures the “broken” — and that is precisely the respective value of Canny’s last two steps.</p>
+<div id="fig-ed-sobel-thresh" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ed-sobel-thresh-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/sobel_thresh.png" class="lightbox" data-gallery="quarto-lightbox-gallery-9" title="Figure&nbsp;13.6: Control: binarizing the gradient magnitude directly with a single threshold (threshold 60), 4064 px. Strong contours grow as thick as 2–4 px, and weak contours shatter into dashed lines — compare with the 2163 px single-pixel connected result of Figure&nbsp;fig-ed-canny-steps-c."><img src="figures/edge_detection/sobel_thresh.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ed-sobel-thresh-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.6: Control: binarizing the gradient magnitude directly with a single threshold (threshold 60), 4064 px. Strong contours grow as thick as 2–4 px, and weak contours shatter into dashed lines — compare with the 2163 px single-pixel connected result of <a href="#fig-ed-canny-steps-c" class="quarto-xref">Figure&nbsp;<span>13.5 (c)</span></a>.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-ed-thresholds" class="level2 page-columns page-full" data-number="13.4">
+<h2 data-number="13.4" class="anchored" data-anchor-id="sec-ed-thresholds"><span class="header-section-number">13.4</span> Choosing the Thresholds in Practice</h2>
+<p>Canny turned one threshold into two, and the responsibility of choosing them doubled as well. Both directions of failure are worth seeing with your own eyes (<a href="#fig-ed-thresh" class="quarto-xref">Figure&nbsp;<span>13.7</span></a>).</p>
+<p>Lowering the threshold pair to (8, 24) yields <a href="#fig-ed-thresh-a" class="quarto-xref">Figure&nbsp;<span>13.7 (a)</span></a>: <strong>64077</strong> edge pixels — 30 times the correct result. The gradient responses of the noise cross the low threshold en masse, then chain to one another through hysteresis linking, turning the whole image into a dense web; the sinusoidal grid of the central texture band also materializes in full. There is a design detail here worth spelling out: this scene’s texture has amplitude ±5 and period 12 px, and its gradient-magnitude peak measures about 19 — pressed just below the default low threshold of 20. That is why the texture region is spotless in the (20, 60) result, while under (8, 24) it floods out together with the noise. On real production lines, brushed, sandblasted, and woven surfaces all play the role of this texture band: whether they count as “edges” depends entirely on where you draw your threshold.</p>
+<p>In the opposite direction, raising the threshold pair to (40, 120) yields <a href="#fig-ed-thresh-b" class="quarto-xref">Figure&nbsp;<span>13.7 (b)</span></a>: only <strong>918</strong> edge pixels remain, and the image is immaculately clean — but the low-contrast rectangle and circle have <strong>vanished entirely</strong>. After smoothing, the gradient magnitude of a contrast-20 edge falls short of 120; not a single seed can be produced, and hysteresis linking cannot make bricks without straw. In detection tasks, a miss is usually deadlier than a false alarm: false alarms can still be salvaged by downstream screening, but a missed target never comes back.</p>
+<div id="fig-ed-thresh" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ed-thresh-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ed-thresh" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-ed-thresh-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ed-thresh-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/canny_low.png" class="lightbox" data-gallery="fig-ed-thresh" title="Figure&nbsp;13.7&nbsp;(a): Thresholds too low (8, 24): 64077 px"><img src="figures/edge_detection/canny_low.png" class="img-fluid figure-img" data-ref-parent="fig-ed-thresh"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ed-thresh-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) Thresholds too low (8, 24): 64077 px
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ed-thresh" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-ed-thresh-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ed-thresh-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/edge_detection/canny_high.png" class="lightbox" data-gallery="fig-ed-thresh" title="Figure&nbsp;13.7&nbsp;(b): Thresholds too high (40, 120): 918 px"><img src="figures/edge_detection/canny_high.png" class="img-fluid figure-img" data-ref-parent="fig-ed-thresh"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ed-thresh-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) Thresholds too high (40, 120): 918 px
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ed-thresh-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.7: Threshold-sensitivity experiment. (a) Low threshold pair: noise and texture cross the line en masse and chain together, drowning the true contours in a dense 64077 px web; (b) high threshold pair: the image is clean, but the weak contrast-20 rectangle and circle are lost completely, leaving only 918 px.
+</figcaption>
+</figure>
+</div>
+<p>The engineering rule of thumb boils down to two steps. <strong>Step one, fix the high threshold: take 3–4 times the noise gradient level.</strong> Measure the typical level of the gradient magnitude in a blank region of the image (e.g.&nbsp;mean plus three standard deviations, or a high quantile) and anchor the high threshold at 3–4 times it — this guarantees that seeds almost cannot be produced by noise. <strong>Step two, fix the low threshold: start from 1/2 to 1/3 of the high threshold.</strong> The low threshold governs contour connectivity: too close to the high threshold and hysteresis linking exists in name only; too low and the noise builds bridges. This chapter’s (20, 60) was chosen exactly by this rule: after smoothing, the <span class="math inline">\(\sigma=8\)</span> noise has a gradient magnitude of roughly 15, the high threshold of 60 is about 4 times that, and the low threshold is 1/3 of the high. Finally, fine-tune online with real images — the rule gives the starting point, not the destination.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>This is kin in spirit to the histogram-based threshold selection of <a href="thresholding.html" class="quarto-xref"><span>Chapter 7</span></a>: there we thresholded the <strong>gray-value</strong> distribution to separate foreground from background; here we threshold the <strong>gradient-magnitude</strong> distribution to separate edges from noise. The object changed; the methodology of “look at the distribution, find the divide” did not.</p>
+</div></div></section>
+<section id="sec-ed-subpixel" class="level2" data-number="13.5">
+<h2 data-number="13.5" class="anchored" data-anchor-id="sec-ed-subpixel"><span class="header-section-number">13.5</span> Subpixel and Outlook</h2>
+<p>The edge pixels Canny outputs have only integer coordinates, nailing the localization precision to 1 px. For recognition and counting this is enough; for measurement it is nowhere near — in a system at 10 μm/px, 1 px of quantization error is 10 μm. Fortunately the remedy is cheap: NMS compares precisely the three magnitudes along the gradient direction, <span class="math inline">\(g_{-1}, g_0, g_{+1}\)</span>, and a parabolic interpolation over them pins the ridge-top position down to <strong>subpixel</strong> accuracy — the very same vertex formula that <a href="geometric_primitives.html" class="quarto-xref"><span>Chapter 14</span></a> used on one-dimensional profiles. Interpolating point by point along the contour upgrades the pixel chain to a subpixel contour. In industrial practice, if only a local edge or hole needs measuring, the more common tool is the caliper of <a href="caliper_measurement.html" class="quarto-xref"><span>Chapter 20</span></a>, doing one-dimensional subpixel localization directly inside an ROI; whole-image edge detection is for the situations where you do not know in advance where the target is.</p>
+<p>The SciVision SDK also offers a class of subpixel extractors complementary to Canny: <code>SciSvExtractLinesGauss</code>, which implements Steger-style curvilinear-structure detection <span class="citation" data-cites="Steger1998">(<a href="references.html#ref-Steger1998" role="doc-biblioref">Steger 1998</a>)</span>. Note that what it finds are not step edges but <strong>lines</strong> — ridges or valleys with width, such as scratches, bonding wires, or adhesive tracks. Based on Gaussian derivatives, <code>ExtractLinesGauss</code> directly outputs an array of center-line contours at subpixel accuracy, attaching attributes to each line: direction <code>angle</code>, response strength <code>response</code>, left/right half-widths, asymmetry, and contrast. Its parameters carry familiar shadows: <code>sigma</code> is the detection scale, and <code>lowThresh</code>/<code>highThresh</code> are the hysteresis threshold pair — the same idea as in Canny; <code>lineModel</code> selects among three profile models: Gaussian line, bar line, and parabolic. The companion <code>CalculateParameter</code> can even derive <code>sigma</code> and the two thresholds from the expected line width and contrast, sparing manual tuning. This chapter ran no experiment on it and offers it only as a pointer: when your target is “a line with width” rather than “a gray-value step,” this is the tool to remember.</p>
+</section>
+<section id="sec-ed-scivision" class="level2" data-number="13.6">
+<h2 data-number="13.6" class="anchored" data-anchor-id="sec-ed-scivision"><span class="header-section-number">13.6</span> SciVision Implementation</h2>
+<p>The operators used in this chapter are provided by <code>SCIMV::SciSvFilter</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvFilter f<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>SciImage amp<span class="op">,</span> lap<span class="op">,</span> smooth<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>SciROI roi<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>SciPoint tl<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">),</span> br<span class="op">(</span>W<span class="op">,</span> H<span class="op">);</span>     <span class="co">// GenRect1 bottom-right is an exclusive endpoint: pass (W, H) for the full image</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>roi<span class="op">.</span>GenRect1<span class="op">(</span>tl<span class="op">,</span> br<span class="op">);</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Sobel gradient magnitude: sobelType=SUM_SQRT(1) is sqrt(gx^2+gy^2); kernelSize=3 (size of the Gaussian pre-smoothing kernel)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> rc <span class="op">=</span> f<span class="op">.</span>SobelAmplitude<span class="op">(</span>img<span class="op">,</span> roi<span class="op">,</span> <span class="op">&amp;</span>amp<span class="op">,</span> SCIMV<span class="op">::</span>SUM_SQRT<span class="op">,</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Laplace: 3x3 kernel, filterMask=1 (8-neighborhood kernel), resultType=0 (absolute-value output)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> f<span class="op">.</span>Laplace<span class="op">(</span>img<span class="op">,</span> roi<span class="op">,</span> <span class="op">&amp;</span>lap<span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Canny pre-smoothing: 3x3 Gaussian, sigma=0.8</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> f<span class="op">.</span>Gaussian<span class="op">(</span>img<span class="op">,</span> roi<span class="op">,</span> <span class="op">&amp;</span>smooth<span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="fl">0.8</span><span class="op">,</span> <span class="fl">0.8</span><span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>SobelAmplitude</code>’s <code>sobelType</code> selects how the magnitude is combined, <code>SUM_SQRT</code> being the standard square root of the sum of squares; <code>kernelSize=3</code> is the size of the <strong>internal Gaussian pre-smoothing kernel</strong> (valid range [1,11]) and has nothing to do with the size of the Sobel derivative kernel. <code>Laplace</code>’s <code>filterMask=1</code> selects the 8-neighborhood kernel (center <span class="math inline">\(-8\)</span>), and <code>resultType=0</code> outputs the absolute value — the double response of <a href="#fig-ed-laplace" class="quarto-xref">Figure&nbsp;<span>13.4</span></a> stems precisely from this.</p>
+<p>The SDK also has a one-shot <code>Canny(srcImage, ROI, dstImage)</code> — but it has <strong>no threshold parameters whatsoever</strong>; the low and high thresholds are entirely built in, cannot be tuned per scene, and naturally cannot perform the sensitivity experiment of <a href="#sec-ed-thresholds" class="quarto-xref"><span>Section 13.4</span></a>. This chapter therefore hand-wrote NMS and hysteresis linking (full code in the example project) — which happens to be the part most worth writing once with your own hands. If production code needs a Canny with controllable thresholds, the same advice applies: own these two steps yourself, leave the gradient and the smoothing to the SDK, and keep the decision logic in your own hands.</p>
+<p>There is also a pitfall that must be recorded honestly: in the current version, <code>SciSvFilter::Gaussian</code> corrupts the rightmost 1–2 columns of the output image no matter what ROI is passed (with a kernel of 3, the last 2 columns are zeroed). The zeroed columns form a false step of contrast above 80 against their neighbors, showing up in the edge map as a false edge running the full image height. The example project’s countermeasure is to repair by replicating the last valid column to the right:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// SDK defect workaround: Gaussian zeroes the rightmost 2 output columns; fill them by copying the last valid column</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> r <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> r <span class="op">&lt;</span> H<span class="op">;</span> <span class="op">++</span>r<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    smooth<span class="op">[</span>r <span class="op">*</span> W <span class="op">+</span> W <span class="op">-</span> <span class="dv">2</span><span class="op">]</span> <span class="op">=</span> smooth<span class="op">[</span>r <span class="op">*</span> W <span class="op">+</span> W <span class="op">-</span> <span class="dv">3</span><span class="op">];</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    smooth<span class="op">[</span>r <span class="op">*</span> W <span class="op">+</span> W <span class="op">-</span> <span class="dv">1</span><span class="op">]</span> <span class="op">=</span> smooth<span class="op">[</span>r <span class="op">*</span> W <span class="op">+</span> W <span class="op">-</span> <span class="dv">3</span><span class="op">];</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The complete runnable project that generates all of this chapter’s images and statistics is located at <code>code/edge_detection/</code>; all edge-pixel counts (4064 / 2163 / 64077 / 918) are actual program output.</p>
+<div class="industry-case">
+<p><span class="case-title">Industry Case: Threshold Tuning for Glass Edge-Chip Detection</span></p>
+<p>A glass deep-processing line used Canny to extract the edge contour, then inspected the contour for local gaps to flag edge chips. The low and high thresholds were tuned against the images available at installation acceptance and then frozen. Months later, the night shift’s miss rate climbed: LED lumen decay compounded by lower ambient light at night reduced image contrast, the gradient magnitudes of small, faint chips fell below the frozen high threshold, and no seeds could be produced. The fix was per-shift automatic tuning: at the start of each shift, estimate the noise gradient level in a blank region beside the edge (a high quantile of the gradient magnitude), set the high threshold <span class="math inline">\(=K\times\)</span> that estimate (<span class="math inline">\(K\approx 3.5\)</span>), and the low threshold to half the high. Through several rounds of lamp aging and replacement since, the miss rate has held steady. The lesson: a gradient threshold measures “how much stronger the signal is than the noise”; a fixed absolute value silently decays along with the illumination — anchor the threshold to the noise, not to one day’s good lighting.</p>
+</div>
+</section>
+<section id="sec-ed-summary" class="level2" data-number="13.7">
+<h2 data-number="13.7" class="anchored" data-anchor-id="sec-ed-summary"><span class="header-section-number">13.7</span> Summary</h2>
+<ul>
+<li><strong>Edges are gray-value discontinuities, characterized by the gradient</strong>: Sobel approximates the gradient with a pair of <span class="math inline">\(3\times 3\)</span> kernels that “difference in one direction, smooth in the perpendicular one”; the magnitude decides “how strong,” the direction decides “which way.” The edge response is proportional to contrast — the root of every thresholding problem.</li>
+<li><strong>Second-order operators are theoretically elegant, practically fragile</strong>: under <span class="math inline">\(\sigma=8\)</span> noise, Laplace’s zero-crossing localization degenerates into a screenful of grain plus double-line responses, and it provides no directional information — industrial edge detection is dominated by first-order operators.</li>
+<li><strong>Canny’s four steps each do one job</strong>: Gaussian smoothing resists noise, the gradient computes “likelihood,” NMS pares the response band down to a single-pixel thin ridge, and hysteresis thresholding — the strong vouch, the weak follow — preserves connected contours whose contrast waxes and wanes. In the experiments, single-threshold binarization at the same threshold output 4064 px of coarse, broken edges, while Canny output 2163 px of single-pixel connected contours.</li>
+<li><strong>Anchor the thresholds to the noise</strong>: set the high threshold at 3–4 times the noise gradient level, start the low threshold at 1/2–1/3 of the high, then fine-tune online. In this chapter’s experiments, (8, 24) let noise and texture drown the result (64077 px), and (40, 120) wiped out the weak contours entirely (918 px).</li>
+<li><strong>Measurement demands subpixel</strong>: parabolic interpolation over NMS’s three magnitudes yields subpixel edges; for line-like structures (scratches, bonding wires), the Steger-style <code>ExtractLinesGauss</code> directly extracts subpixel center lines together with attributes such as width and contrast.</li>
+</ul>
+<p>Two foundational papers reward a return to the originals: Canny’s classic derivation of this chapter’s four-step method from optimality criteria <span class="citation" data-cites="Canny1986">(<a href="references.html#ref-Canny1986" role="doc-biblioref">Canny 1986</a>)</span>, and Marr and Hildreth’s work laying the theoretical basis for second-order zero-crossing (LoG) detection <span class="citation" data-cites="MarrHildreth1980">(<a href="references.html#ref-MarrHildreth1980" role="doc-biblioref">Marr and Hildreth 1980</a>)</span>. For a systematic treatment of subpixel edge and line extraction, detection-scale selection, and their accuracy analysis, see the book by Steger et al. <span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, and Wiedemann 2018</a>)</span>.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Canny1986" class="csl-entry" role="listitem">
+Canny, John. 1986. <span>“A Computational Approach to Edge Detection.”</span> <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em> 8 (6): 679–98.
+</div>
+<div id="ref-MarrHildreth1980" class="csl-entry" role="listitem">
+Marr, David, and Ellen Hildreth. 1980. <span>“Theory of Edge Detection.”</span> <em>Proceedings of the Royal Society of London. Series B, Biological Sciences</em> 207 (1167): 187–217.
+</div>
+<div id="ref-Steger1998" class="csl-entry" role="listitem">
+Steger, Carsten. 1998. <span>“An Unbiased Detector of Curvilinear Structures.”</span> <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em> 20 (2): 113–25.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, and Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2nd ed. Wiley-VCH.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./part_locating.html" class="pagination-link" aria-label="Locating">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Locating</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./geometric_primitives.html" class="pagination-link" aria-label="Detecting Geometric Primitives">
+        <span class="nav-page-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

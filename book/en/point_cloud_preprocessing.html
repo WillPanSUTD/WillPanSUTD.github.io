@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>38&nbsp; Point Cloud Preprocessing – Machine Vision Algorithms: Principles and Industrial Practice</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./icp_registration.html" rel="next">
+<link href="./point_cloud_basics.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_3d_processing.html">3D Processing</a></li><li class="breadcrumb-item"><a href="./point_cloud_preprocessing.html"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Point Cloud Preprocessing</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Machine Vision Algorithms: Principles and Industrial Practice</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Digital Image Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Preliminaries</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Imaging and Calibration</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Cameras and Lenses</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Illumination</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Camera Calibration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Image Enhancement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Spatial Filtering</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Thresholding</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Morphology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Gray-Level Transforms and Histograms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Geometric Transforms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Frequency Domain Processing and the FFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Advanced Enhancement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Locating</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Edge Detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Template Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Shape Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Feature and Color Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI Generation and Fixturing</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Caliper Measurement and Subpixel Localization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Geometric Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Intensity, Color, and Gap Measurement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inspection</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Contour Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Shape Features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Defect Detection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recognition</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1D and 2D Barcode Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Optical Character Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Classical Classifiers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Imaging</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Overview of 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Stereo Vision</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Structured Light 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Laser Triangulation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Photometric Stereo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Phase Measuring Deflectometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Confocal Imaging and Focus Variation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Processing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Point Cloud Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Point Cloud Preprocessing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP Registration and 3D Rectification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D Inspection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-pp-where" id="toc-sec-pp-where" class="nav-link active" data-scroll-target="#sec-pp-where"><span class="header-section-number">38.1</span> Range Image vs.&nbsp;Point Cloud: Where to Do It</a></li>
+  <li><a href="#sec-pp-filtering" id="toc-sec-pp-filtering" class="nav-link" data-scroll-target="#sec-pp-filtering"><span class="header-section-number">38.2</span> 3D Filtering</a></li>
+  <li><a href="#sec-pp-morphology" id="toc-sec-pp-morphology" class="nav-link" data-scroll-target="#sec-pp-morphology"><span class="header-section-number">38.3</span> 3D Morphology: Hole Filling</a></li>
+  <li><a href="#sec-pp-sampling" id="toc-sec-pp-sampling" class="nav-link" data-scroll-target="#sec-pp-sampling"><span class="header-section-number">38.4</span> 3D Sampling</a></li>
+  <li><a href="#sec-pp-segmentation" id="toc-sec-pp-segmentation" class="nav-link" data-scroll-target="#sec-pp-segmentation"><span class="header-section-number">38.5</span> 3D Thresholding and Segmentation</a></li>
+  <li><a href="#sec-pp-scivision" id="toc-sec-pp-scivision" class="nav-link" data-scroll-target="#sec-pp-scivision"><span class="header-section-number">38.6</span> SciVision Implementation</a></li>
+  <li><a href="#sec-pp-summary" id="toc-sec-pp-summary" class="nav-link" data-scroll-target="#sec-pp-summary"><span class="header-section-number">38.7</span> Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_3d_processing.html">3D Processing</a></li><li class="breadcrumb-item"><a href="./point_cloud_preprocessing.html"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Point Cloud Preprocessing</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-point_cloud_preprocessing" class="quarto-section-identifier"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Point Cloud Preprocessing</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Point a line-laser profilometer or a structured-light camera at a metal workpiece, press the capture button, and what you get back is never a clean, tidy 3D surface. The raw data carries three kinds of ailments mixed together: the height value jitters randomly at every sample point (the same origin as the noise in 2D images, except this time it is Z that jitters rather than gray value); scattered across the surface are patches of “black holes” — where the laser hits a steep wall, a deep bore, or a specular reflection and cannot be returned, those sample points get no height at all and become invalid pixels; and occasionally a few lonely “spikes” pop up, hundreds of microns above the true surface, the artifacts left by secondary reflections or anomalous matching. At the same time, a single range image easily contains hundreds of thousands to millions of points, and feeding it straight into registration or matching makes the computation explode in an instant. Noisy, full of holes, and far too dense — this is the raw stock that downstream measurement and inspection must confront. <strong>Point cloud preprocessing is the very first procedure before measurement.</strong> What it does corresponds one to one with the 2D image enhancement of Part III: denoising, gap filling, downsampling, segmentation — only the battlefield has moved from the gray image to the 3D surface. This chapter can be read as the 3D counterpart of 2D enhancement.</p>
+<p><a href="#fig-pp-raw" class="quarto-xref">Figure&nbsp;<span>38.1</span></a> is the synthetic scene that runs through this entire chapter: a 320×240 = 76800-pixel range image, with a base height of 1000 μm and a gentle slope along the x direction, carrying a +400 μm boss and a −300 μm groove; onto it we have superimposed Gaussian height noise of σ = 5 μm, 5% invalid pixels (3858 invalid points in total, appearing as black spots in the figure), and then sprinkled 245 spikes (appearing as white spots). This single image gathers all three typical defects at once, and every section below starts from it.</p>
+<div id="fig-pp-raw" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pp-raw-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/point_cloud_preprocessing/range_raw.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;38.1: Raw synthetic range image (2.5D height map). Brightness encodes height: the base in the upper left is darker, the boss (central rectangle) is brighter, and the groove (right-hand vertical stripe) is darkest; the scattered black spots are the 5% invalid pixels, and the white spots are the 245 spikes rising above the true surface."><img src="figures/point_cloud_preprocessing/range_raw.png" class="img-fluid figure-img" style="width:70.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pp-raw-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;38.1: Raw synthetic range image (2.5D height map). Brightness encodes height: the base in the upper left is darker, the boss (central rectangle) is brighter, and the groove (right-hand vertical stripe) is darkest; the scattered black spots are the 5% invalid pixels, and the white spots are the 245 spikes rising above the true surface.
+</figcaption>
+</figure>
+</div>
+<section id="sec-pp-where" class="level2 page-columns page-full" data-number="38.1">
+<h2 data-number="38.1" class="anchored" data-anchor-id="sec-pp-where"><span class="header-section-number">38.1</span> Range Image vs.&nbsp;Point Cloud: Where to Do It</h2>
+<p>Three-dimensional data can be stored in two ways, and preprocessing can be performed on either, but the cost and reusability differ greatly.</p>
+<p>The first is the <strong>range image</strong>, also called the depth map or 2.5D height map: it is essentially an image on a regular grid, where each pixel stores one height value (Z), and the horizontal and vertical coordinates are implied by the pixel position (<a href="point_cloud_basics.html" class="quarto-xref"><span>Chapter 37</span></a>). Its greatest benefit is “regularity” — all the 2D algorithms based on pixel neighborhoods in Part III, namely median filtering, Gaussian filtering, morphology, and threshold segmentation, can be transplanted almost unchanged, simply swapping “gray value” for “height.” The second is the unordered <strong>point cloud</strong>: a pile of discrete <span class="math inline">\((X,Y,Z)\)</span> triplets that attach to no grid, able to faithfully express arbitrary topology (including overhangs, sidewalls, and multilayer structures that a range image cannot represent), but at the price of relying on a kd-tree for neighborhood queries, with every step running noticeably slower than on a regular grid.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Rule of thumb: for single-view, single-layer surfaces (which describes the vast majority of inline inspection), prefer processing on the range image — it lets you directly reuse the mature 2D algorithms, runs fast, and saves memory; only when the object has overhangs, requires multi-view stitching, or has topology too complex for a grid to express do you enter the world of unordered point clouds (<a href="icp_registration.html" class="quarto-xref"><span>Chapter 39</span></a>).</p>
+</div></div><p>For exactly this reason, <strong>most SDK 3D preprocessing operations are done on the range image</strong>, and this chapter’s main arena is set here too. But there is one pitfall that does not exist in the 2D world and must be made clear first: <strong>invalid pixels must not enter the computation as 0</strong>. In a range image, invalid points are often marked with a count of 0 (or some sentinel value), meaning “there is no data here,” not “the height here is 0.” If a filter treats this as a height value of 0 and folds it into an average, then the true height next to a hole gets dragged sharply downward by this false 0, and denoising ends up manufacturing a fake trough. Therefore every step of 3D filtering and morphology must be <strong>NaN-aware</strong>: only valid neighbors are counted, and invalid points neither contribute nor get contaminated. Every hand-written operator in this chapter obeys this rule, and we will see its effect again and again below.</p>
+</section>
+<section id="sec-pp-filtering" class="level2 page-columns page-full" data-number="38.2">
+<h2 data-number="38.2" class="anchored" data-anchor-id="sec-pp-filtering"><span class="header-section-number">38.2</span> 3D Filtering</h2>
+<p>Denoising is the first step of preprocessing, and the idea is entirely consistent with <a href="spatial_filtering.html" class="quarto-xref"><span>Chapter 6</span></a>: on the height map, take a neighborhood around each point and perform an appropriate “averaging” to suppress the random jitter. We let two classic filters compete on the range image — a 3×3 <strong>median filter</strong> and a 3×3 <strong>Gaussian filter</strong>, both implemented as NaN-aware versions: if the center is invalid it stays invalid; if the center is valid it takes the median of only the valid heights in the neighborhood (median filter) or their weighted average (Gaussian filter).</p>
+<p>To measure the denoising effect, we look at the root-mean-square (RMS, in μm) of the flat base subregion’s height relative to the ground-truth plane. The results are as follows: the raw data has an RMS as high as <strong>32.09 μm</strong> — note that this number is far larger than the 5 μm noise standard deviation, because it is heavily polluted by the 245 spikes. The median filter pushes the RMS down to <strong>2.28 μm</strong>, the Gaussian filter only to <strong>12.08 μm</strong>, while median-then-Gaussian (median to remove spikes, Gaussian to smooth random noise) achieves <strong>1.61 μm</strong>, the best of the field.</p>
+<p>The root of the gap lies in the spikes. The lesson from <a href="spatial_filtering.html" class="quarto-xref"><span>Chapter 6</span></a> — <strong>the median removes outliers, the Gaussian smears them</strong> — replays unchanged here in 3D. Counting the residual spikes (valid points with |measured height − ground truth| &gt; 200 μm): 245 originally, <strong>only 5 remain after the median filter</strong>, while <strong>14 still remain after the Gaussian filter</strong>. The median filter treats each spike as a local outlier; after sorting it gets pushed to the tail of the list, never gets a turn to be the output, and is thus cleanly eliminated. The Gaussian filter, however, spreads the spike’s few-hundred-micron height across its surrounding neighbors, and the result is not the elimination of the spike but smearing it into a shorter, fatter “bump” — the spike’s energy has not vanished, it has merely been painted out. <a href="#fig-pp-filter-compare" class="quarto-xref">Figure&nbsp;<span>38.2</span></a> places the three side by side, and the eye can plainly see that the white spikes in the raw image have completely disappeared in the median result, but have turned into patches of pale halos in the Gaussian result.</p>
+<div id="fig-pp-filter-compare" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pp-filter-compare-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/point_cloud_preprocessing/range_filter_compare.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;38.2: Three-panel 3D filtering comparison: raw (left, white spots are spikes) | median (center, spikes removed, edges sharp) | Gaussian (right, spikes smeared into pale bumps, boss edges slightly blurred). On the same data, the opposition of “median removes spikes, Gaussian smears spikes” replays on the 3D height map."><img src="figures/point_cloud_preprocessing/range_filter_compare.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pp-filter-compare-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;38.2: Three-panel 3D filtering comparison: raw (left, white spots are spikes) | median (center, spikes removed, edges sharp) | Gaussian (right, spikes smeared into pale bumps, boss edges slightly blurred). On the same data, the opposition of “median removes spikes, Gaussian smears spikes” replays on the 3D height map.
+</figcaption>
+</figure>
+</div>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>This section uses isotropic Gaussian/median filters. If you want both to suppress noise and to preserve the steep walls of the boss and groove, you can switch to an <strong>edge-preserving</strong> 3D filter — the bilateral filter or the guided filter — which introduces the “only participate in the average if the heights are close” criterion into the weighting, with a mechanism stemming from the same lineage as the bilateral filter of <a href="spatial_filtering.html" class="quarto-xref"><span>Chapter 6</span></a>.</p>
+</div></div><p>Therefore the final output takes the <strong>median + Gaussian</strong> cascade (<a href="#fig-pp-filtered" class="quarto-xref">Figure&nbsp;<span>38.3</span></a>): the first median pass clears away the spikes and any impulse that may have slipped through, and the second Gaussian pass further soothes the residual random jitter. This combination preserves the edges of the boss and groove while pressing the flat-region RMS below 2 μm, laying a clean foundation for the measurement to come.</p>
+<div id="fig-pp-filtered" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pp-filtered-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/point_cloud_preprocessing/range_filtered.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;38.3: Range image after the median + Gaussian cascade filter: the spikes are removed, the random noise is soothed, and the boss and groove edges stay sharp; the invalid pixels (black spots) are not yet handled, left to the morphology of the next section."><img src="figures/point_cloud_preprocessing/range_filtered.png" class="img-fluid figure-img" style="width:70.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pp-filtered-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;38.3: Range image after the median + Gaussian cascade filter: the spikes are removed, the random noise is soothed, and the boss and groove edges stay sharp; the invalid pixels (black spots) are not yet handled, left to the morphology of the next section.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-pp-morphology" class="level2 page-columns page-full" data-number="38.3">
+<h2 data-number="38.3" class="anchored" data-anchor-id="sec-pp-morphology"><span class="header-section-number">38.3</span> 3D Morphology: Hole Filling</h2>
+<p>Filtering dealt with the “jitter” and the “spikes,” but did not touch the 3858 black holes — the invalid pixels are still holes. Hole filling is a job for morphology, and the idea is consistent with the 2D morphology of <a href="morphology.html" class="quarto-xref"><span>Chapter 8</span></a>: use a <strong>closing operation (dilation followed by erosion)</strong> to fill in small-sized holes. On the height map, for each invalid pixel we inspect its 8-neighborhood, and if the number of valid neighbors reaches a threshold, we fill it with the median of those valid neighbors, iterating for several rounds — this is equivalent to letting the valid region “grow” inward a few rings, gradually closing up the isolated small holes while leaving the large continuous gaps untouched.</p>
+<p>The experimental result is crisp and clean: the invalid pixels drop from <strong>3858 to 1</strong> — the closing operation filled 3857 small holes (<a href="#fig-pp-morph" class="quarto-xref">Figure&nbsp;<span>38.4</span></a>). Most of the 5% invalid pixels are scattered holes of 1 to 3 pixels, and a few rounds of closing can gather them all up.</p>
+<div id="fig-pp-morph" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pp-morph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/point_cloud_preprocessing/range_morph.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;38.4: Range image after morphological closing for hole filling: the originally scattered black invalid pixels (3858 of them) are almost all filled with the median of valid neighbors (1 remaining), and the surface regains continuity."><img src="figures/point_cloud_preprocessing/range_morph.png" class="img-fluid figure-img" style="width:70.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pp-morph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;38.4: Range image after morphological closing for hole filling: the originally scattered black invalid pixels (3858 of them) are almost all filled with the median of valid neighbors (1 remaining), and the surface regains continuity.
+</figcaption>
+</figure>
+</div>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Why “closing” and not “opening”? The closing operation fills the dark holes inside the foreground (the valid region), which is exactly the invalid pixels we want to fill; the opening operation, by contrast, erases small bright spots, a use of an entirely different kind. The choice of morphological operator always depends on which — the “hole” or the “spike” — is the object you want to eliminate.</p>
+</div></div><p>But hole filling must be done with vigilance. <strong>Small holes can be filled, but what you fill a big hole with is fake data.</strong> Closing fills a hole by interpolating from the surrounding valid points, which carries the implicit assumption that “the surface beneath this hole is continuous with its surroundings.” For scattered holes of a few pixels, this assumption essentially holds, and the filled height is credible enough; but once you face a large continuous gap — say, a blind zone left where the laser was wholly occluded by a deep groove or steep wall — forcibly interpolating from the surrounding heights amounts to fabricating, out of thin air, a stretch of surface that was never measured at all. This is the same reasoning as the “better missing than fabricated” dilemma in <a href="laser_triangulation.html" class="quarto-xref"><span>Chapter 33</span></a>: the missing data itself often carries information (there is a deep structure here, there is an abnormal reflection here), and mindlessly filling it flat instead erases the genuine signal. So the closing operation in this section deliberately sets the constraint that it “fills only when the number of valid neighbors reaches a threshold,” letting it fill only small holes and pass over large ones — and that 1 remaining invalid point is precisely the embodiment of this restraint.</p>
+</section>
+<section id="sec-pp-sampling" class="level2 page-columns page-full" data-number="38.4">
+<h2 data-number="38.4" class="anchored" data-anchor-id="sec-pp-sampling"><span class="header-section-number">38.4</span> 3D Sampling</h2>
+<p>After denoising and hole filling, the surface is clean, but there are still too many points. This section addresses the “too dense” problem. <strong>Voxel grid downsampling</strong> is the most commonly used means of point cloud downsampling: cut 3D space into small cubes of fixed edge length (voxels), replace all points that fall into the same voxel with one representative point (usually the centroid), and the point density is thereby uniformly thinned out. Its benefit is “spatial uniformity” — no matter where the original point cloud is dense and where it is sparse, the output point spacing is uniformly constrained by the voxel edge length, with no local over-density.</p>
+<p>Taking a voxel edge length of 0.4 mm, this chapter’s range image goes from <strong>76799 valid points down to 4901, a 15.7× reduction</strong> (<a href="#fig-pp-downsampled" class="quarto-xref">Figure&nbsp;<span>38.5</span></a>). The key is that this reduction barely harms the structure: the densely packed points on the flat base already have similar heights and fall into the same batch of voxels, so collapsing them into representative points loses almost no information; while the edges of the boss and the groove, because their heights span different Z voxel layers, keep their points, and the edge density is relatively prominent by comparison. <a href="#fig-pp-downsampled" class="quarto-xref">Figure&nbsp;<span>38.5</span></a> clearly shows this: the flat region is sparse in points, yet the contour lines of the groove and the boss remain dense — the structural information has been preserved intact.</p>
+<div id="fig-pp-downsampled" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pp-downsampled-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/point_cloud_preprocessing/range_downsampled.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;38.5: Voxel grid downsampling result (voxel edge length 0.4 mm): 76799 points reduced to 4901 (15.7×). The flat region is sparse in points, the structural edges (groove and boss contours) are dense in points, and the downsampling preserves the structure even as it greatly reduces the count."><img src="figures/point_cloud_preprocessing/range_downsampled.png" class="img-fluid figure-img" style="width:70.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pp-downsampled-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;38.5: Voxel grid downsampling result (voxel edge length 0.4 mm): 76799 points reduced to 4901 (15.7×). The flat region is sparse in points, the structural edges (groove and boss contours) are dense in points, and the downsampling preserves the structure even as it greatly reduces the count.
+</figcaption>
+</figure>
+</div>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Voxel sampling is not the only kind of downsampling. <strong>Uniform sampling</strong> takes every n-th point at a fixed stride, simple but liable to miss details; <strong>voxel sampling</strong> takes a representative point per spatial cell, with uniform density; <strong>curvature-adaptive sampling</strong> thins aggressively in flat regions and keeps more in high-curvature regions (edges, corners), saving the most points while best preserving structure, at the cost of having to first estimate normals and curvature. The three are chosen according to “whether you need to preserve detail” and “whether you can afford the precomputation.”</p>
+</div></div><p>Why must 3D always be downsampled? Because downstream algorithms are extremely sensitive to point count. The ICP in registration (<a href="icp_registration.html" class="quarto-xref"><span>Chapter 39</span></a>) must search for the nearest neighbor of every point in every round; running ICP or feature matching on a million-point cloud means a million kd-tree queries per single round, and after dozens of rounds the computation flat-out explodes; template matching and surface registration are the same. Cutting the point count by an order of magnitude or two first, before doing this heavy work, is often the key step that turns “won’t run” into “real-time.” Of course downsampling is also scene-dependent: for localization and registration, the downsampled result is both fast and stable; but for high-precision volume or dimensional measurement, you should use full resolution — a trade-off we will encounter again in the next section’s industry case.</p>
+</section>
+<section id="sec-pp-segmentation" class="level2" data-number="38.5">
+<h2 data-number="38.5" class="anchored" data-anchor-id="sec-pp-segmentation"><span class="header-section-number">38.5</span> 3D Thresholding and Segmentation</h2>
+<p>The last step of preprocessing is often to separate the “region of interest” from the background and hand it off to subsequent measurement. The simplest and most direct 3D segmentation is <strong>height thresholding</strong>, an idea exactly like the 2D gray-value thresholding of <a href="thresholding.html" class="quarto-xref"><span>Chapter 7</span></a>: set a height threshold, classify everything above it as the target and everything below it as background. This chapter separates the boss from the base by “height &gt; 1200 μm” — the base sits around 1000 μm, the boss rises 400 μm to about 1400 μm, and the 1200 μm line falls cleanly between the two.</p>
+<p>The result is nearly perfect: the segmentation yields <strong>7197 pixels</strong>, while the boss ground truth (GT) is <strong>7200 pixels</strong>, with <strong>0 false positives (FP) and 3 false negatives (FN)</strong>, and an intersection-over-union of <strong>IoU = 0.9996</strong> (<a href="#fig-pp-segmented" class="quarto-xref">Figure&nbsp;<span>38.6</span></a>). All 3 false negatives are on the boss edge — where the height happens to sit right at the threshold and, after being slightly smoothed by filtering, dipped below the line, an acceptable boundary effect. Achieving this kind of precision owes much to the groundwork of the previous sections: filtering first removed the spikes that would have caused massive misclassification, and hole filling then filled the holes inside the boss that would otherwise have been judged as background, so that threshold segmentation could come out this clean.</p>
+<div id="fig-pp-segmented" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pp-segmented-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/point_cloud_preprocessing/range_segmented.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="Figure&nbsp;38.6: Height threshold segmentation result: the boss separated by height > 1200 μm is highlighted in green overlaid on the gray-value height base map. Segmentation 7197 pixels vs.&nbsp;ground truth 7200, FP = 0, FN = 3, IoU = 0.9996."><img src="figures/point_cloud_preprocessing/range_segmented.png" class="img-fluid figure-img" style="width:70.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pp-segmented-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;38.6: Height threshold segmentation result: the boss separated by height &gt; 1200 μm is highlighted in green overlaid on the gray-value height base map. Segmentation 7197 pixels vs.&nbsp;ground truth 7200, FP = 0, FN = 3, IoU = 0.9996.
+</figcaption>
+</figure>
+</div>
+<p>Height thresholding is only the starting point of 3D segmentation. When the height difference between target and background is not obvious, or when the regions to be separated are coplanar, you need more advanced means: <strong>region growing</strong> clusters adjacent points into patches by the continuity of normals or curvature, and <strong>plane segmentation (RANSAC plane fitting)</strong> directly extracts plane primitives one by one from the point cloud (echoing the primitive fitting of <a href="3d_measurement.html" class="quarto-xref"><span>Chapter 41</span></a>). But for the most common industrial targets of the “boss that rises a notch / groove that drops a notch” kind, a single height threshold is often enough — simple and reliable.</p>
+</section>
+<section id="sec-pp-scivision" class="level2" data-number="38.6">
+<h2 data-number="38.6" class="anchored" data-anchor-id="sec-pp-scivision"><span class="header-section-number">38.6</span> SciVision Implementation</h2>
+<p>The usability of this chapter’s corresponding SciVision 3D module varies greatly in testing on this machine; it is recorded faithfully below for engineering trade-offs.</p>
+<ul>
+<li><strong>SciSv3DFilter</strong>’s <code>Median</code> / <code>Gaussian</code> are <strong>usable</strong> and NaN-aware (they correctly skip invalid pixels), consistent with the hand-written implementations;</li>
+<li><strong>SciSv3DMorphology</strong>’s <code>Close</code> (closing for hole filling) is <strong>usable</strong>;</li>
+<li><strong>SciSv3DThreshold</strong> is <strong>inert</strong> on this machine — <code>ManualThreshold</code> returns rc = 0 but produces empty output, so segmentation has to be done yourself;</li>
+<li><strong>SciSv3DSampling</strong>’s <code>Sampling</code> overload on the range image <strong>fails</strong> (returns 123403001), and switching to the point cloud’s <code>VoxelSampling</code> is <strong>non-deterministic across runs</strong> (the same input yields a drift of 4821/4821/0 over three runs), which is unreliable.</li>
+</ul>
+<p>Therefore the main line of this chapter uses entirely hand-written, NaN-aware, deterministic implementations to produce the figures and numbers, while the various SDK 3D modules are placed in an isolated subprocess as probes, corroborating their return codes and usability (the 3D modules on this machine occasionally throw a 0xC0000005 access violation, so they are isolated to avoid dragging down the main flow). Below are the two most critical hand-written snippets. The NaN-aware median filter keeps the center invalid if it is invalid, otherwise takes the median of only the valid neighbors:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 3x3 NaN-aware median: suppresses spikes, preserves edges; invalid points neither participate nor get contaminated</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> dy <span class="op">=</span> <span class="op">-</span>r<span class="op">;</span> dy <span class="op">&lt;=</span> r<span class="op">;</span> <span class="op">++</span>dy<span class="op">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> dx <span class="op">=</span> <span class="op">-</span>r<span class="op">;</span> dx <span class="op">&lt;=</span> r<span class="op">;</span> <span class="op">++</span>dx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> v <span class="op">=</span> h<span class="op">[(</span>yy<span class="op">)*</span>W <span class="op">+</span> xx<span class="op">];</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>valid<span class="op">(</span>v<span class="op">))</span> w<span class="op">.</span>push_back<span class="op">(</span>v<span class="op">);</span>   <span class="co">// collect only valid neighbors</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>sort<span class="op">(</span>w<span class="op">.</span>begin<span class="op">(),</span> w<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>out<span class="op">[</span>y<span class="op">*</span>W <span class="op">+</span> x<span class="op">]</span> <span class="op">=</span> w<span class="op">[</span>w<span class="op">.</span>size<span class="op">()</span> <span class="op">/</span> <span class="dv">2</span><span class="op">];</span>     <span class="co">// median</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Voxel grid downsampling quantizes <span class="math inline">\((X,Y,Z)\)</span> to a voxel key and keeps one representative point per voxel:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> <span class="dt">long</span> ix <span class="op">=</span> floor<span class="op">(</span>X <span class="op">/</span> L<span class="op">),</span> iy <span class="op">=</span> floor<span class="op">(</span>Y <span class="op">/</span> L<span class="op">),</span> iz <span class="op">=</span> floor<span class="op">(</span>Z <span class="op">/</span> L<span class="op">);</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> <span class="dt">long</span> key <span class="op">=</span> <span class="op">(</span>ix<span class="op">*</span><span class="dv">100003</span><span class="bu">LL</span> <span class="op">+</span> iy<span class="op">)*</span><span class="dv">100003</span><span class="bu">LL</span> <span class="op">+</span> iz<span class="op">;</span>   <span class="co">// voxel key</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Vox<span class="op">&amp;</span> g <span class="op">=</span> grid<span class="op">[</span>key<span class="op">];</span>                                 <span class="co">// merge points falling into the same voxel</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>g<span class="op">.</span>n <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span> g<span class="op">.</span>rx <span class="op">=</span> x<span class="op">;</span> g<span class="op">.</span>ry <span class="op">=</span> y<span class="op">;</span> <span class="op">}</span>               <span class="co">// first point as representative</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>g<span class="op">.</span>sx <span class="op">+=</span> X<span class="op">;</span> g<span class="op">.</span>sy <span class="op">+=</span> Y<span class="op">;</span> g<span class="op">.</span>sz <span class="op">+=</span> Z<span class="op">;</span> <span class="op">++</span>g<span class="op">.</span>n<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The complete runnable project is located at <code>code/point_cloud_preprocessing/</code>; readers can change the noise level, voxel edge length, and segmentation threshold to reproduce all the figures and numbers themselves.</p>
+<div class="industry-case">
+<p><span class="case-title">Industry Case: Holes and Downsampling in 3D Solder Paste Inspection</span></p>
+<p>SPI (Solder Paste Inspection) uses a 3D camera to measure the volume of solder paste on each pad. The specular reflection of solder paste prevents the laser from being returned, leaving a large number of invalid pixels — and if you integrate the data with holes directly, the holes are treated as zero height, the volume is systematically underestimated, and a flood of “insufficient paste” false alarms results. The correct approach is to first fill the measurement holes with morphological closing, then integrate. But hole filling has an iron rule: <strong>you may only repair “measurement holes,” never fill in “process holes”</strong> — somewhere with no paste printed at all (a missed print) is a genuine process defect and must never be filled by the hole-filling algorithm; distinguishing the two kinds of holes relies on a joint judgment of size, position, and surrounding morphology. On downsampling: measuring volume requires full resolution to preserve precision, while locating pad positions on a large board is fast and accurate enough with a downsampled point cloud. The lesson is just one sentence: at every step of preprocessing, you must distinguish “repairing a measurement defect” from “erasing a genuine signal.”</p>
+</div>
+</section>
+<section id="sec-pp-summary" class="level2" data-number="38.7">
+<h2 data-number="38.7" class="anchored" data-anchor-id="sec-pp-summary"><span class="header-section-number">38.7</span> Summary</h2>
+<p>The key points of this chapter can be distilled as follows.</p>
+<ul>
+<li><strong>Preprocessing is the 3D counterpart of 2D enhancement.</strong> The four steps of denoising, hole filling, downsampling, and segmentation correspond respectively to spatial filtering, morphology, sampling, and thresholding — swap “gray value” for “height,” and most of the mature 2D algorithms can be directly transplanted to the range image for reuse.</li>
+<li><strong>Invalid pixels must never enter the computation as 0.</strong> Every operator step in 3D must be NaN-aware, counting only valid neighbors; otherwise a single hole will drag the surrounding true heights down into a fake trough.</li>
+<li><strong>The median removes spikes, the Gaussian smears them.</strong> The lesson of <a href="spatial_filtering.html" class="quarto-xref"><span>Chapter 6</span></a> replays in 3D: the median presses the spikes down to just 5 (RMS 32.09 → 2.28 μm), while the Gaussian paints the spikes into bumps (14 residual); the median + Gaussian cascade achieves 1.61 μm.</li>
+<li><strong>Hole filling must distinguish measurement defects from genuine signals.</strong> Closing is very effective at filling small holes (3858 → 1), but what forced interpolation fills a large gap with is fake data — the same dilemma as “better missing than fabricated” at occlusions.</li>
+<li><strong>Downsampling is the prerequisite for 3D to run.</strong> The voxel grid reduces 76799 points to 4901 (15.7×) while preserving the structural edges; ICP/matching on a million points will explode without downsampling first, but high-precision measurement still needs full resolution.</li>
+</ul>
+<p>For a more systematic treatment of filtering, morphology, and segmentation of 3D data in industrial inspection, see further the book by Steger et al. <span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, and Wiedemann 2018</a>)</span>. This chapter’s statistical outlier removal (SOR) with its “neighborhood average distance <span class="math inline">\(\mu+t\sigma\)</span>” criterion comes from the denoising pipeline Rusu et al.&nbsp;proposed while building point-cloud object maps for household scenes <span class="citation" data-cites="Rusu2008">(<a href="references.html#ref-Rusu2008" role="doc-biblioref">Rusu et al. 2008</a>)</span>; the open-source reference implementation of voxel-grid downsampling and the other operators above is surveyed in the Point Cloud Library (PCL) overview <span class="citation" data-cites="RusuCousins2011">(<a href="references.html#ref-RusuCousins2011" role="doc-biblioref">Rusu and Cousins 2011</a>)</span>.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-RusuCousins2011" class="csl-entry" role="listitem">
+Rusu, Radu Bogdan, and Steve Cousins. 2011. <span>“<span>3D</span> Is Here: Point Cloud Library (<span>PCL</span>).”</span> In <em>IEEE International Conference on Robotics and Automation (ICRA)</em>, 1–4. Shanghai, China.
+</div>
+<div id="ref-Rusu2008" class="csl-entry" role="listitem">
+Rusu, Radu Bogdan, Zoltan Csaba Marton, Nico Blodow, Mihai Dolha, and Michael Beetz. 2008. <span>“Towards <span>3D</span> Point Cloud Based Object Maps for Household Environments.”</span> <em>Robotics and Autonomous Systems</em> 56 (11): 927–41.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, and Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2nd ed. Wiley-VCH.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./point_cloud_basics.html" class="pagination-link" aria-label="Point Cloud Fundamentals">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Point Cloud Fundamentals</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./icp_registration.html" class="pagination-link" aria-label="ICP Registration and 3D Rectification">
+        <span class="nav-page-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP Registration and 3D Rectification</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>15&nbsp; The Hough Transform – Machine Vision Algorithms: Principles and Industrial Practice</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./template_matching.html" rel="next">
+<link href="./geometric_primitives.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_locating.html">Locating</a></li><li class="breadcrumb-item"><a href="./hough_transform.html"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Machine Vision Algorithms: Principles and Industrial Practice</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notation</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foundations</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Digital Image Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Preliminaries</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Imaging and Calibration</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Cameras and Lenses</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Illumination</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Camera Calibration</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Image Enhancement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Spatial Filtering</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Thresholding</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Morphology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Gray-Level Transforms and Histograms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Geometric Transforms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Frequency Domain Processing and the FFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Advanced Enhancement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Locating</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Edge Detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Template Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Shape Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Feature and Color Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI Generation and Fixturing</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Caliper Measurement and Subpixel Localization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Geometric Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Intensity, Color, and Gap Measurement</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inspection</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Contour Analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Shape Features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Defect Detection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recognition</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1D and 2D Barcode Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Optical Character Recognition</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Classical Classifiers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Imaging</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Overview of 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Stereo Vision</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Structured Light 3D Imaging</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Laser Triangulation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Photometric Stereo</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Phase Measuring Deflectometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Confocal Imaging and Focus Variation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D Processing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Point Cloud Fundamentals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Point Cloud Preprocessing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP Registration and 3D Rectification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D Matching</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D Measurement</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D Inspection</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-ht-voting" id="toc-sec-ht-voting" class="nav-link active" data-scroll-target="#sec-ht-voting"><span class="header-section-number">15.1</span> Parameter Space and Voting</a></li>
+  <li><a href="#sec-ht-accumulator" id="toc-sec-ht-accumulator" class="nav-link" data-scroll-target="#sec-ht-accumulator"><span class="header-section-number">15.2</span> Reading the Accumulator</a></li>
+  <li><a href="#sec-ht-robustness" id="toc-sec-ht-robustness" class="nav-link" data-scroll-target="#sec-ht-robustness"><span class="header-section-number">15.3</span> Multiple Instances and Robustness</a></li>
+  <li><a href="#sec-ht-circles" id="toc-sec-ht-circles" class="nav-link" data-scroll-target="#sec-ht-circles"><span class="header-section-number">15.4</span> Hough Circles</a></li>
+  <li><a href="#sec-ht-scivision" id="toc-sec-ht-scivision" class="nav-link" data-scroll-target="#sec-ht-scivision"><span class="header-section-number">15.5</span> SciVision Implementation</a></li>
+  <li><a href="#sec-ht-summary" id="toc-sec-ht-summary" class="nav-link" data-scroll-target="#sec-ht-summary"><span class="header-section-number">15.6</span> Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_locating.html">Locating</a></li><li class="breadcrumb-item"><a href="./hough_transform.html"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-hough_transform" class="quarto-section-identifier"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Hough Transform</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>The search-line approach of <a href="geometric_primitives.html" class="quarto-xref"><span>Chapter 14</span></a> carries a self-evident premise: you roughly know where the target is. Frame an ROI first, then lay down the search lines — the whole pipeline rests on the prior of “one ROI, one primitive”. But what if that premise fails? The image contains <strong>multiple</strong> lines and <strong>multiple</strong> circles, with no advance knowledge of where each one sits; the targets may also be broken (dashed lines, gaps carved out by reflections) or partially occluded. Now there is nowhere to lay search lines, and point-by-point tracking snaps at the first gap. The <strong>Hough transform</strong> asks the question differently: instead of asking “where is this line”, it lets <strong>every edge point vote for all the lines that could pass through it (voting)</strong>, and the parameter combination with the most votes naturally wins. This chapter runs the voting machinery end to end on a 480×360 synthetic scene (<a href="#fig-ht-scene" class="quarto-xref">Figure&nbsp;<span>15.1</span></a>): the scene contains 3 lines — one of them a <strong>dashed line with a gap ratio of about 47%</strong> — and 2 circles — one of them <strong>40% occluded</strong> — plus 40 stray blobs and Gaussian noise with σ=8. Breaks, occlusion, clutter, and noise, all four kinds of interference present at once — exactly what it takes to force out the full value of the Hough transform.</p>
+<div id="fig-ht-scene" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-scene-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/scene.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;15.1: The synthetic test scene (480×360): 3 lines (L1 and L3 solid, L2 a dashed line with a gap ratio of about 47%), 2 circles (C1 complete, C2 missing 40% of its arc), and 40 stray blobs, overlaid with Gaussian noise of σ=8."><img src="figures/hough_transform/scene.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-scene-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15.1: The synthetic test scene (480×360): 3 lines (L1 and L3 solid, L2 a dashed line with a gap ratio of about 47%), 2 circles (C1 complete, C2 missing 40% of its arc), and 40 stray blobs, overlaid with Gaussian noise of σ=8.
+</figcaption>
+</figure>
+</div>
+<section id="sec-ht-voting" class="level2 page-columns page-full" data-number="15.1">
+<h2 data-number="15.1" class="anchored" data-anchor-id="sec-ht-voting"><span class="header-section-number">15.1</span> Parameter Space and Voting</h2>
+<p>To vote for lines, the lines first need a suitable set of parameters. The Hough transform adopts the <strong>normal form</strong> parameterization <span class="citation" data-cites="Duda1972Hough">(<a href="references.html#ref-Duda1972Hough" role="doc-biblioref">Duda and Hart 1972</a>)</span>:</p>
+<p><span class="math display">\[
+\rho = x\cos\theta + y\sin\theta,
+\]</span></p>
+<p>where <span class="math inline">\(\theta\in[0^\circ,180^\circ)\)</span> is the angle between the line’s normal direction and the <span class="math inline">\(x\)</span> axis, and <span class="math inline">\(\rho\)</span> is the signed distance from the origin to the line. A pair <span class="math inline">\((\rho,\theta)\)</span> uniquely determines a line, and both parameters are bounded: <span class="math inline">\(|\rho|\)</span> never exceeds the image diagonal, and <span class="math inline">\(\theta\)</span> needs only half a turn.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Why not the more familiar slope-intercept form <span class="math inline">\(y=kx+b\)</span>? A vertical line has slope <span class="math inline">\(k\to\infty\)</span>, so the <strong>parameter space</strong> is unbounded in the <span class="math inline">\(k\)</span> direction and cannot be discretized into a finite grid; moreover, a uniform partition of <span class="math inline">\(k\)</span> corresponds to wildly non-uniform line directions (<span class="math inline">\(k\)</span> from 0 to 1 sweeps 45°, while from 10 to 11 it sweeps only about 0.5°). The normal form keeps both parameters bounded and is uniform in direction — a parameterization tailor-made for voting.</p>
+</div></div><p>The normal form brings a beautiful <strong>duality</strong>: substitute an image-space point <span class="math inline">\((x_0,y_0)\)</span> into the equation above and let <span class="math inline">\(\theta\)</span> range over <span class="math inline">\([0^\circ,180^\circ)\)</span>, and the resulting <span class="math inline">\(\rho(\theta)=x_0\cos\theta+y_0\sin\theta\)</span> is <strong>a sinusoidal curve</strong> in parameter space — it enumerates all the lines passing through that point. Conversely, if a set of points is collinear on <span class="math inline">\((\rho^*,\theta^*)\)</span>, their sinusoidal curves must <strong>all pass through the very same point</strong> <span class="math inline">\((\rho^*,\theta^*)\)</span> of parameter space. Detecting lines thus becomes finding the common intersections of a family of sinusoids.</p>
+<p>The engineering realization is the <strong>accumulator</strong>: discretize the <span class="math inline">\((\theta,\rho)\)</span> plane into a grid (e.g.&nbsp;1°×1 px), initialized to zero; for each edge point, sweep over <span class="math inline">\(\theta\)</span>, compute the corresponding <span class="math inline">\(\rho\)</span>, and add one vote to the cell it lands in; once all points have voted, the <strong>peaks</strong> in the accumulator are the lines in the image — the vote count is the number of edge points lying on that line. A global geometric detection problem has been reduced to an array peak search.</p>
+<p>Where do the edge points come from? Any edge detector will do (the systematic treatment is <a href="edge_detection.html" class="quarto-xref"><span>Chapter 13</span></a>) — this chapter thresholds the Sobel gradient magnitude of <a href="#fig-ht-scene" class="quarto-xref">Figure&nbsp;<span>15.1</span></a> (threshold 200, about 7σ of the σ=8 noise level, anchoring the gate above the noise in the spirit of <a href="thresholding.html" class="quarto-xref"><span>Chapter 7</span></a>, with almost no false alarms), yielding <strong>6677 edge points</strong> (<a href="#fig-ht-edges" class="quarto-xref">Figure&nbsp;<span>15.2</span></a>). Note that the gaps in the dashed line and the missing arc of the circle are preserved verbatim in the edge map — the voting is about to face them head-on.</p>
+<div id="fig-ht-edges" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-edges-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/edges.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;15.2: Edge map from thresholding the Sobel magnitude (threshold 200 ≈ 7σ), 6677 edge points in total. The dashed-line gaps, the missing circular arc, and the stray blobs are all faithfully preserved."><img src="figures/hough_transform/edges.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-edges-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15.2: Edge map from thresholding the Sobel magnitude (threshold 200 ≈ 7σ), 6677 edge points in total. The dashed-line gaps, the missing circular arc, and the stray blobs are all faithfully preserved.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-ht-accumulator" class="level2" data-number="15.2">
+<h2 data-number="15.2" class="anchored" data-anchor-id="sec-ht-accumulator"><span class="header-section-number">15.2</span> Reading the Accumulator</h2>
+<p>Before calling the SDK, we build a 180×1201 accumulator by hand (1°/cell along <span class="math inline">\(\theta\)</span>, 1 px/cell along <span class="math inline">\(\rho\)</span>, <span class="math inline">\(|\rho|\le 600\)</span>) and let the 6677 points vote one by one. The result is <a href="#fig-ht-accumulator" class="quarto-xref">Figure&nbsp;<span>15.3</span></a>: <span class="math inline">\(\theta\)</span> on the horizontal axis, <span class="math inline">\(\rho\)</span> on the vertical, gray levels stretched by a square root. Two layers of structure are visible: the <strong>family of sinusoidal curves</strong> filling the lower half — every faint bright curve is the voting trajectory of one (cluster of) edge points — and, within the family, <strong>three distinctly brighter intersections</strong> — the peaks of the three lines. The votes of the 40 stray blobs scatter along their own sinusoids, share no common intersection, and pile up into a peak nowhere.</p>
+<div id="fig-ht-accumulator" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-accumulator-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/accumulator.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;15.3: The hand-built accumulator (180×1201, θ horizontal, ρ vertical, square-root gray stretch). Every edge point contributes one sinusoidal voting trajectory; the trajectories of collinear points intersect at a single point, forming three bright peaks corresponding to L1, L2, and L3."><img src="figures/hough_transform/accumulator.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-accumulator-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15.3: The hand-built accumulator (180×1201, θ horizontal, ρ vertical, square-root gray stretch). Every edge point contributes one sinusoidal voting trajectory; the trajectories of collinear points intersect at a single point, forming three bright peaks corresponding to L1, L2, and L3.
+</figcaption>
+</figure>
+</div>
+<p>Do the peaks land where they should? From the ground-truth endpoints of the three segments we can <strong>predict</strong> each line’s <span class="math inline">\((\rho,\theta)\)</span>; we then extract the three largest peaks from the accumulator (global maximum + neighborhood suppression, refined to sub-cell accuracy with a 5×5 weighted centroid) and set them against the detections of the SDK’s <code>FindHoughLines</code>:</p>
+<div id="tbl-ht-peaks" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-ht-peaks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;15.1: The three ground-truth lines: predicted peak position vs.&nbsp;measured peak of the hand-built accumulator vs.&nbsp;SDK detection
+</figcaption>
+<div aria-describedby="tbl-ht-peaks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Line</th>
+<th>Predicted <span class="math inline">\((\rho,\theta)\)</span></th>
+<th>Accumulator peak <span class="math inline">\((\rho,\theta,\text{votes})\)</span></th>
+<th>SDK detection <span class="math inline">\((\rho,\theta)\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>L1 (solid)</td>
+<td>(119.79, 15.00°)</td>
+<td>(120.77, 15.30°, 291 votes)</td>
+<td>(121.04, 15.01°)</td>
+</tr>
+<tr class="even">
+<td>L2 (dashed, 47% gaps)</td>
+<td>(9.15, 104.25°)</td>
+<td>(9.11, 104.25°, 190 votes)</td>
+<td>(9.22, 104.01°)</td>
+</tr>
+<tr class="odd">
+<td>L3 (solid)</td>
+<td>(378.55, 47.60°)</td>
+<td>(377.31, 48.05°, 260 votes)</td>
+<td>(379.19, 48.02°)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>All three lines pass verification: the <span class="math inline">\(\theta\)</span> deviation stays within half a degree, the <span class="math inline">\(\rho\)</span> deviation within 1.3 px. That 1.3 px is no mystical error floor; it has a definite origin: the strokes in the scene are about 2.8 px wide, and Sobel detects a row of edge points on <strong>each side</strong> of the stroke; the two rows are each collinear, about 2.8 px apart, and the post-voting peak is a compromise between the two rows of votes, so its position drifts between the sides — the accumulator’s peak is forever faithful to the geometry of the <strong>edge points</strong>, and the geometry of the edge points is dictated by the stroke width.</p>
+<p>The row most worth staring at is L2: the dashed line is missing 47% of its stroke, and its vote count drops from the solid lines’ roughly 290 to 190, yet <strong>the position of the peak does not budge and remains clearly identifiable</strong>. This is the soul of the Hough transform — <strong>break immunity</strong>. Voting only asks “does this point lie on this line”, never “is it connected to its neighbors”: gaps merely shave votes off in proportion; they do not move the peak, let alone make it vanish. By contrast, any method that relies on <strong>local continuity</strong> (edge tracking, contour linking) snaps at the first 14 px gap. Global evidence accumulation and local continuity tracking are two worldviews; when the target is inherently broken, only the former is left standing.</p>
+</section>
+<section id="sec-ht-robustness" class="level2 page-columns page-full" data-number="15.3">
+<h2 data-number="15.3" class="anchored" data-anchor-id="sec-ht-robustness"><span class="header-section-number">15.3</span> Multiple Instances and Robustness</h2>
+<p>What happens if, instead of voting, we hand “find the lines” to our most familiar tool, least squares? Run a negative experiment: fit <strong>one</strong> total-least-squares line to all 6677 edge points at once, and the result is <span class="math inline">\(\rho=180.04\)</span>, <span class="math inline">\(\theta=93.76°\)</span>, with an all-point RMS distance of <strong>82.6 px</strong> — the white line slashing across the image in <a href="#fig-ht-naive" class="quarto-xref">Figure&nbsp;<span>15.4</span></a>, matching none of L1, L2, or L3. This is not an implementation slip; the question itself was wrong: least squares assumes <strong>all points obey one and the same model</strong>, while the points here belong to three lines, two circles, and 40 stray blobs; “the optimal single line over all points” is a compromise for an object that does not exist — it can only land near the centroid of all the structures, oriented along the principal axis of greatest scatter — an “average line” that is nobody.</p>
+<div id="fig-ht-naive" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-naive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/naive_fit.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;15.4: The negative experiment: a single-line total-least-squares fit to all 6677 edge points yields ρ=180.04, θ=93.76°, all-point RMS=82.6 px (the white line) — on multi-instance data the “optimum over everything” is a meaningless compromise."><img src="figures/hough_transform/naive_fit.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-naive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15.4: The negative experiment: a single-line total-least-squares fit to all 6677 edge points yields ρ=180.04, θ=93.76°, all-point RMS=82.6 px (the white line) — on multi-instance data the “optimum over everything” is a meaningless compromise.
+</figcaption>
+</figure>
+</div>
+<p>The Hough transform is born without this dilemma: <strong>each instance gathers its own peak in the accumulator</strong>, none interfering with the others — L1’s 291 votes, L2’s 190, and L3’s 260 each sit in their own place; points that belong to no line — the circle arcs and the clutter — scatter their votes everywhere and never form a peak. Multi-instance separation and robustness to clutter are two faces of the <strong>same mechanism</strong>: concentrated votes win, scattered votes lose. <a href="#fig-ht-lines" class="quarto-xref">Figure&nbsp;<span>15.5</span></a> shows the detections of the SDK’s <code>FindHoughLines</code>: all three lines are hit (white lines), the dashed one included.</p>
+<div id="fig-ht-lines" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-lines-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/hough_lines.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;15.5: The 3 lines detected by the SDK’s FindHoughLines (white lines; the infinite lines are clipped to the image borders). The dashed line L2 is detected as usual despite its 47% gaps; the circles and the clutter produce no false alarms."><img src="figures/hough_transform/hough_lines.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-lines-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15.5: The 3 lines detected by the SDK’s <code>FindHoughLines</code> (white lines; the infinite lines are clipped to the image borders). The dashed line L2 is detected as usual despite its 47% gaps; the circles and the clutter produce no false alarms.
+</figcaption>
+</figure>
+</div>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>How do Hough and the robust fitting of <a href="geometric_primitives.html" class="quarto-xref"><span>Chapter 14</span></a> (Huber, RANSAC) divide the work? Robust fitting handles “<strong>one</strong> instance + a few outliers”, still under the premise that an ROI has roughly framed the target, with subpixel accuracy as the reward; RANSAC can handle multiple instances by “find one, remove its inliers, find the next”, but turns inefficient once instances multiply. Hough handles “an <strong>unknown number</strong> of instances + plenty of irrelevant structure”, needs no positional prior whatsoever, at the cost of accuracy capped by the accumulator quantization. Rule of thumb: have an ROI and need accuracy — search lines + robust fitting; no prior and need to find them all — Hough.</p>
+</div></div></section>
+<section id="sec-ht-circles" class="level2 page-columns page-full" data-number="15.4">
+<h2 data-number="15.4" class="anchored" data-anchor-id="sec-ht-circles"><span class="header-section-number">15.4</span> Hough Circles</h2>
+<p>A circle has three parameters <span class="math inline">\((c_x,c_y,r)\)</span>, so the accumulator rises from two dimensions to three: an edge point’s voting trajectory is no longer a sinusoid but a cone surface in parameter space (the farther a candidate center lies from the point, the larger the required radius). A direct implementation costs an order of magnitude more than the line case in both memory and vote counting, so practical algorithms almost universally accelerate with the <strong>gradient direction</strong>: an edge point’s gradient points toward (or away from) the circle center, so votes need only be cast for candidate centers along the gradient ray — the 3D problem collapses into two steps, “2D center accumulation + 1D radius histogram”, which is exactly the 2-1 Hough strategy adopted by mainstream implementations (including OpenCV and most industrial libraries).</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>A feel for the magnitudes: for a 480×360 image and a radius search range of 40 px, a naive 3D accumulator has 480×360×40 ≈ 6.9 million cells, and every edge point must draw a full circle of votes in every radius layer; with gradient-direction acceleration, each point casts only a few dozen votes along a single ray. Without this step, Hough circles cannot run within a production-line cycle.</p>
+</div></div><p>The experiment continues on the same scene (<a href="#fig-ht-circles" class="quarto-xref">Figure&nbsp;<span>15.6</span></a>): <code>FindHoughCircles</code> detects exactly two circles. The complete circle C1 has ground truth <span class="math inline">\((150,230,50)\)</span> and is detected at <span class="math inline">\((151.0,231.0,50.2)\)</span> — a center error of 1.41 px and a radius error of 0.20 px; C2, <strong>missing 40% of its arc</strong>, has ground truth <span class="math inline">\((380,270,60)\)</span> and is detected at <span class="math inline">\((377.0,267.0,57.8)\)</span> — a center error of 4.24 px and a radius error of 2.20 px. The two sets of numbers add up to one sentence: <strong>under occlusion, accuracy degrades, but detection does not fail</strong>. The cause of the degradation is the same as the line’s ρ shift, only stronger: the circle’s three parameters are mutually coupled, the missing arc tilts the vote mass toward the surviving arc, and the peak gets pulled slightly off; but the remaining 60% of the arc still contributes enough votes to gather into a peak — break immunity replayed on circles.</p>
+<div id="fig-ht-circles" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-circles-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/hough_circles.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="Figure&nbsp;15.6: Detections of the SDK’s FindHoughCircles (white circles and crosses mark the detected circles and centers). The complete circle C1 has errors of 1.41/0.20 px; C2, missing 40% of its arc, has errors of 4.24/2.20 px — under occlusion accuracy degrades but detection does not fail."><img src="figures/hough_transform/hough_circles.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-circles-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15.6: Detections of the SDK’s <code>FindHoughCircles</code> (white circles and crosses mark the detected circles and centers). The complete circle C1 has errors of 1.41/0.20 px; C2, missing 40% of its arc, has errors of 4.24/2.20 px — under occlusion accuracy degrades but detection does not fail.
+</figcaption>
+</figure>
+</div>
+<p>The essential ceiling on accuracy must also be seen clearly: measurements show this SDK’s circle centers are <strong>quantized to a 2 px grid</strong> and its radii step by about 0.2 px — the direct imprint of the accumulator cell size; no number of votes can buy resolution below the cell. Hence the standard industrial recipe is two-stage: <strong>Hough for coarse localization, search lines for precise measurement</strong> — first use Hough to find every circle across the whole image (no prior needed, occlusion-tolerant), then take the detected center and radius as the prior to construct an annular ROI and hand it to the radial search lines + robust fitting of <a href="geometric_primitives.html" class="quarto-xref"><span>Chapter 14</span></a> for subpixel-precise measurement. Hough answers “where”, search lines answer “how precisely” — the methods of the two chapters are not rivals but upstream and downstream of one pipeline.</p>
+</section>
+<section id="sec-ht-scivision" class="level2" data-number="15.5">
+<h2 data-number="15.5" class="anchored" data-anchor-id="sec-ht-scivision"><span class="header-section-number">15.5</span> SciVision Implementation</h2>
+<p>Hough lines are provided by <code>SCIMV::SciSvHoughLines</code>, which performs Canny edge extraction internally and consumes the gray image directly:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvHoughLines houghL<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>SciPointArray term<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>SciVarArray lineAng<span class="op">,</span> lineLen<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> rc <span class="op">=</span> houghL<span class="op">.</span>FindHoughLines<span class="op">(</span>src<span class="op">,</span> fullROI<span class="op">,</span> <span class="co">/*cannyLow*/</span> <span class="dv">60</span><span class="op">,</span> <span class="co">/*cannyHigh*/</span> <span class="dv">120</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*accumThreshold*/</span> <span class="dv">65</span><span class="op">,</span> <span class="co">/*minAngle*/</span> <span class="op">-</span><span class="dv">90</span><span class="op">,</span> <span class="co">/*maxAngle*/</span> <span class="dv">90</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*AngleGap*/</span> <span class="dv">5</span><span class="op">,</span> <span class="co">/*DistGap*/</span> <span class="dv">10</span><span class="op">,</span> <span class="co">/*maxNum*/</span> <span class="dv">6</span><span class="op">,</span> <span class="co">/*AngleCheck within range*/</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">&amp;</span>term<span class="op">,</span> <span class="op">&amp;</span>lineAng<span class="op">,</span> <span class="op">&amp;</span>lineLen<span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>cannyLow/cannyHigh</code> are the dual thresholds of the internal Canny; <code>accumThreshold=65</code> is the vote-count gate — peaks with fewer than 65 votes are not reported; <code>minAngle/maxAngle</code> bound the accepted range of line angles; <code>AngleGap=5</code> and <code>DistGap=10</code> define the neighborhood for peak deduplication (peaks differing by &lt;5° in angle and &lt;10 px in distance are merged into one line); <code>maxNum=6</code> caps the number of lines returned. In this example up to 6 lines were allowed and exactly the 3 ground-truth lines were detected — no false alarms under these parameters.</p>
+<p>In actual testing this API exhibits three behaviors that contradict intuition (or the documentation) and must be recorded honestly. <strong>First, the header file does not state what the values of <code>AngleCheck</code> mean</strong>: measurement shows that <code>false</code> means “find lines <strong>within</strong> the angle range” and <code>true</code> means find those <strong>outside</strong> it — passing <code>true</code> together with the full range [-90,90] directly yields the “no suitable line found” error code 122408001. <strong>Second, the default Canny thresholds 20/40 fail on this scene</strong>: under σ=8 noise there are too many false edge points, the votes of the real lines drown in noise votes, and phantom diagonal lines spanning the whole image surface in the accumulator; results only stabilize once the thresholds are raised to 60/120 — the Canny gate must be anchored above the noise level, the same reasoning as the 7σ threshold of the hand-built edge map in <a href="#sec-ht-voting" class="quarto-xref"><span>Section 15.1</span></a>. <strong>Third, the semantics of the return values</strong>: the “endpoints” in <code>term</code> are not segment endpoints but <strong>the intersections of the infinite line with the image borders</strong> (which is why every white line in <a href="#fig-ht-lines" class="quarto-xref">Figure&nbsp;<span>15.5</span></a> runs clear across the image), and <code>lineLenth</code> is the clipped length; the angle returned in <code>lineAng</code> is <span class="math inline">\(90^\circ-\theta\)</span> (the line’s direction angle, not the normal angle) — do not get the conversion backwards.</p>
+<p>Hough circles are provided by <code>SCIMV::SciSvHoughCircles</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvHoughCircles houghC<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SciPointArray centers<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>SciVarArray radii<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> houghC<span class="op">.</span>FindHoughCircles<span class="op">(</span>src<span class="op">,</span> fullROI<span class="op">,</span> <span class="co">/*minDist*/</span> <span class="dv">100</span><span class="op">,</span> <span class="co">/*edgeThreshold*/</span> <span class="dv">160</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*accumThreshold*/</span> <span class="dv">65</span><span class="op">,</span> <span class="co">/*minRadius*/</span> <span class="dv">35</span><span class="op">,</span> <span class="co">/*maxRadius*/</span> <span class="dv">75</span><span class="op">,</span> <span class="co">/*maxNum*/</span> <span class="dv">4</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">&amp;</span>centers<span class="op">,</span> <span class="op">&amp;</span>radii<span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>minDist=100</code> is the minimum spacing between two circle centers (deduplication); <code>edgeThreshold</code> is the strength gate of the internal edge extraction; <code>accumThreshold=65</code> is the vote-count gate of the center accumulator; <code>minRadius/maxRadius</code> delimit the radius search band of 35–75 px. There is a pitfall here as well: <strong>the default <code>edgeThreshold=80</code> is too low</strong> — noise edges gather into <strong>phantom circles whose radius hugs <code>maxRadius</code></strong> (a large-radius circle has a long circumference, more noise points happen to pass by, a built-in vote advantage); after raising it to 160 and pairing it with <code>accumThreshold=65</code>, only the two ground-truth circles are detected even with <code>maxNum=4</code> left open. A final reminder about the output quantization granularity: centers land on a 2 px grid and radii step by about 0.2 px — the moment you receive the result you should know it is a “coarse localization”, and leave the precise measurement to the downstream. The complete project that generates all of this chapter’s images and numbers lives in <code>code/hough_transform/</code>.</p>
+<div class="industry-case">
+<p><span class="case-title">Industry Case: Counting Pins on a Tray</span></p>
+<p>An IC tray inspection station must count the pins of each chip in its pocket: under ring light the metal pins reflect and image as a set of <strong>intermittent short bright lines</strong> — each pin breaks into two or three segments, and the count varies with the chip model. Template matching does not apply (the pin count is variable and the appearance changes with the reflections), and search lines have nowhere to lay their ROIs. Hough lines fit exactly: the pin direction is known (perpendicular to the chip body), so narrowing <code>minAngle/maxAngle</code> to an angular band of ±10° around that direction throws out reflections in irrelevant directions from the start; the several broken bright segments <strong>pool their votes into the same peak</strong> in the accumulator — break immunity automatically merges “several segments” back into “one pin”; finally the vote-count gate filters out sporadic reflections, and the number of detected peaks is the pin count. The center of gravity in tuning is exactly the same as in this chapter’s experiments: first measure the noise level of the production-line images and anchor the internal Canny thresholds above it — the moment phantom lines appear, the count can no longer be trusted.</p>
+</div>
+</section>
+<section id="sec-ht-summary" class="level2" data-number="15.6">
+<h2 data-number="15.6" class="anchored" data-anchor-id="sec-ht-summary"><span class="header-section-number">15.6</span> Summary</h2>
+<ul>
+<li><strong>The Hough transform turns geometric detection into voting</strong>: under the normal form <span class="math inline">\(\rho=x\cos\theta+y\sin\theta\)</span>, an image point is dual to a sinusoid in parameter space, and the sinusoids of collinear points intersect at a single point; a discrete accumulator counts the votes, and the peaks are the lines.</li>
+<li><strong>Break immunity is the Hough transform’s soul</strong>: voting only checks “on the line or not”, never “connected or not” — gaps cut votes but do not move peaks. The dashed line with 47% gaps still peaked with 190 votes, and the 40%-occluded circle was detected as usual.</li>
+<li><strong>Multi-instance separation and clutter robustness are the same mechanism</strong>: each instance gathers its own peak, scattered votes gather into none; in the negative experiment, a single-line least-squares fit to the 6677 points produced an “average line” with RMS 82.6 px — on multi-instance data the optimum over everything is a meaningless compromise.</li>
+<li><strong>Hough accuracy is capped by the accumulator quantization</strong> (here circle centers on a 2 px grid and radii in 0.2 px steps; the line’s ρ deviation is further swayed by the votes from the two sides of the stroke), so the engineering recipe is “Hough for coarse localization + search lines for precise measurement”, forming an upstream–downstream pair with <a href="geometric_primitives.html" class="quarto-xref"><span>Chapter 14</span></a>.</li>
+<li><strong>Anchor parameters to the noise and verify semantics empirically</strong>: internal Canny thresholds below the noise level breed phantom lines/circles; this chapter’s SDK has <code>AngleCheck</code> semantics opposite to the documentation, returns border-clipped intersections as endpoints, and reports the angle as <span class="math inline">\(90^\circ-\theta\)</span> — always validate critical semantics on synthetic images with known ground truth before going live.</li>
+</ul>
+<p>The original reference for the Hough transform is the classic paper by Duda and Hart <span class="citation" data-cites="Duda1972Hough">(<a href="references.html#ref-Duda1972Hough" role="doc-biblioref">Duda and Hart 1972</a>)</span>; its generalization from lines to arbitrary shapes is Ballard’s generalized Hough transform <span class="citation" data-cites="Ballard1981">(<a href="references.html#ref-Ballard1981" role="doc-biblioref">Ballard 1981</a>)</span>, and Illingworth and Kittler’s survey systematically maps the variants and computational strategies <span class="citation" data-cites="Illingworth1988">(<a href="references.html#ref-Illingworth1988" role="doc-biblioref">Illingworth and Kittler 1988</a>)</span>. For its connection to geometric measurement pipelines, see further the book by Steger et al. <span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, and Wiedemann 2018</a>)</span>.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Ballard1981" class="csl-entry" role="listitem">
+Ballard, Dana H. 1981. <span>“Generalizing the Hough Transform to Detect Arbitrary Shapes.”</span> <em>Pattern Recognition</em> 13 (2): 111–22.
+</div>
+<div id="ref-Duda1972Hough" class="csl-entry" role="listitem">
+Duda, Richard O., and Peter E. Hart. 1972. <span>“Use of the Hough Transformation to Detect Lines and Curves in Pictures.”</span> <em>Communications of the ACM</em> 15 (1): 11–15.
+</div>
+<div id="ref-Illingworth1988" class="csl-entry" role="listitem">
+Illingworth, John, and Josef Kittler. 1988. <span>“A Survey of the Hough Transform.”</span> <em>Computer Vision, Graphics, and Image Processing</em> 44 (1): 87–116.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, and Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2nd ed. Wiley-VCH.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./geometric_primitives.html" class="pagination-link" aria-label="Detecting Geometric Primitives">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Detecting Geometric Primitives</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./template_matching.html" class="pagination-link" aria-label="Template Matching">
+        <span class="nav-page-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Template Matching</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
