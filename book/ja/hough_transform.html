@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>15&nbsp; ホフ変換 – マシンビジョンアルゴリズム——原理と産業実践</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./template_matching.html" rel="next">
+<link href="./geometric_primitives.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "一致なし",
+    "search-matching-documents-text": "一致した文書",
+    "search-copy-link-title": "検索へのリンクをコピー",
+    "search-hide-matches-text": "追加の検索結果を非表示",
+    "search-more-match-text": "追加の検索結果",
+    "search-more-matches-text": "追加の検索結果",
+    "search-clear-button-title": "消去",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "検索",
+    "search-label": "サーチ"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_locating.html">位置決め</a></li><li class="breadcrumb-item"><a href="./hough_transform.html"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">ホフ変換</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="サーチ" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">マシンビジョンアルゴリズム——原理と産業実践</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="サーチ"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">記号の約束事</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">基礎</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">デジタル画像基礎</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">数学予備</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">撮像とキャリブレーション</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">カメラとレンズ</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">光源と照明</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">カメラキャリブレーション</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">画像エンハンスメント</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">空間フィルタリング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">閾値処理</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">モルフォロジー</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">グレースケール変換とヒストグラム</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">幾何変換</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">周波数領域処理とFFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">高度強調</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">位置決め</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">エッジ検出</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">幾何プリミティブの検出</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">ホフ変換</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">テンプレートマッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">形状マッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">特徴マッチングとカラーマッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI 生成と位置補正</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">測定</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">カリパー計測とサブピクセル位置決め</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">幾何計測</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">輝度、色、間隔の測定</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">検査</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob解析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">輪郭分析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">形状特徴</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">欠陥検出</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">認識</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1Dおよび2Dバーコード認識</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">OCR 文字認識</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">古典的分類器</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D イメージング</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">3次元イメージング概論</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">ステレオビジョン</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">構造化光3次元イメージング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">レーザー三角測量</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">照度差ステレオ</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">位相計測ディフレクトメトリー</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">共焦点結像とフォーカスバリエーション</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D 処理</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">点群基礎</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">点群の前処理</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP 位置合わせと3D校正</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D マッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D計測</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D検査</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目次</h2>
+   
+  <ul>
+  <li><a href="#sec-ht-voting" id="toc-sec-ht-voting" class="nav-link active" data-scroll-target="#sec-ht-voting"><span class="header-section-number">15.1</span> パラメータ空間と投票</a></li>
+  <li><a href="#sec-ht-accumulator" id="toc-sec-ht-accumulator" class="nav-link" data-scroll-target="#sec-ht-accumulator"><span class="header-section-number">15.2</span> アキュムレータの読み取り</a></li>
+  <li><a href="#sec-ht-robustness" id="toc-sec-ht-robustness" class="nav-link" data-scroll-target="#sec-ht-robustness"><span class="header-section-number">15.3</span> 複数インスタンスと頑健性</a></li>
+  <li><a href="#sec-ht-circles" id="toc-sec-ht-circles" class="nav-link" data-scroll-target="#sec-ht-circles"><span class="header-section-number">15.4</span> ハフ円</a></li>
+  <li><a href="#sec-ht-scivision" id="toc-sec-ht-scivision" class="nav-link" data-scroll-target="#sec-ht-scivision"><span class="header-section-number">15.5</span> SciVision実装</a></li>
+  <li><a href="#sec-ht-summary" id="toc-sec-ht-summary" class="nav-link" data-scroll-target="#sec-ht-summary"><span class="header-section-number">15.6</span> まとめ</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_locating.html">位置決め</a></li><li class="breadcrumb-item"><a href="./hough_transform.html"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">ホフ変換</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-hough_transform" class="quarto-section-identifier"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">ホフ変換</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><a href="geometric_primitives.html" class="quarto-xref"><span>チャプター 14</span></a> の探索線法には自明の前提がある：目標がおおよそどこにあるかをあらかじめ知っていることである。まずROIを指定し、次に探索線を配置する——この一連のパイプラインは「1つのROIにつき1つの幾何プリミティブ」という事前知識に基づいている。しかし、この前提が成立しない場合はどうなるだろうか？画像内に<strong>複数</strong>の直線や<strong>複数</strong>の円があり、それぞれがどこにあるか事前にはわからない状況である。さらに目標が途切れていたり（破線、反射による切れ目）、部分的に隠れていたりすることもある。この場合、探索線を配置する場所がなくなり、点ごとの追跡も最初の切れ目で途切れてしまう。<strong>ホフ変換（Hough transform）</strong>は問いの立て方を変える：「この直線はどこにあるか」を問うのではなく、<strong>すべてのエッジ点が、自身を通るすべての可能性のある直線に投票（voting）</strong>することで、最も多くの票を集めたパラメータの組み合わせが自然に選ばれるのである。本章では、480×360の合成シーン（<a href="#fig-ht-scene" class="quarto-xref">図&nbsp;<span>15.1</span></a>）を用いて、この投票機構を全体的に実行する。このシーンには3本の直線——そのうち1本は<strong>欠落率約47%の破線</strong>——と2つの円——そのうち1つは<strong>40%が隠れている</strong>——に加え、40個の散在する斑点とσ=8のガウシアンノイズが含まれている。途切れ、隠れ、雑点、ノイズの4種類の妨害がすべて揃っており、ホフ変換の真価を引き出すのにちょうどよい。</p>
+<div id="fig-ht-scene" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-scene-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/scene.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="図&nbsp;15.1: 合成テストシーン（480×360）：3本の直線（L1、L3は実線、L2は欠落率約47%の破線）、2つの円（C1は完全、C2は円弧の40%が欠落）、40個の散在する斑点、さらにσ=8のガウシアンノイズを重畳。"><img src="figures/hough_transform/scene.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-scene-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;15.1: 合成テストシーン（480×360）：3本の直線（L1、L3は実線、L2は欠落率約47%の破線）、2つの円（C1は完全、C2は円弧の40%が欠落）、40個の散在する斑点、さらにσ=8のガウシアンノイズを重畳。
+</figcaption>
+</figure>
+</div>
+<section id="sec-ht-voting" class="level2 page-columns page-full" data-number="15.1">
+<h2 data-number="15.1" class="anchored" data-anchor-id="sec-ht-voting"><span class="header-section-number">15.1</span> パラメータ空間と投票</h2>
+<p>直線に投票するには、まず直線に適切なパラメータの組を与える必要がある。ホフ変換は<strong>法線式（normal form）</strong>によるパラメータ化を採用している<span class="citation" data-cites="Duda1972Hough">(<a href="references.html#ref-Duda1972Hough" role="doc-biblioref">Duda と Hart 1972</a>)</span>：</p>
+<p><span class="math display">\[
+\rho = x\cos\theta + y\sin\theta,
+\]</span></p>
+<p>ここで<span class="math inline">\(\theta\in[0^\circ,180^\circ)\)</span>は直線の法線方向と<span class="math inline">\(x\)</span>軸のなす角、<span class="math inline">\(\rho\)</span>は原点から直線までの符号付き距離である。<span class="math inline">\((\rho,\theta)\)</span>の組は1本の直線を一意に定め、両方のパラメータには上限・下限がある：<span class="math inline">\(|\rho|\)</span>は画像の対角線長を超えず、<span class="math inline">\(\theta\)</span>は半周分だけでよい。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>なぜより馴染みのある斜截式<span class="math inline">\(y=kx+b\)</span>を使わないのだろうか？鉛直線は傾き<span class="math inline">\(k\to\infty\)</span>となるため、<strong>パラメータ空間（parameter space）</strong>が<span class="math inline">\(k\)</span>方向に上限を持たず、有限の格子に離散化できない。さらに、<span class="math inline">\(k\)</span>を等間隔に分割すると、対応する直線の方向が極端に不均一になる（<span class="math inline">\(k\)</span>が0から1までで45°を掃引するのに対し、10から11まででは約0.5°しか掃引しない）。法線式は両方のパラメータに上限・下限があり、方向に対して均一であるため、投票専用に設計されたパラメータ化といえる。</p>
+</div></div><p>法線式は美しい双対関係をもたらす。画像空間内の1点<span class="math inline">\((x_0,y_0)\)</span>を上式に代入し、<span class="math inline">\(\theta\)</span>を<span class="math inline">\([0^\circ,180^\circ)\)</span>の範囲で動かすと、得られる<span class="math inline">\(\rho(\theta)=x_0\cos\theta+y_0\sin\theta\)</span>はパラメータ空間内の<strong>1本の正弦曲線</strong>となる——これはその点を通るすべての直線を列挙したものである。逆に、一群の点が<span class="math inline">\((\rho^*,\theta^*)\)</span>で共線であれば、それぞれの正弦曲線はパラメータ空間内の<strong>同一点<span class="math inline">\((\rho^*,\theta^*)\)</span>をすべて通る</strong>。したがって、直線の検出は正弦曲線族の共通の交点を見つけることに帰着する。</p>
+<p>工学的な実装は<strong>アキュムレータ（accumulator）</strong>である：<span class="math inline">\((\theta,\rho)\)</span>平面を格子（例えば1°×1 px）に離散化し、0で初期化する。各エッジ点について、<span class="math inline">\(\theta\)</span>を掃引して対応する<span class="math inline">\(\rho\)</span>を計算し、該当する格子に1票を加える。すべての点の投票が終わった後、アキュムレータ内の<strong>ピーク（peak）</strong>が画像内の直線となる——票数はその直線上にあるエッジ点の数である。大域的な幾何学的検出問題が、配列のピーク探索に単純化されるのである。</p>
+<p>エッジ点はどこから得るのだろうか？任意のエッジ検出器でよい（系統的な解説は <a href="edge_detection.html" class="quarto-xref"><span>チャプター 13</span></a> を参照）——本章では <a href="#fig-ht-scene" class="quarto-xref">図&nbsp;<span>15.1</span></a> に対してSobel勾配振幅の閾値処理を行い（閾値200、σ=8のノイズレベルの約7σに相当し、<a href="thresholding.html" class="quarto-xref"><span>チャプター 7</span></a> の考え方に従って閾値をノイズより高く設定することで、虚警はほぼない）、<strong>6677個のエッジ点</strong>を得た（<a href="#fig-ht-edges" class="quarto-xref">図&nbsp;<span>15.2</span></a>）。破線の切れ目と円の欠けた円弧がエッジ図にそのまま残っていることに注意されたい——次の投票でこれらに真正面から取り組むことになる。</p>
+<div id="fig-ht-edges" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-edges-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/edges.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="図&nbsp;15.2: Sobel振幅の閾値処理（閾値200 ≈ 7σ）で得られたエッジ図、計6677個のエッジ点。破線の切れ目、円弧の欠落、散在する斑点がすべて忠実に保存されている。"><img src="figures/hough_transform/edges.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-edges-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;15.2: Sobel振幅の閾値処理（閾値200 ≈ 7σ）で得られたエッジ図、計6677個のエッジ点。破線の切れ目、円弧の欠落、散在する斑点がすべて忠実に保存されている。
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-ht-accumulator" class="level2" data-number="15.2">
+<h2 data-number="15.2" class="anchored" data-anchor-id="sec-ht-accumulator"><span class="header-section-number">15.2</span> アキュムレータの読み取り</h2>
+<p>SDKを呼び出す前に、手作業で180×1201のアキュムレータを作成し（<span class="math inline">\(\theta\)</span>方向は1°/セル、<span class="math inline">\(\rho\)</span>方向は1 px/セル、<span class="math inline">\(|\rho|\le 600\)</span>）、6677個の点に1つずつ投票させる。結果を <a href="#fig-ht-accumulator" class="quarto-xref">図&nbsp;<span>15.3</span></a> に示す：横軸が<span class="math inline">\(\theta\)</span>、縦軸が<span class="math inline">\(\rho\)</span>で、グレースケール値は平方根で伸張されている。図には2層の構造が見える：下半分を埋め尽くす<strong>正弦曲線族</strong>——淡く明るい各曲線が1つ（または1クラスタ）のエッジ点の投票軌跡である——と、曲線族の中にある<strong>3つの明らかにより明るい交点</strong>——3本の直線のピークである。40個の散在する斑点の票はそれぞれの正弦曲線上に散らばり、共通の交点を持たないため、どこにもピークを形成しない。</p>
+<div id="fig-ht-accumulator" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-accumulator-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/accumulator.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="図&nbsp;15.3: 手作業で作成したアキュムレータ（180×1201、θ横軸、ρ縦軸、平方根グレースケール伸張）。各エッジ点が1つの正弦波状の投票軌跡を寄与し；共線の点の軌跡は1点で交わり、L1、L2、L3に対応する3つの明るいピークを形成する。"><img src="figures/hough_transform/accumulator.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-accumulator-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;15.3: 手作業で作成したアキュムレータ（180×1201、θ横軸、ρ縦軸、平方根グレースケール伸張）。各エッジ点が1つの正弦波状の投票軌跡を寄与し；共線の点の軌跡は1点で交わり、L1、L2、L3に対応する3つの明るいピークを形成する。
+</figcaption>
+</figure>
+</div>
+<p>ピークは本来あるべき位置にあるだろうか？3本の線分の真値の端点から、それぞれの<span class="math inline">\((\rho,\theta)\)</span>を<strong>予測</strong>できる。アキュムレータから3つの最大ピークを抽出し（大域最大値＋近傍抑制、5×5の加重重心を用いてサブセル精度に精緻化）、SDKの<code>FindHoughLines</code>による検出結果と比較した：</p>
+<div id="tbl-ht-peaks" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-ht-peaks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;15.1: 3本の真値直線：予測ピーク位置 vs 手作業アキュムレータの実測ピーク vs SDK検出
+</figcaption>
+<div aria-describedby="tbl-ht-peaks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>直線</th>
+<th>予測 <span class="math inline">\((\rho,\theta)\)</span></th>
+<th>アキュムレータピーク <span class="math inline">\((\rho,\theta,\text{票数})\)</span></th>
+<th>SDK 検出 <span class="math inline">\((\rho,\theta)\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>L1（実線）</td>
+<td>(119.79, 15.00°)</td>
+<td>(120.77, 15.30°, 291 票)</td>
+<td>(121.04, 15.01°)</td>
+</tr>
+<tr class="even">
+<td>L2（破線、47%欠落）</td>
+<td>(9.15, 104.25°)</td>
+<td>(9.11, 104.25°, 190 票)</td>
+<td>(9.22, 104.01°)</td>
+</tr>
+<tr class="odd">
+<td>L3（実線）</td>
+<td>(378.55, 47.60°)</td>
+<td>(377.31, 48.05°, 260 票)</td>
+<td>(379.19, 48.02°)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>3本すべての直線が検証をパスした：<span class="math inline">\(\theta\)</span>の偏差は0.5度以内、<span class="math inline">\(\rho\)</span>の偏差は1.3 px以内である。この1.3 pxは不可解な誤差の下限ではなく、明確な原因がある：シーン内の線の太さは約2.8 pxであり、Sobelは線の<strong>両側</strong>にそれぞれエッジ点の列を検出する。この2列の点はそれぞれ共線で約2.8 px離れており、投票後のピークは2列の票の妥協点となるため、位置は両側の間を変動する——アキュムレータのピークは常に<strong>エッジ点</strong>の幾何に忠実であり、エッジ点の幾何は線の太さによって決まるのである。</p>
+<p>表の中で最も注目に値するのはL2である：破線は線の47%が欠落しており、票数は実線の約290から190に減少しているが、<strong>ピークの位置は全く動かず、依然として明瞭に識別できる</strong>。これがホフ変換の真髄——<strong>途切れに対する耐性</strong>である。投票は「この点はこの直線上にあるか」だけを問い、「隣の点とつながっているか」は問わない：切れ目は単に票数を比例的に減らすだけで、ピークを移動させることも消滅させることもない。これに対し、<strong>局所的な連続性</strong>に依存する手法（エッジ追跡、輪郭連結）は、最初の14 pxの切れ目で途切れてしまう。大域的な証拠の蓄積と局所的な連続性追跡は2つの世界観であり；目標が本質的に途切れている場合、前者だけが有効なのである。</p>
+</section>
+<section id="sec-ht-robustness" class="level2 page-columns page-full" data-number="15.3">
+<h2 data-number="15.3" class="anchored" data-anchor-id="sec-ht-robustness"><span class="header-section-number">15.3</span> 複数インスタンスと頑健性</h2>
+<p>投票を使わず、「直線を探す」を最も馴染みのある最小二乗法に任せたらどうなるだろうか？逆実験を行う：6677個すべてのエッジ点に対して全体で<strong>1本</strong>の総最小二乗直線を当てはめると、結果は<span class="math inline">\(\rho=180.04\)</span>、<span class="math inline">\(\theta=93.76°\)</span>、全点のRMS距離は<strong>82.6 px</strong>となった——<a href="#fig-ht-naive" class="quarto-xref">図&nbsp;<span>15.4</span></a> の画像を横切る白線であり、L1、L2、L3のいずれとも一致しない。これは実装のミスではなく、問いの立て方自体が間違っているのである：最小二乗法は<strong>すべての点が同一のモデルに従う</strong>ことを仮定しているのに対し、ここの点は3本の直線、2つの円、40個の雑点に属している。「すべての点に対する最適な1本の直線」は存在しない対象に対する妥協であり、すべての構造の重心付近に位置し、ばらつきの最大の主軸に沿った方向を向く——誰でもない「平均的な線」に過ぎないのである。</p>
+<div id="fig-ht-naive" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-naive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/naive_fit.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="図&nbsp;15.4: 逆実験：6677個すべてのエッジ点に対して単一直線の総最小二乗当てはめを行った結果、ρ=180.04、θ=93.76°、全点RMS=82.6 px（白線）——複数インスタンスのデータ上で「全体の最適」は無意味な妥協である。"><img src="figures/hough_transform/naive_fit.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-naive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;15.4: 逆実験：6677個すべてのエッジ点に対して単一直線の総最小二乗当てはめを行った結果、ρ=180.04、θ=93.76°、全点RMS=82.6 px（白線）——複数インスタンスのデータ上で「全体の最適」は無意味な妥協である。
+</figcaption>
+</figure>
+</div>
+<p>ホフ変換はこのジレンマを本質的に持たない：<strong>各インスタンスがアキュムレータ内で自身のピークを形成し</strong>、互いに干渉しない——L1の291票、L2の190票、L3の260票はそれぞれ自身の位置に存在する；どの直線にも属さない円弧の点と雑点の票は至る所に散らばり、ピークを形成することはない。複数インスタンスの分離と雑点に対する頑健性は<strong>同一のメカニズム</strong>の両面である：票が集中したものが勝ち、散らばったものが負けるのである。<a href="#fig-ht-lines" class="quarto-xref">図&nbsp;<span>15.5</span></a> はSDKの<code>FindHoughLines</code>による検出結果である：破線を含む3本の直線がすべて検出されている（白線）。</p>
+<div id="fig-ht-lines" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-lines-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/hough_lines.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="図&nbsp;15.5: SDKのFindHoughLinesによって検出された3本の直線（白線、無限直線を画像の境界で切り取り）。破線L2は47%の欠落の下でも通常通り検出され；円と雑点から虚警は発生しなかった。"><img src="figures/hough_transform/hough_lines.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-lines-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;15.5: SDKの<code>FindHoughLines</code>によって検出された3本の直線（白線、無限直線を画像の境界で切り取り）。破線L2は47%の欠落の下でも通常通り検出され；円と雑点から虚警は発生しなかった。
+</figcaption>
+</figure>
+</div>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>ホフ変換と <a href="geometric_primitives.html" class="quarto-xref"><span>チャプター 14</span></a> の頑健な当てはめ（Huber、RANSAC）はどのように使い分けるべきだろうか？頑健な当てはめは「<strong>1つ</strong>のインスタンス＋少数の外れ値」を扱い、前提としてROIで目標をおおよそ囲んでいる必要があり、サブピクセル精度が得られるという利点がある；RANSACは「1つ見つけて、そのインライア点を除去し、次を探す」という方法で複数インスタンスを扱えるが、インスタンスの数が多くなると効率が悪くなる。ホフ変換は「<strong>数不明</strong>のインスタンス＋多数の無関係な構造」を扱い、位置の事前知識を一切必要としないが、精度はアキュムレータの量子化によって制限されるという代償がある。経験則として：ROIがあり精度が必要な場合は——探索線＋頑健な当てはめ；事前知識がなくすべてを見つける必要がある場合は——ホフ変換、である。</p>
+</div></div></section>
+<section id="sec-ht-circles" class="level2 page-columns page-full" data-number="15.4">
+<h2 data-number="15.4" class="anchored" data-anchor-id="sec-ht-circles"><span class="header-section-number">15.4</span> ハフ円</h2>
+<p>円は3つのパラメータ <span class="math inline">\((c_x,c_y,r)\)</span> を持つため、アキュムレータは2次元から3次元に拡張される。エッジ点の投票軌跡は正弦曲線ではなく、パラメータ空間内の円錐面となる（候補中心が点から遠いほど、必要な半径は大きくなる）。直接実装した場合、メモリ消費と投票計算のコストは直線の場合より1桁大きくなるため、実用的なアルゴリズムはほぼ例外なく<strong>勾配方向</strong>を用いて高速化する。エッジ点の勾配方向は円の中心を向く（あるいは背く）ため、勾配方向の射線に沿って候補中心に投票するだけでよく、3次元の問題は「2次元の中心投票 + 1次元の半径ヒストグラム」の2段階に縮退される。これがOpenCVや多くの産業用ライブラリを含む主流の実装が採用する2-1ハフ戦略である。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>規模感の目安：480×360の画像、半径探索範囲40 pxの場合、単純な3次元アキュムレータは480×360×40 ≈ 690万個のセルを持ち、すべてのエッジ点は各半径層で1周分の投票を行う必要がある。勾配方向による高速化後は、各点は1本の射線に沿って数十票を投じるだけで済む。この処理がなければ、ハフ円は生産ラインのタクト内で実行できない。</p>
+</div></div><p>実験は同じシーンで継続する（<a href="#fig-ht-circles" class="quarto-xref">図&nbsp;<span>15.6</span></a>）。<code>FindHoughCircles</code> はちょうど2つの円を検出した。完全な円C1の真値は <span class="math inline">\((150,230,50)\)</span>、検出値は <span class="math inline">\((151.0,231.0,50.2)\)</span> であり、中心誤差は1.41 px、半径誤差は0.20 pxであった。<strong>円弧の40%が欠落した</strong>C2の真値は <span class="math inline">\((380,270,60)\)</span>、検出値は <span class="math inline">\((377.0,267.0,57.8)\)</span> であり、中心誤差は4.24 px、半径誤差は2.20 pxであった。これら2組の数値は1つの結論を導く：<strong>遮蔽下では精度は低下するが、検出は失敗しない</strong>。精度低下の原因は直線のρオフセットと同様であるが、影響はより大きい。円の3つのパラメータは相互に結合しており、欠落した円弧によって投票の重心が残存する円弧側に偏り、ピークはわずかに引きずられる。しかし、残存する60%の円弧がピークを形成するのに十分な票を寄与するため、これは円における断絶耐性の再現である。</p>
+<div id="fig-ht-circles" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ht-circles-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/hough_transform/hough_circles.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="図&nbsp;15.6: SDKのFindHoughCirclesによる検出結果（白い円と十字が検出された円と中心）。完全な円C1の誤差は1.41/0.20 pxであり、40%の円弧が欠落したC2の誤差は4.24/2.20 pxである。遮蔽下で精度は低下するが検出は失敗しない。"><img src="figures/hough_transform/hough_circles.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ht-circles-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;15.6: SDKの<code>FindHoughCircles</code>による検出結果（白い円と十字が検出された円と中心）。完全な円C1の誤差は1.41/0.20 pxであり、40%の円弧が欠落したC2の誤差は4.24/2.20 pxである。遮蔽下で精度は低下するが検出は失敗しない。
+</figcaption>
+</figure>
+</div>
+<p>精度の本質的な上限も明確に把握しておく必要がある。実測によると、このSDKの円中心は<strong>2 pxの格子に量子化</strong>され、半径は約0.2 px刻みである。これはアキュムレータのセルサイズの直接的な反映であり、いくら票を集めてもセルサイズ未満の分解能は得られない。そのため、産業分野での標準的な手順は2段階である：<strong>ハフによる粗位置出し、サーチラインによる精測</strong>。まずハフを用いて画像全体からすべての円を検出し（事前情報不要、遮蔽に耐性あり）、検出された中心と半径を事前情報として環状ROIを作成し、<a href="geometric_primitives.html" class="quarto-xref"><span>チャプター 14</span></a> の放射状サーチライン + ロバストフィッティングに渡してサブピクセル精度の精測を行う。ハフは「どこにあるか」を担当し、サーチラインは「どれだけ正確か」を担当する。両章の手法は競合関係ではなく、パイプラインの上流と下流の関係にある。</p>
+</section>
+<section id="sec-ht-scivision" class="level2" data-number="15.5">
+<h2 data-number="15.5" class="anchored" data-anchor-id="sec-ht-scivision"><span class="header-section-number">15.5</span> SciVision実装</h2>
+<p>ハフ直線は<code>SCIMV::SciSvHoughLines</code>から提供され、内部でCannyエッジ抽出を行い、グレースケール画像を直接入力とする。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvHoughLines houghL<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>SciPointArray term<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>SciVarArray lineAng<span class="op">,</span> lineLen<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> rc <span class="op">=</span> houghL<span class="op">.</span>FindHoughLines<span class="op">(</span>src<span class="op">,</span> fullROI<span class="op">,</span> <span class="co">/*cannyLow*/</span> <span class="dv">60</span><span class="op">,</span> <span class="co">/*cannyHigh*/</span> <span class="dv">120</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*accumThreshold*/</span> <span class="dv">65</span><span class="op">,</span> <span class="co">/*minAngle*/</span> <span class="op">-</span><span class="dv">90</span><span class="op">,</span> <span class="co">/*maxAngle*/</span> <span class="dv">90</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*AngleGap*/</span> <span class="dv">5</span><span class="op">,</span> <span class="co">/*DistGap*/</span> <span class="dv">10</span><span class="op">,</span> <span class="co">/*maxNum*/</span> <span class="dv">6</span><span class="op">,</span> <span class="co">/*AngleCheck 範囲内*/</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">&amp;</span>term<span class="op">,</span> <span class="op">&amp;</span>lineAng<span class="op">,</span> <span class="op">&amp;</span>lineLen<span class="op">);</span></span></code><button title="コピー" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>cannyLow/cannyHigh</code>は内部のCannyの2つの閾値である。<code>accumThreshold=65</code>は票数の閾値であり、65票未満のピークは報告されない。<code>minAngle/maxAngle</code>は受け入れる直線の角度範囲を限定する。<code>AngleGap=5</code>、<code>DistGap=10</code>はピークの重複除去のための近傍領域を定義し（角度差&lt;5°かつ距離差&lt;10 pxのピークは1本の直線に統合される）、<code>maxNum=6</code>は返される直線の最大数を制限する。本例では6本の返却を許可したところ、ちょうど3本の真値直線のみが検出され、このパラメータでは虚警が発生しないことが確認された。</p>
+<p>実測では、このAPIに直感（またはドキュメント）とは異なる、正直に記録しておくべき3つの挙動が見られた。<strong>1つ目は、ヘッダーファイルに<code>AngleCheck</code>の値の意味が明記されていない</strong>ことである。実測によると、<code>false</code>が「角度範囲<strong>内</strong>の直線を探す」であり、<code>true</code>が範囲<strong>外</strong>の直線を探すである。<code>true</code>を全範囲[-90,90]と組み合わせて渡すと、「適切な直線が見つからない」というエラーコード122408001が直接返される。<strong>2つ目は、デフォルトのCanny閾値20/40が本シーンでは機能しない</strong>ことである。σ=8のノイズ下では虚警のエッジ点が多すぎ、真の直線の票がノイズの票に埋もれ、アキュムレータ内に画像全体を貫く幻影の対角線が出現する。閾値を60/120に上げて初めて結果が安定した。これは@sec-ht-voting の手動エッジ画像で7σの閾値を用いたのと同じ理屈で、Cannyの閾値はノイズレベルより上に設定する必要がある。<strong>3つ目は、戻り値のセマンティクス</strong>である。<code>term</code>内の「端点」は線分の端点ではなく、<strong>無限直線と画像境界との交点</strong>であり（<a href="#fig-ht-lines" class="quarto-xref">図&nbsp;<span>15.5</span></a> の白い線がすべて画像を貫いているのはこのためである）、<code>lineLenth</code>はクリップ後の長さである。また、<code>lineAng</code>に返される角度は <span class="math inline">\(90^\circ-\theta\)</span>（法線角ではなく直線の方向角）であるため、換算時に逆にしないよう注意する必要がある。</p>
+<p>ハフ円は<code>SCIMV::SciSvHoughCircles</code>から提供される。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvHoughCircles houghC<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SciPointArray centers<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>SciVarArray radii<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> houghC<span class="op">.</span>FindHoughCircles<span class="op">(</span>src<span class="op">,</span> fullROI<span class="op">,</span> <span class="co">/*minDist*/</span> <span class="dv">100</span><span class="op">,</span> <span class="co">/*edgeThreshold*/</span> <span class="dv">160</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">/*accumThreshold*/</span> <span class="dv">65</span><span class="op">,</span> <span class="co">/*minRadius*/</span> <span class="dv">35</span><span class="op">,</span> <span class="co">/*maxRadius*/</span> <span class="dv">75</span><span class="op">,</span> <span class="co">/*maxNum*/</span> <span class="dv">4</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">&amp;</span>centers<span class="op">,</span> <span class="op">&amp;</span>radii<span class="op">);</span></span></code><button title="コピー" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>minDist=100</code>は2つの円の中心間の最小間隔（重複除去用）である。<code>edgeThreshold</code>は内部のエッジ抽出の強度閾値である。<code>accumThreshold=65</code>は中心アキュムレータの票数閾値である。<code>minRadius/maxRadius</code>は半径探索帯35～75 pxを規定する。ここにも落とし穴がある：<strong>デフォルトの<code>edgeThreshold=80</code>は低すぎる</strong>ため、ノイズのエッジが<strong>半径が<code>maxRadius</code>に張り付いた幻影円</strong>として集まってしまう（大きな半径の円は円周が長く、通過するノイズ点が多いため、本来的に票数で有利になる）。これを160に上げ、<code>accumThreshold=65</code>と組み合わせることで、<code>maxNum=4</code>を許可しても2つの真値円のみが検出されるようになった。最後に出力の量子化粒度について再度注意する：中心は2 pxの格子に載り、半径は約0.2 px刻みである。結果を受け取った時点で「粗位置出し」であることを認識し、精測は下流の処理に委ねるべきである。本章のすべての画像と数値を生成する完全なプロジェクトは<code>code/hough_transform/</code>にある。</p>
+<div class="industry-case">
+<p><span class="case-title">産業事例：トレイ上のピンカウント</span></p>
+<p>あるICトレイの検査ステーションでは、各ポケット内のチップのピン数を計数する必要がある。リング照明下で金属ピンは反射し、<strong>途切れ途切れの短い輝線</strong>の集合として撮像される。各ピンは2～3つのセグメントに分断され、本数はチップのモデルによって異なる。テンプレートマッチングは適用できず（ピン数が不定で、外観が反射によって変化する）、サーチラインもROIを設定することができない。ハフ直線はまさにこの用途に適している。ピンの方向は既知（チップ本体と垂直）であるため、<code>minAngle/maxAngle</code>をその方向の±10°の角度帯に絞ることで、無関係な方向の反射は最初から排除される。分断された数個の輝線セグメントはアキュムレータ内で<strong>同じピークに票を集め</strong>、断絶耐性によって「数個のセグメント」が自動的に「1本のピン」に統合される。最後に票数閾値で散発的な反射をフィルタリングし、検出されたピーク数がピン数となる。パラメータ調整の重点は本章の実験とまったく同じである：まず生産ラインの画像のノイズレベルを測定し、内部のCanny閾値をノイズレベルより上に固定する。幻影線が出現した時点で、計数は信頼できなくなる。</p>
+</div>
+</section>
+<section id="sec-ht-summary" class="level2" data-number="15.6">
+<h2 data-number="15.6" class="anchored" data-anchor-id="sec-ht-summary"><span class="header-section-number">15.6</span> まとめ</h2>
+<ul>
+<li><strong>ハフ変換は幾何検出を投票に変える</strong>：法線式 <span class="math inline">\(\rho=x\cos\theta+y\sin\theta\)</span> のもと、画像点はパラメータ空間の正弦曲線に双対され、共線な点の曲線は1点で交わる。離散アキュムレータが投票をカウントし、ピークが直線となる。</li>
+<li><strong>断絶耐性はハフ変換の核心である</strong>：投票は「直線上にあるか否か」だけを見て「連続しているか否か」は見ないため、欠けは票数を減らすだけでピークの位置は移動しない。47%の欠けを持つ破線は190票で通常通りピークを形成し、40%遮蔽された円も通常通り検出された。</li>
+<li><strong>多インスタンスの分離と雑音に対するロバスト性は同じメカニズムである</strong>：各インスタンスは自身のピークを形成し、散在する票はピークを形成できない。対照実験では、6677点に対して単一直線の最小二乗フィッティングを行ったところ、RMS 82.6 pxの「平均直線」が得られた。多インスタンスのデータにおいて、全体で最適な解は無意味な妥協案に過ぎない。</li>
+<li><strong>ハフの精度はアキュムレータの量子化によって上限が定まる</strong>（本例では円中心は2 px格子、半径は0.2 px刻み。直線のρ偏差はさらに線の両側からの投票の影響を受ける）。そのため、エンジニアリングの手順は「ハフによる粗位置出し + サーチラインによる精測」であり、<a href="geometric_primitives.html" class="quarto-xref"><span>チャプター 14</span></a> とともに上流-下流の関係を構成する。</li>
+<li><strong>パラメータはノイズに固定し、セマンティクスは実測で検証する</strong>：内部のCanny閾値がノイズレベルを下回ると幻影直線/幻影円が発生する。本章のSDKは<code>AngleCheck</code>のセマンティクスがドキュメントと逆であり、戻りの端点は境界クリップ後の交点であり、角度は <span class="math inline">\(90^\circ-\theta\)</span> である。重要なセマンティクスは、必ず真値が既知の合成画像で検証してから本番に適用するべきである。</li>
+</ul>
+<p>ハフ変換の原典はDudaとHartの古典的な論文<span class="citation" data-cites="Duda1972Hough">(<a href="references.html#ref-Duda1972Hough" role="doc-biblioref">Duda と Hart 1972</a>)</span>である。直線から任意の形状への一般化はBallardの一般化ハフ変換<span class="citation" data-cites="Ballard1981">(<a href="references.html#ref-Ballard1981" role="doc-biblioref">Ballard 1981</a>)</span>であり、IllingworthとKittlerのサーベイは各種の変形と計算戦略を体系的に整理している<span class="citation" data-cites="Illingworth1988">(<a href="references.html#ref-Illingworth1988" role="doc-biblioref">Illingworth と Kittler 1988</a>)</span>。幾何測定パイプラインとの接続については、Stegerらの著作をさらに参照できる<span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, と Wiedemann 2018</a>)</span>。</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Ballard1981" class="csl-entry" role="listitem">
+Ballard, Dana H. 1981. <span>「Generalizing the Hough Transform to Detect Arbitrary Shapes」</span>. <em>Pattern Recognition</em> 13 (2): 111–22.
+</div>
+<div id="ref-Duda1972Hough" class="csl-entry" role="listitem">
+Duda, Richard O., と Peter E. Hart. 1972. <span>「Use of the Hough Transformation to Detect Lines and Curves in Pictures」</span>. <em>Communications of the ACM</em> 15 (1): 11–15.
+</div>
+<div id="ref-Illingworth1988" class="csl-entry" role="listitem">
+Illingworth, John, と Josef Kittler. 1988. <span>「A Survey of the Hough Transform」</span>. <em>Computer Vision, Graphics, and Image Processing</em> 44 (1): 87–116.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, と Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2nd 版. Wiley-VCH.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "コピーしました");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "コピーしました");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./geometric_primitives.html" class="pagination-link" aria-label="幾何プリミティブの検出">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">幾何プリミティブの検出</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./template_matching.html" class="pagination-link" aria-label="テンプレートマッチング">
+        <span class="nav-page-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">テンプレートマッチング</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

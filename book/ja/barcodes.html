@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>27&nbsp; 1Dおよび2Dバーコード認識 – マシンビジョンアルゴリズム——原理と産業実践</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ocr.html" rel="next">
+<link href="./part_recognition.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "一致なし",
+    "search-matching-documents-text": "一致した文書",
+    "search-copy-link-title": "検索へのリンクをコピー",
+    "search-hide-matches-text": "追加の検索結果を非表示",
+    "search-more-match-text": "追加の検索結果",
+    "search-more-matches-text": "追加の検索結果",
+    "search-clear-button-title": "消去",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "検索",
+    "search-label": "サーチ"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_recognition.html">認識</a></li><li class="breadcrumb-item"><a href="./barcodes.html"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1Dおよび2Dバーコード認識</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="サーチ" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">マシンビジョンアルゴリズム——原理と産業実践</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="サーチ"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">記号の約束事</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">基礎</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">デジタル画像基礎</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">数学予備</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">撮像とキャリブレーション</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">カメラとレンズ</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">光源と照明</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">カメラキャリブレーション</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">画像エンハンスメント</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">空間フィルタリング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">閾値処理</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">モルフォロジー</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">グレースケール変換とヒストグラム</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">幾何変換</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">周波数領域処理とFFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">高度強調</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">位置決め</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">エッジ検出</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">幾何プリミティブの検出</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">ホフ変換</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">テンプレートマッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">形状マッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">特徴マッチングとカラーマッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI 生成と位置補正</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">測定</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">カリパー計測とサブピクセル位置決め</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">幾何計測</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">輝度、色、間隔の測定</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">検査</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob解析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">輪郭分析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">形状特徴</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">欠陥検出</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">認識</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1Dおよび2Dバーコード認識</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">OCR 文字認識</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">古典的分類器</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D イメージング</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">3次元イメージング概論</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">ステレオビジョン</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">構造化光3次元イメージング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">レーザー三角測量</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">照度差ステレオ</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">位相計測ディフレクトメトリー</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">共焦点結像とフォーカスバリエーション</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D 処理</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">点群基礎</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">点群の前処理</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP 位置合わせと3D校正</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D マッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D計測</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D検査</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目次</h2>
+   
+  <ul>
+  <li><a href="#sec-bc-1d" id="toc-sec-bc-1d" class="nav-link active" data-scroll-target="#sec-bc-1d"><span class="header-section-number">27.1</span> 1Dバーコードの原理</a></li>
+  <li><a href="#sec-bc-robustness" id="toc-sec-bc-robustness" class="nav-link" data-scroll-target="#sec-bc-robustness"><span class="header-section-number">27.2</span> ロバスト性の境界</a></li>
+  <li><a href="#sec-bc-2d" id="toc-sec-bc-2d" class="nav-link" data-scroll-target="#sec-bc-2d"><span class="header-section-number">27.3</span> 二次元コードと誤り訂正</a></li>
+  <li><a href="#sec-bc-roundtrip" id="toc-sec-bc-roundtrip" class="nav-link" data-scroll-target="#sec-bc-roundtrip"><span class="header-section-number">27.4</span> ラウンドトリップ検証方法論</a></li>
+  <li><a href="#sec-bc-scivision" id="toc-sec-bc-scivision" class="nav-link" data-scroll-target="#sec-bc-scivision"><span class="header-section-number">27.5</span> SciVision 実装</a></li>
+  <li><a href="#sec-bc-summary" id="toc-sec-bc-summary" class="nav-link" data-scroll-target="#sec-bc-summary"><span class="header-section-number">27.6</span> まとめ</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_recognition.html">認識</a></li><li class="breadcrumb-item"><a href="./barcodes.html"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1Dおよび2Dバーコード認識</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-barcodes" class="quarto-section-identifier"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1Dおよび2Dバーコード認識</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>ここまで、本書のアルゴリズムは「対象はどこにあるか」「寸法はどれくらいか」「欠陥があるか」という問いに答えてきた。本章から始まる認識編は、異なる問いに答える：<strong>画像に何が書かれているか</strong>――画素を再びデータに戻す。現場で最も成熟し、最も大規模な「画像からデータへ」の応用がバーコードである：各ワーク、各基板、各材料箱にコードが貼付または刻印され、ラインの各ステーションで1回ずつ読み取られ、サプライチェーン全体のトレーサビリティ体系はこの読み取りの積み重ねの上に構築される。コード読み取りは簡単に聞こえる――誰もがスマートフォンでコードをスキャンする――が、生産ライン上のコードはインクの広がり、レンズのピンボケ、低解像度、汚損によって次々と苛まれ、1回の<strong>誤読</strong>が引き起こす部品混入事故は、読み取り不能よりもはるかに高くつく。本章では、1枚の実機マルチシンボル1Dバーコードテストカード（<a href="#fig-bc-real" class="quarto-xref">図&nbsp;<span>27.1</span></a>）を用いて、1Dバーコードデコード、劣化に対するロバスト性の境界、2Dバーコードの誤り訂正比較、印字品質評価の4つの実験群を貫き通し、最後に「手書きエンコーダ＋SDKデコーダ」のクローズドループ実験で締めくくる。</p>
+<div id="fig-bc-real" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bc-real-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/barcodes/real_barcode.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="図&nbsp;27.1: 実機マルチシンボル1Dバーコードテストカード sample/barcodes.jpg（1536×878 グレースケール）：8種のシンボル体系、計9個のシンボルを収めた標準テストカード――上段はCODE39とCODE128がいずれも”SCIMV”をエンコード、EAN-8が12345670をエンコード；中段はEAN-13が1234567890128をエンコード、UPC-Aが185020919621をエンコード、UPC-Eが01234565をエンコード；下段はCODE93が”Sci-Code93”をエンコード、2つのITF（Interleaved 2 of 5）がいずれも123456789013をエンコード。赤枠と赤ラベルはSciVision FindBarcodeの検出結果の重ね合わせ（シンボル名＋デコード文字列）。"><img src="figures/barcodes/real_barcode.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bc-real-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;27.1: 実機マルチシンボル1Dバーコードテストカード <code>sample/barcodes.jpg</code>（1536×878 グレースケール）：8種のシンボル体系、計9個のシンボルを収めた標準テストカード――上段はCODE39とCODE128がいずれも”SCIMV”をエンコード、EAN-8が12345670をエンコード；中段はEAN-13が1234567890128をエンコード、UPC-Aが185020919621をエンコード、UPC-Eが01234565をエンコード；下段はCODE93が”Sci-Code93”をエンコード、2つのITF（Interleaved 2 of 5）がいずれも123456789013をエンコード。赤枠と赤ラベルはSciVision <code>FindBarcode</code>の検出結果の重ね合わせ（シンボル名＋デコード文字列）。
+</figcaption>
+</figure>
+</div>
+<section id="sec-bc-1d" class="level2 page-columns page-full" data-number="27.1">
+<h2 data-number="27.1" class="anchored" data-anchor-id="sec-bc-1d"><span class="header-section-number">27.1</span> 1Dバーコードの原理</h2>
+<p>1Dバーコード（1D barcode）のエンコード思想はきわめて素朴である：<strong>バー（bar）とスペース（space）の幅の並び</strong>でデータを担う。最も細いバー/スペースの幅を<strong>モジュール（module）</strong>と呼び、それ以外の要素の幅はモジュールの整数倍となる。1文字は固定数のバーとスペースで構成され、太細の組み合わせがその文字のコードである。情報は一方向にのみ展開され、垂直方向の各行は同じ内容である――これは1本のスキャンラインでデコードできる理由であると同時に、ロバスト性の弱点の根源でもあり、<a href="#sec-bc-robustness" class="quarto-xref"><span>セクション 27.2</span></a> でこの点は非常に具体的になる。</p>
+<p>代表的な<strong>シンボル体系（symbology）</strong>はそれぞれ分担を持つ：<strong>CODE39</strong>は9個の要素（5バー4スペース、うち3個が太要素）で1文字をエンコードし、数字と大文字アルファベットをサポートし、構造が単純で可変長であり、産業用ラベルで極めて一般的である――ただし、そのチェックキャラクタは<strong>オプション</strong>であり、規格では必須とされていない点に注意が必要である。<strong>CODE128</strong>はより高密度で、全ASCIIをサポートし、チェックキャラクタを<strong>必須</strong>で含む。<strong>EAN-13/EAN-8/UPC</strong>は小売商品コードであり、固定長の数字で末尾がチェックデジットである。<strong>CODE93</strong>はCODE39の高密度改良版である。<strong>ITF（Interleaved 2 of 5）</strong>は数字のみをエンコードする<strong>連続型</strong>シンボル体系である――バーとスペースの両方が情報を担い、文字間に隙間がないため高密度だが、チェックデジットもやはり<strong>オプション</strong>である。<a href="#fig-bc-real" class="quarto-xref">図&nbsp;<span>27.1</span></a> のテストカードはこの8種のシンボル体系を並べており、劣化下での体質差を比較するのにちょうどよい。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>CODE39とITFの各要素には一定の「自己チェック」性がある――単一の太細判定ミスは通常不正なコードワードに落ちて破棄される；しかし文字列全体としては必須のチェックキャラクタ（check character）がないため、文字レベルの切り詰めや置換は検出されない。ITFはさらに連続型シンボル体系であり、密度が最も高い。この潜在的リスクは <a href="#sec-bc-robustness" class="quarto-xref"><span>セクション 27.2</span></a> におけるITFの複数回の誤読によって裏付けられる。</p>
+</div></div><p>スキャンラインデコードのプロセスは4つのステップに分かれる：まず画像中で<strong>コードを探す</strong>――バーコード領域は強い一方向テクスチャを持ち、勾配方向が高度に一致するため、これに基づいて候補領域を迅速に特定し向きを推定できる。次にバーコード方向に沿って1本以上の<strong>スキャンライン（scan line）</strong>を配置し、グレースケールプロファイルを抽出する。プロファイルにエッジ検出をかけ、バーとスペースの交互パターンを<strong>幅の並び</strong>に変換する。最後に、シンボル体系のコード表に照らして幅の並びを<strong>テーブル参照</strong>して文字に復元し、スタート/ストップキャラクタ（CODE39では <code>*</code>）とチェックキャラクタ（存在する場合）を検証する。</p>
+<p><a href="#fig-bc-real" class="quarto-xref">図&nbsp;<span>27.1</span></a> にSDKの <code>FindBarcode</code> を実行すると（完全なプロジェクトは <code>code/barcodes/</code> を参照；<code>barcodeType</code> に「自動」モードがないため、サンプルでは8種の候補シンボル体系を順に試して結果をマージする）、クリーン画像上の9個のシンボルは<strong>すべて1回でデコード</strong>され、方向はいずれも0°に近く（カードは水平に配置）、モジュールあたり画素数（pixelPerModule）は<strong>2.1～4.1 px/モジュール</strong>の範囲に収まる――CODE93が最も細く（約2.1）、EAN-8が最も太い（約4.1）。同時に <code>checkQuality</code> をオンにするとISO/IEC 15416の印字品質評価が得られ、その差は極めて顕著である：EAN-8とUPC-Eは満点の <strong>4.0</strong>、CODE93は <strong>3.0</strong>（<strong>変調度 modulation</strong> に制限）、CODE39とEAN-13は <strong>2.0</strong>、CODE128とUPC-Aは <strong>1.0</strong>（いずれも<strong>復号性 decodability</strong> に制限）、そして2つの <strong>ITFは評価0.0（Fランク）</strong>――復号性が0であり、幅の測定値はコード表の判定境界に張り付いており、余裕がほとんどない。復号性は幅の測定値が判定境界からどれだけ離れているかを反映し、変調度は細要素における局所コントラストを反映する。同一のカード上で最も良く印字されたコード（EAN-8）と最も悪いコード（ITF）は丸4ランクも違う――これこそが評価体系の価値である：評価が測るのは「今回は読めたか」ではなく「読めなくなるまであとどれくらいか」である。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>ISO/IEC 15416は1Dバーコードの印字品質を4（A）から0（F）までランク付け（grading）する：複数のスキャンラインについてそれぞれデコード、コントラスト、変調度、欠陥、復号性などのパラメータを測定し、各ラインで<strong>最も悪い</strong>パラメータをそのラインの評価とし、さらに各ラインの平均をとる。総合評価が≥1.5であれば通常は安定して読み取れるが、余裕はすでに大きくない。</p>
+</div></div><p>評価体系の価値は次の点にある：「今回は読めたか」ではなく、「このコードは読めなくなるまであとどれくらいか」を答えることである。今日読める1.0ランクのコードは、レンズを変えたり少し汚れれば読めなくなる。生産ラインの検収時にラベル評価≥2.5または3.0を要求することは、「現場での試し読み成功」よりもはるかに信頼できる基準である。</p>
+</section>
+<section id="sec-bc-robustness" class="level2" data-number="27.2">
+<h2 data-number="27.2" class="anchored" data-anchor-id="sec-bc-robustness"><span class="header-section-number">27.2</span> ロバスト性の境界</h2>
+<p>デコード成功は出発点にすぎず、エンジニアリング上は<strong>境界がどこにあるか</strong>がより重要である。<a href="#fig-bc-real" class="quarto-xref">図&nbsp;<span>27.1</span></a> の9個のシンボルに対し、ガウシアンぼかし、加法ノイズ、ダウンサンプリング、オクルージョンの4種類の漸進的劣化を同時に加え、各シンボル体系の生存と誤読の状況を段階的に記録した（<a href="#fig-bc-degraded" class="quarto-xref">図&nbsp;<span>27.2</span></a> は4つの代表的なレベルを示す）。</p>
+<div id="fig-bc-degraded" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bc-degraded-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-bc-degraded" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-bc-degraded-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-bc-degraded-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/barcodes/degraded_blur2.png" class="lightbox" data-gallery="fig-bc-degraded" title="図&nbsp;27.2&nbsp;(a): ガウシアンぼかし \sigma=2：9コード中6個がまだデコード可能、CODE93と2つのITFが失敗、さらに1つの ITFが120000000013と誤読された"><img src="figures/barcodes/degraded_blur2.png" class="img-fluid figure-img" data-ref-parent="fig-bc-degraded"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-bc-degraded-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) ガウシアンぼかし <span class="math inline">\(\sigma=2\)</span>：9コード中6個がまだデコード可能、CODE93と2つのITFが失敗、さらに1つの <strong>ITFが120000000013と誤読された</strong>
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-bc-degraded" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-bc-degraded-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-bc-degraded-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/barcodes/degraded_noise30.png" class="lightbox" data-gallery="fig-bc-degraded" title="図&nbsp;27.2&nbsp;(b): ノイズ \sigma=30：UPC-Aのみが失敗、残り8コードは正常（\sigma=10では9コードすべて正常）"><img src="figures/barcodes/degraded_noise30.png" class="img-fluid figure-img" data-ref-parent="fig-bc-degraded"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-bc-degraded-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) ノイズ <span class="math inline">\(\sigma=30\)</span>：UPC-Aのみが失敗、残り8コードは正常（<span class="math inline">\(\sigma=10\)</span>では9コードすべて正常）
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-bc-degraded" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-bc-degraded-c" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-bc-degraded-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/barcodes/degraded_scale035.png" class="lightbox" data-gallery="fig-bc-degraded" title="図&nbsp;27.2&nbsp;(c): 縮小 ×0.35：CODE39/CODE128（“SCIMV”）とEAN-8のみが読み取り可能、残りは約1.5 px/モジュールを下回り失敗"><img src="figures/barcodes/degraded_scale035.png" class="img-fluid figure-img" data-ref-parent="fig-bc-degraded"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-bc-degraded-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) 縮小 ×0.35：CODE39/CODE128（“SCIMV”）とEAN-8のみが読み取り可能、残りは約1.5 px/モジュールを下回り失敗
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-bc-degraded" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-bc-degraded-d" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-bc-degraded-d-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/barcodes/barcode_occluded10.png" class="lightbox" data-gallery="fig-bc-degraded" title="図&nbsp;27.2&nbsp;(d): 全高の白帯が各コード幅の10%をオクルージョン：9コードすべて失敗（赤枠がオクルージョン帯の位置を示す）"><img src="figures/barcodes/barcode_occluded10.png" class="img-fluid figure-img" data-ref-parent="fig-bc-degraded"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-bc-degraded-d-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(d) 全高の白帯が各コード幅の10%をオクルージョン：<strong>9コードすべて失敗</strong>（赤枠がオクルージョン帯の位置を示す）
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bc-degraded-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;27.2: 1Dロバスト性実験の4つの代表レベル（赤い重ね合わせは検出/オクルージョンマーク）。完全な境界：ぼかし <span class="math inline">\(\sigma=1\)</span> で全数正常、<span class="math inline">\(\sigma=2\)</span> で6/9生存、<span class="math inline">\(\sigma=3\)</span> で全滅；ノイズ <span class="math inline">\(\sigma=10\)</span> で全数正常、<span class="math inline">\(\sigma=30\)</span> で8/9生存、<span class="math inline">\(\sigma=50\)</span> で6/9生存；縮小 ×0.5で6/9生存、×0.35で3/9生存、×0.25で全滅；全高白帯オクルージョン 2%で6/9生存、5%で2/9生存、10%で全滅。
+</figcaption>
+</figure>
+</div>
+<p>4つの境界はそれぞれ意味を持ち、かつクリーン画像上の評価順序を項目ごとに裏付けている――評価の低いコードが先に倒れる。<strong>ぼかし</strong>：<span class="math inline">\(\sigma=1\)</span> で9コード全数正常、<span class="math inline">\(\sigma=2\)</span> で6/9生存、先に陥落したのはまさに最もモジュールの細いCODE93（約2.1 px）と2つのITF（約3.0 px）、<span class="math inline">\(\sigma=3\)</span> で全滅――ぼかしは細バーと細スペースのコントラストを平坦化し、最も細いコードが先に死ぬ。これは15416評価でITF/CODE93がもともと最下位であった予言にちょうど合致する。<strong>ノイズ</strong>：<span class="math inline">\(\sigma=10\)</span> は無害、<span class="math inline">\(\sigma=30\)</span> ではUPC-Aのみが脱落、<span class="math inline">\(\sigma=50\)</span> でも6/9が生存――複数のスキャンラインはランダムノイズに対して天然の平均化効果を持ち、余裕はかなり大きい。<strong>解像度</strong>：縮小 ×0.5で6/9生存、×0.35では最も太く最も安定した3コードのみが残る（2つのSCIMVとEAN-8、元のppmは約3.7～4.1、縮小後≈1.3～1.4 px/モジュール）、×0.25で全滅――1Dデコードはスキャンライン上でバー/スペースの幅を識別するだけでよいため、解像度の要求は直感よりもはるかに緩く、約1.5 px/モジュールが本例での実用下限であり、最も細いCODE93はダウンサンプリングの瞬間に真っ先に死ぬ（レンズと解像度の選定は <a href="cameras_and_lenses.html" class="quarto-xref"><span>チャプター 3</span></a> を参照）。</p>
+<p>一文字ずつ読む価値があるのは、どのコードが読めないかではなく、<strong>読み間違えた</strong>ものである。ぼかし <span class="math inline">\(\sigma=2\)</span> で1つのITFが失敗を報告せず、<strong>120000000013とデコードされた</strong>（真値は123456789013）；2%と5%のオクルージョンで別のITFが<strong>123400789013と誤読された</strong>；縮小 ×0.5では本来存在しないEAN-8の誤読45252921まで現れた。トレーサビリティシステムにとって、これは読めないことよりもはるかに危険である：読めなければ手動再スキャンが誘発されるが、<strong>気づかれない誤読</strong>はあるワークが他人の身分を着たまま生産ライン全体を流れてしまう。根本原因は前述の伏線である――ITF（およびCODE39）のチェックデジットはオプションであり、このカードには付いていない；ITFはさらに<strong>連続型</strong>シンボル体系（バーとスペースがともに符号化し、文字間に隙間がない）であるため、局所的な汚損が一部を別の合法的な偶数桁の数字列に容易に崩壊させ、シンボル体系レベルでは発見できない。これが、クリーン画像上でも復号性がFランクに留まる理由でもある。工学的対策は2つある：強制チェック付きのシンボル体系を選ぶか（<strong>CODE128は本実験を通じて誤読ゼロ</strong>）、ITF/CODE39のオプションチェックデジットを有効にし、デコーダ側で <code>codeCheck</code> 検証をオンにするかである；さらに、アプリケーション層で内容フォーマット（桁数、プレフィックス）を検証することは常に価値がある。</p>
+<p>オクルージョンはシンボル体系の体質を最もよく区別する：バーコードの全高を貫く白帯を、各コード幅のパーセンテージとして段階的に広げる――2%では9コード中6個がまだ読める（より緩いCODE39/CODE128/EAN系が生存、最も密なCODE93とITFはすでに陥落）、5%ではSCIMVの2個のみが残り、10%ではすべて失敗する。しかし「読める」ことは「正しく読める」ことと<strong>等しくない</strong>：上記の2回のITF誤読はまさに2%と5%のオクルージョンレベルで発生している。理由は構造的である：1Dバーコードの冗長性は<strong>縦方向</strong>にのみ存在する――同じ内容がバーの全高にわたって繰り返され、任意の1本の水平スキャンラインがデコードできるため、上下方向からの汚損は致命的ではない；しかし横方向では各文字が1回しか符号化されず、誤り訂正は一切なく、全高の縦方向オクルージョンが1文字を消し去ればその唯一のコピーを消し去ることになる。横方向の損傷に生き残るには、冗長性をデータそのものに組み込む必要がある――これこそがまさに2Dバーコードの設計の出発点である。</p>
+</section>
+<section id="sec-bc-2d" class="level2 page-columns page-full" data-number="27.3">
+<h2 data-number="27.3" class="anchored" data-anchor-id="sec-bc-2d"><span class="header-section-number">27.3</span> 二次元コードと誤り訂正</h2>
+<p><strong>DataMatrix</strong>（ECC200）は、工業部品上で最も一般的に使用される二次元コードである。<a href="#fig-bc-dm-a" class="quarto-xref">図&nbsp;<span>27.3 (a)</span></a> は 16×16 シンボルである：左側の列全体と下部の行全体が塗りつぶされた <strong>L 字型ファインダパターン（finder pattern）</strong> を構成し、位置と向きの基準を提供する。上辺の行と右辺の列は白黒が交互に並ぶ<strong>クロックトラック（clock track）</strong>であり、モジュールグリッドの行・列座標を較正する。残りの 14×14 の<strong>データ領域</strong>には、ISO/IEC 16022 が規定するジグザグ順序でコードワードが配置され、各コードワードの 8 ビットは「ユタ形」モジュールグループとして配置される。</p>
+<div id="fig-bc-dm" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bc-dm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-bc-dm" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-bc-dm-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-bc-dm-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/barcodes/dm_clean.png" class="lightbox" data-gallery="fig-bc-dm" title="図&nbsp;27.3&nbsp;(a): 手書き ECC200 エンコーダが生成した 16×16 シンボル、内容 “MVBOOK CH27”"><img src="figures/barcodes/dm_clean.png" class="img-fluid figure-img" data-ref-parent="fig-bc-dm"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-bc-dm-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) 手書き ECC200 エンコーダが生成した 16×16 シンボル、内容 “MVBOOK CH27”
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-bc-dm" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div id="fig-bc-dm-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-bc-dm-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/barcodes/dm_occluded15.png" class="lightbox" data-gallery="fig-bc-dm" title="図&nbsp;27.3&nbsp;(b): シンボル面積の 15% を覆う白いパッチ：誤り訂正予算を超過し、デコード失敗（10% では依然として正しい）"><img src="figures/barcodes/dm_occluded15.png" class="img-fluid figure-img" data-ref-parent="fig-bc-dm"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-bc-dm-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) シンボル面積の 15% を覆う白いパッチ：誤り訂正予算を超過し、デコード失敗（10% では依然として正しい）
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bc-dm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;27.3: DataMatrix シンボルの構造とオクルージョン実験。(a) 左/下は L 字型ファインダパターン、上/右は交互クロックトラック、内部はデータ領域。(b) 偏心して配置された白いパッチはファインダパターンを避け、データ領域のみを破壊する。面積の 10% は Reed-Solomon 誤り訂正で吸収できるが、15% では失敗する。
+</figcaption>
+</figure>
+</div>
+<p>二次元コードのロバスト性の核は <strong>Reed-Solomon 誤り訂正（error correction）</strong> である。直感的には次のように理解できる：12 個のデータコードワードをひとつの多項式の係数とみなし、GF(256) 上で 12 個の<strong>チェックコードワード</strong>を計算して末尾に付加する——こうして 24 個のコードワード間に強力な代数的制約が生まれ、少数のコードワードが破壊されても、デコーダは制約から逆算して「どれが間違っていて、元の値は何だったか」を推定できる。12 個のチェックコードワードは、位置未知の約 <strong>6 個のエラーコードワード</strong>を訂正できる——本例では 24 個のコードワードのうちデータが半分を占めるのみであり、<strong>シンボル面積の半分が冗長性に費やされている</strong>。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Reed-Solomon の誤り訂正予算：<span class="math inline">\(n_{\text{ecc}}\)</span> 個のチェックコードワードは、位置未知の <span class="math inline">\(t\)</span> 個のエラーコードワードを訂正でき、<span class="math inline">\(2t \le n_{\text{ecc}}\)</span> を満たす必要がある。本例では <span class="math inline">\(n_{\text{ecc}}=12\)</span> であり、したがって <span class="math inline">\(t \le 6\)</span> である：24 個のコードワードのうち 6 個（25%）が破壊されても完全に復元可能である。</p>
+</div></div><p>オクルージョン実験は、この「面積でロバスト性を買う」というトレードオフを浮き彫りにする：白いパッチでシンボル面積を覆うと（偏心配置、ファインダパターンを回避）、<strong>10% ではデコードが依然として正しいが、15% では失敗する</strong>（<a href="#fig-bc-dm-b" class="quarto-xref">図&nbsp;<span>27.3 (b)</span></a>）。一次元コードと比較すると——最も脆弱な ITF/CODE93 は全高 2% のオクルージョンで陥落し、すべての 1D コードは 10% で全滅し、しかも陥落前に誤読を発生させる——二次元コードは許容量が高いだけでなく、さらに重要なのは<strong>密かに読み間違えることがない</strong>点である：誤り訂正予算を超過した場合、<code>ReadDM</code> は誤った値を返すのではなく、ただちに失敗（rc=122703001）を返す。さらに、DataMatrix はぼかし <span class="math inline">\(\sigma=1,2,3\)</span> およびノイズ <span class="math inline">\(\sigma=30\)</span> の下でもすべて正しくデコードされるが、一次元コードはこれらの水準ではすでに半数が壊滅している（公平を期すために言及すると、本例の DM は約 <strong>10.3 px/モジュール</strong> であり、テストカード上の 2～4 px/モジュールの一次元コードよりも解像度面で有利であるが、オクルージョンの比較には影響しない）。強調しておきたいが、誤り訂正は無料ではない：同じデータ量に対し、50% の冗長性を持つシンボルは 2 倍の面積を必要とする。二次元コードが面積で購入しているのは、一次元コードがどれほど面積を費やしても買えない<strong>横方向の損傷に対する生存能力</strong>である。</p>
+<p>ついでに <strong>QR コード</strong>についても触れておく：DataMatrix と同じ「マトリックスコード＋ Reed-Solomon」ファミリーに属するが、主な違いは位置決め方式にある——QR は三つの角に回字型（入れ子四角形）のファインダパターンを用い、DataMatrix は L 字型の実線エッジを用いる。前者は遠距離・大シンボルの高速位置決めに有利であり、後者は小サイズの直接部品マーキング（DPM）用途でよりコンパクトである。SDK は <code>ReadQR</code> インターフェースを提供するが、本章のテスト画像には QR シンボルが含まれていないため、QR の実験は行っていない。原理的な結論は類推により適用できる。</p>
+</section>
+<section id="sec-bc-roundtrip" class="level2" data-number="27.4">
+<h2 data-number="27.4" class="anchored" data-anchor-id="sec-bc-roundtrip"><span class="header-section-number">27.4</span> ラウンドトリップ検証方法論</h2>
+<p>前節の DataMatrix 画像はどこから来たのか？ここには掘り下げる価値のある方法論的な問題がある：SciVision SDK には<strong>デコード API しかなく、生成 API は一切ない</strong>うえ、testImage ディレクトリにも二次元コード画像は含まれていない。二次元コードの実験を行うため、我々はサンプルプロジェクトの中に<strong>ECC200 エンコーダを手書きした</strong>（約 150 行）：GF(256)（原始多項式 301）上で Reed-Solomon 符号化を実装し（生成多項式の根は <span class="math inline">\(\alpha^1\!\dots\!\alpha^{12}\)</span>）、テキストを ASCII モードで符号化し（数字の 2 桁を 1 コードワードに圧縮、253 状態アルゴリズムでパディング）、ISO/IEC 16022 附属書 F の標準配置アルゴリズムに従って 12+12 個のコードワードを 16×16 シンボルに配置し、ファインダパターンとクロックトラックを付加して画像をレンダリングした。</p>
+<p>検証方法は<strong>ラウンドトリップ</strong>である：エンコーダが生成した画像を SDK の <code>ReadDM</code> に渡してデコードし、返された文字列を原文 “MVBOOK CH27” と 1 文字ずつ比較する。実験結果：デコードは成功し、内容は一致した。シンボルは 16×16、約 10.3 px/モジュール、ISO/IEC 15415 総合評価 <strong>4.0</strong>——満点であり、理想的にレンダリングされたシンボルが得られるべき評価である。この往復は両端を同時に検証する：エンコーダが 1 ビットでも誤った位置に配置すれば、デコードは失敗するか誤り訂正余裕が低下するし、SDK デコーダが満点評価を読み出すことは、そのグリッド位置決めと品質測定が正常に動作していることを証明する。これは <a href="camera_calibration.html" class="quarto-xref"><span>チャプター 5</span></a> における「ゴールドスタンダード実験」の思想の再現である——<strong>既知の真値を持つ入力でチェーン全体を検証する</strong>——しかもここでの真値は我々自身の手で符号化したものであり、すべてのビットが追跡可能である。同時に、これは 15415/15416 評価のもう一つの使い方も示している：満点評価のシンボルをベースラインとすれば、現場シンボルの評価の低下をパラメータごとに印刷および撮像の各工程に帰属させることができる（照明によるコントラストの問題については <a href="illumination.html" class="quarto-xref"><span>チャプター 4</span></a> を参照）。</p>
+</section>
+<section id="sec-bc-scivision" class="level2" data-number="27.5">
+<h2 data-number="27.5" class="anchored" data-anchor-id="sec-bc-scivision"><span class="header-section-number">27.5</span> SciVision 実装</h2>
+<p>1 次元コードのデコードは <code>SCIMV::SciSvBarCode::FindBarcode</code> で行う：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvBarCode bc<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>Sci1DCodeArray codes<span class="op">;</span> SciROIArray rects<span class="op">,</span> bad<span class="op">;</span>   <span class="co">// 3 つの出力すべてに実体を渡す</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> rc <span class="op">=</span> bc<span class="op">.</span>FindBarcode<span class="op">(</span>img<span class="op">,</span> roi<span class="op">,</span> SCI_CODETYPE_CODE39<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">1</span><span class="op">,</span>      <span class="co">// polarity：暗いバー、明るい背景</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">0</span><span class="op">,</span>      <span class="co">// sampleRate：自動サンプリング密度</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">2</span><span class="op">,</span>      <span class="co">// contrastLevel：中コントラスト</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">4</span><span class="op">,</span>      <span class="co">// codeNumber：期待コード数（コード制ごとのスキャン時に余裕を持たせる）</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">10000</span><span class="op">,</span>  <span class="co">// timeOut：タイムアウト（ms）</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">0</span><span class="op">,</span>      <span class="co">// codeCheck：チェックキャラクタ検証スイッチ</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                         <span class="dv">0</span><span class="op">,</span>      <span class="co">// decodeDirection：双方向デコード</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                         <span class="kw">false</span><span class="op">,</span>  <span class="co">// sendStartEnd：開始・終了文字を出力しない</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                         <span class="kw">true</span><span class="op">,</span>   <span class="co">// checkQuality：ISO 15416 評価を出力</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                         <span class="op">&amp;</span>codes<span class="op">,</span> <span class="op">&amp;</span>rects<span class="op">,</span> <span class="op">&amp;</span>bad<span class="op">);</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Sci1DCode：codeType / codeString / orientation</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">//            / pixelPerModule / qualityLevel_15416</span></span></code><button title="コピー" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>3 つのパラメータについて特に説明が必要である。<code>codeCheck</code> をオンにすると、シンボル体系の規則に従ってチェックキャラクタが検証される。CODE39 の場合、印刷側にオプションのモジュロ 43 チェックキャラクタを含めることが要求されるが、これは <a href="#sec-bc-robustness" class="quarto-xref"><span>セクション 27.2</span></a> で述べた誤読事故に対するシンボル体系レベルの防御手段である。<code>checkQuality</code> をオンにすると、コードごとに 15416 の各パラメータ評価が出力される。ラインのデバッグおよび受入段階では常時オンにすることを推奨し、安定稼働後は時間を節約するためにオフにしてよい。<code>timeOut</code> はデコードのタイムアウトであり、タクトタイムが厳しいステーションでは必ず設定しなければならない。そうしなければ、1 枚の低品質画像がサイクル全体を引きずり下げるおそれがある。</p>
+<p>DataMatrix のデコードには <code>SCIMV::SciSvMatrixCode::ReadDM</code> を用いる：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvMatrixCode mc<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SciDMCodeArray ret<span class="op">;</span> SciVarArray strs<span class="op">;</span> SciROIArray cand<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> rc <span class="op">=</span> mc<span class="op">.</span>ReadDM<span class="op">(</span>img<span class="op">,</span> roi<span class="op">,</span> <span class="dv">1</span> <span class="co">/*polarity 暗いコード、明るい背景*/</span><span class="op">,</span> <span class="op">-</span><span class="dv">1</span> <span class="co">/*dmStyle 自動*/</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                    <span class="dv">6</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span>  <span class="co">// minSize/maxSize：シンボルの行・列数の探索範囲</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                    <span class="dv">30</span><span class="op">,</span>     <span class="co">// minContrast：最小コントラスト</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>                    <span class="dv">0</span><span class="op">,</span>      <span class="co">// mirror：ミラーを自動判定</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                    <span class="dv">1</span><span class="op">,</span> <span class="dv">10000</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span>            <span class="co">// codeNum / timeOut / model</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">true</span><span class="op">,</span>   <span class="co">// checkQuality：ISO 15415 評価を出力</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">false</span><span class="op">,</span> <span class="kw">false</span><span class="op">,</span> <span class="kw">false</span><span class="op">,</span> <span class="kw">false</span><span class="op">,</span> <span class="kw">false</span><span class="op">,</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                    <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span>   <span class="co">// デコードおよび出力文字列はともに UTF-8</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                    <span class="op">&amp;</span>ret<span class="op">,</span> <span class="op">&amp;</span>strs<span class="op">,</span> <span class="op">&amp;</span>cand<span class="op">);</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">// SciDMCode：codeString / symbolRows / symbolCols</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">//            / moduleSize / orientation / qualityLevel_15415</span></span></code><button title="コピー" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>2 つのエンジニアリング上の落とし穴がある。第一に、<strong>シンボル体系を明示しなければならない</strong>。<code>FindBarcode</code> の <code>barcodeType</code> に「自動」設定はなく、画像中に存在しないシンボル体系を指定するとデコードに失敗する（非ゼロのエラーコードを返す）。シンボル体系が不明な場合は、本章の例のように候補リストをループで試すしかない（ここでは 8 種類の 1 次元コードシンボル体系についてそれぞれ 1 回ずつ <code>FindBarcode</code> を呼び出し、結果をマージして重複を除去する）。ただし、量産プロジェクトでは設計段階でシンボル体系を固定すべきであり、これはラベルサプライヤーと合意する仕様の一部でもある。第二に、<code>SciSvBarCode.h</code> などのヘッダファイルは無条件にエクスポートマクロを dllexport として定義するため、その <code>#include</code> を他の dllimport 形式のヘッダファイルの<strong>後ろ</strong>に配置すれば正常にリンクできる。</p>
+<div class="industry-case">
+<p><span class="case-title">業界事例：ライン読み取り率を 98% から 99.9% へ</span></p>
+<p>ある組立ラインの DataMatrix 読み取り率が長らく 98% で停滞していた。決して低くはないように聞こえるが、千個あたり 20 個が手動再スキャンを引き起こすことを意味し、タクトタイムと人件費のいずれの観点からも許容できない。プロジェクトチームはまずデコードパラメータを繰り返し調整したが効果は乏しく、次に検証器でラベルを測定した。変調度は C 評価のみであった——ラベル用紙がインクを吸収してインクの広がりが生じ、狭要素のコントラストが崩れていたのである。同時に光学系を監査したところ、モジュール幅がわずか約 1.8 px/モジュールであり、デコード下限値に張り付いていることが判明した。2 項目の改善策を実施した：高コントラストのラミネートラベル材に切り替えて評価を A/B に回復させたこと、およびレンズの倍率を上げてモジュールを 3 px/モジュールに到達させたことである。読み取り率は 99.9% に上昇し、デコードパラメータは最終的にデフォルト値のままとなった。教訓：<strong>読み取り率の問題では、まず印刷品質評価とモジュールあたり画素数を確認し、その後でアルゴリズムパラメータを調整する</strong>——評価が不合格のときにパラメータを調整しても、境界線上の賭けにすぎない。</p>
+</div>
+</section>
+<section id="sec-bc-summary" class="level2" data-number="27.6">
+<h2 data-number="27.6" class="anchored" data-anchor-id="sec-bc-summary"><span class="header-section-number">27.6</span> まとめ</h2>
+<ul>
+<li>1 次元コードはバー・スペース幅でエンコードし、走査線に沿ってデコードされる。垂直方向にはバー高さ全体の冗長性があるが、水平方向には誤り訂正が一切ない。本章の 8 シンボル体系カードにおいて、最も密な ITF/CODE93 は全高遮蔽 <strong>2%</strong> で陥落し、すべての 1D コードは <strong>10%</strong> で全滅する。解像度の下限は約 1.5 px/モジュールである（×0.35 では最も幅の広い 3 コードのみが生存）。劣化下での生存順序は、クリーン画像の 15416 評価の順序を項目ごとに裏付けている。</li>
+<li><strong>誤読は読み取り不能よりも危険である</strong>。本カードの ITF（オプションのチェックディジット、連続型シンボル体系）は、ぼかし <span class="math inline">\(\sigma=2\)</span> および 2%/5% の遮蔽下で複数回の誤読を発生させ（例：120000000013、123400789013）、クリーン画像においても復号可能性は F 評価にとどまる。チェックキャラクタを必須とするシンボル体系を選択する（CODE128 はここでは一度も誤読しない）、<code>codeCheck</code> をオンにする、アプリケーション層でフォーマットを検証する——これら 3 つの防御線のうち少なくとも 1 つは必ず備えなければならない。</li>
+<li>2 次元コードは Reed-Solomon 誤り訂正を用いて<strong>面積で堅牢性を獲得する</strong>。16×16 DataMatrix の 12 個のチェックコードワードは約 6 個の誤りコードワードを訂正でき、面積の 10% が遮蔽されても正しくデコードされる。予算を超えると誤読ではなく失敗を返す——水平方向の損傷に対する許容度は 1 次元コードをはるかに上回る。</li>
+<li>SDK がデコードのみでエンコードをサポートしない場合、<strong>手書きエンコーダと SDK デコーダのラウンドトリップ</strong>は、実験能力のギャップを埋めるだけでなく、両端に対するゴールドスタンダード検証を構成する（本例のラウンドトリップは ISO 15415 評価 4.0 の満点を達成した）。</li>
+<li>ISO/IEC 15416/15415 の印刷品質評価が答えるのは「読み取り不能になるまであとどれくらいか」という問いである。受入は試し読みの成功ではなく評価で判断し、読み取り率の問題ではまず評価とモジュールあたり画素数を確認する。</li>
+</ul>
+<p>産業ビジョンにおけるバーコード認識およびデコードアルゴリズムのより体系的な議論については、Steger らの著書 <span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, と Wiedemann 2018</a>)</span> を参照されたい。本章で繰り返し引用した印刷品質グレーディング体系は、2 つの中核規格に由来する。1 次元コードのパラメータ別評価方法は ISO/IEC 15416 <span class="citation" data-cites="ISO15416_2016">(<a href="references.html#ref-ISO15416_2016" role="doc-biblioref">International Organization for Standardization 2016</a>)</span> で規定され、2 次元コード（DataMatrix および QR を含む）のシンボル品質評価は ISO/IEC 15415 <span class="citation" data-cites="ISO15415_2011">(<a href="references.html#ref-ISO15415_2011" role="doc-biblioref">International Organization for Standardization 2011</a>)</span> で規定されている。各シンボル体系のエンコーディング、誤り訂正、および参照デコードアルゴリズムには、それぞれ専用の規格が存在する。DataMatrix（ECC200）のコードワード配置および Reed-Solomon 規則は ISO/IEC 16022 <span class="citation" data-cites="ISO16022_2006">(<a href="references.html#ref-ISO16022_2006" role="doc-biblioref">International Organization for Standardization 2006</a>)</span> に、QR コードは ISO/IEC 18004 <span class="citation" data-cites="ISO18004_2015">(<a href="references.html#ref-ISO18004_2015" role="doc-biblioref">International Organization for Standardization 2015</a>)</span> に規定されている。ラベルサプライヤーと仕様を合意する際や本章の実験を再現する際には、これらの規格の原文を基準とすべきである。</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-ISO16022_2006" class="csl-entry" role="listitem">
+International Organization for Standardization. 2006. <em>ISO/IEC 16022:2006 Information Technology — Automatic Identification and Data Capture Techniques — Data Matrix Bar Code Symbology Specification</em>. Geneva, Switzerland: International Organization for Standardization / International Electrotechnical Commission.
+</div>
+<div id="ref-ISO15415_2011" class="csl-entry" role="listitem">
+———. 2011. <em>ISO/IEC 15415:2011 Information Technology — Automatic Identification and Data Capture Techniques — Bar Code Symbol Print Quality Test Specification — Two-Dimensional Symbols</em>. Geneva, Switzerland: International Organization for Standardization / International Electrotechnical Commission.
+</div>
+<div id="ref-ISO18004_2015" class="csl-entry" role="listitem">
+———. 2015. <em>ISO/IEC 18004:2015 Information Technology — Automatic Identification and Data Capture Techniques — QR Code Bar Code Symbology Specification</em>. Geneva, Switzerland: International Organization for Standardization / International Electrotechnical Commission.
+</div>
+<div id="ref-ISO15416_2016" class="csl-entry" role="listitem">
+———. 2016. <em>ISO/IEC 15416:2016 Automatic Identification and Data Capture Techniques — Bar Code Print Quality Test Specification — Linear Symbols</em>. Geneva, Switzerland: International Organization for Standardization / International Electrotechnical Commission.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, と Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2nd 版. Wiley-VCH.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "コピーしました");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "コピーしました");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./part_recognition.html" class="pagination-link" aria-label="認識">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">認識</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ocr.html" class="pagination-link" aria-label="OCR 文字認識">
+        <span class="nav-page-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">OCR 文字認識</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

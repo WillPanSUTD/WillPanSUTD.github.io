@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>26&nbsp; 欠陥検出 – マシンビジョンアルゴリズム——原理と産業実践</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./part_recognition.html" rel="next">
+<link href="./shape_features.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "一致なし",
+    "search-matching-documents-text": "一致した文書",
+    "search-copy-link-title": "検索へのリンクをコピー",
+    "search-hide-matches-text": "追加の検索結果を非表示",
+    "search-more-match-text": "追加の検索結果",
+    "search-more-matches-text": "追加の検索結果",
+    "search-clear-button-title": "消去",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "検索",
+    "search-label": "サーチ"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_inspection.html">検査</a></li><li class="breadcrumb-item"><a href="./defect_detection.html"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">欠陥検出</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="サーチ" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">マシンビジョンアルゴリズム——原理と産業実践</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="サーチ"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">記号の約束事</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">基礎</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">デジタル画像基礎</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">数学予備</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">撮像とキャリブレーション</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">カメラとレンズ</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">光源と照明</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">カメラキャリブレーション</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">画像エンハンスメント</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">空間フィルタリング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">閾値処理</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">モルフォロジー</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">グレースケール変換とヒストグラム</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">幾何変換</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">周波数領域処理とFFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">高度強調</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">位置決め</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">エッジ検出</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">幾何プリミティブの検出</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">ホフ変換</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">テンプレートマッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">形状マッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">特徴マッチングとカラーマッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI 生成と位置補正</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">測定</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">カリパー計測とサブピクセル位置決め</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">幾何計測</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">輝度、色、間隔の測定</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">検査</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob解析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">輪郭分析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">形状特徴</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">欠陥検出</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">認識</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1Dおよび2Dバーコード認識</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">OCR 文字認識</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">古典的分類器</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D イメージング</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">3次元イメージング概論</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">ステレオビジョン</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">構造化光3次元イメージング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">レーザー三角測量</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">照度差ステレオ</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">位相計測ディフレクトメトリー</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">共焦点結像とフォーカスバリエーション</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D 処理</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">点群基礎</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">点群の前処理</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP 位置合わせと3D校正</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D マッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D計測</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D検査</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目次</h2>
+   
+  <ul>
+  <li><a href="#sec-dd-vm" id="toc-sec-dd-vm" class="nav-link active" data-scroll-target="#sec-dd-vm"><span class="header-section-number">26.1</span> 変数モデル：サンプルに正常を定義させる</a></li>
+  <li><a href="#sec-dd-experiment" id="toc-sec-dd-experiment" class="nav-link" data-scroll-target="#sec-dd-experiment"><span class="header-section-number">26.2</span> 検出実験</a></li>
+  <li><a href="#sec-dd-threshold" id="toc-sec-dd-threshold" class="nav-link" data-scroll-target="#sec-dd-threshold"><span class="header-section-number">26.3</span> 閾値のジレンマ</a></li>
+  <li><a href="#sec-dd-rules" id="toc-sec-dd-rules" class="nav-link" data-scroll-target="#sec-dd-rules"><span class="header-section-number">26.4</span> ルールベースルート：エッジと輪郭の欠陥</a></li>
+  <li><a href="#sec-dd-scivision" id="toc-sec-dd-scivision" class="nav-link" data-scroll-target="#sec-dd-scivision"><span class="header-section-number">26.5</span> SciVisionでの実装</a></li>
+  <li><a href="#sec-dd-summary" id="toc-sec-dd-summary" class="nav-link" data-scroll-target="#sec-dd-summary"><span class="header-section-number">26.6</span> まとめ</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_inspection.html">検査</a></li><li class="breadcrumb-item"><a href="./defect_detection.html"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">欠陥検出</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-defect_detection" class="quarto-section-identifier"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">欠陥検出</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>検出編の前章3つは、3つのツールを提供してきた。Blob解析（<a href="blob_analysis.html" class="quarto-xref"><span>チャプター 23</span></a>）は二値画像から領域を分割し計測するものであり、輪郭解析（<a href="contour_analysis.html" class="quarto-xref"><span>チャプター 24</span></a>）は実際の輪郭と理論上の輪郭を点ごとに照合するものであり、形状特徴は「どのような形状か」を比較可能な数値に圧縮するものである。しかしこれらが答えるのは「この物体は何か、大きさはどれくらいか、どれだけずれているか」であるのに対し、生産ラインで最も多い問いは別のものである。「この製品に<strong>あってはならないものがあるか</strong>」という問いである。汚れ、異物、傷、欠け、バリ……欠陥の形状は列挙しきれず、それぞれに対して検出器を作成することはできない。本章は検出編全体を締めくくる<strong>パラダイム</strong>を提示する。<strong>欠陥（defect）とは「正常」からのずれである</strong>、というものである。これにより問題は反転する。千差万別の欠陥を定義するよりも、まず唯一の「正常」を定義すればよい。「正常はどこから来るのか」という線に沿って、工業用欠陥検出は3つの経路に分かれる。<strong>参照比較</strong>——良品サンプルで参照を作成し、画素ごとに比較する（本章の主役である変数モデル）；<strong>ルール判定</strong>——「エッジの真直度は2 px以下」といった幾何学的ルールで合格条件を記述する（エッジ欠陥、輪郭欠陥の検出）；<strong>統計的外れ値</strong>——外部参照に依存せず、画像内から統計的に異常な領域を直接探す。本章では一連の<strong>実際の工業用サンプル画像</strong>を実験全体で用いる。Smart3「傷検出示例ソリューション」の5枚の2448×2048、8ビットグレースケール画像であり（<a href="#fig-dd-master" class="quarto-xref">図&nbsp;<span>26.1</span></a>）、各画像は繊維フィルタ円盤（盤面の平均グレースケール値は約150、暗い背景のグレースケール値は約80）で、盤面には実際の傷が散在し、それぞれに1種類の実際の欠陥——大きな暗い汚れ、明るい異物、エッジの欠け——が存在する。この「きれいな原図はなく、実際の部品のみ」のサンプルセットこそが、理想的な合成シーンでは変数モデルが学べなかったいくつかの教訓を引き出すきっかけとなる。</p>
+<div id="fig-dd-master" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dd-master-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/defect_detection/vm_master.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="図&nbsp;26.1: “傷検出示例ソリューション”に含まれる実際の欠陥フィルタ円盤（サンプル002）：繊維盤面には実際の傷が全面にあり、中心よりやや左上に背景に近いグレースケール値の大きな暗い汚れ（異物の埋め込み/欠材）がある。盤心は明るく、縁には明るいハロー環があり、盤面は強度が正規化され平均値は150である。"><img src="figures/defect_detection/vm_master.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dd-master-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;26.1: “傷検出示例ソリューション”に含まれる実際の欠陥フィルタ円盤（サンプル002）：繊維盤面には実際の傷が全面にあり、中心よりやや左上に背景に近いグレースケール値の大きな暗い汚れ（異物の埋め込み/欠材）がある。盤心は明るく、縁には明るいハロー環があり、盤面は強度が正規化され平均値は150である。
+</figcaption>
+</figure>
+</div>
+<section id="sec-dd-vm" class="level2 page-columns page-full" data-number="26.1">
+<h2 data-number="26.1" class="anchored" data-anchor-id="sec-dd-vm"><span class="header-section-number">26.1</span> 変数モデル：サンプルに正常を定義させる</h2>
+<p>フィルタ検出の素朴な手法は、金サンプル（golden sample）画像から被検査画像を減算し、その差分に閾値処理を施すものである。これはすぐに失敗する。盤面は<strong>ランダムな繊維テクスチャ</strong>であり、各円盤のテクスチャの向きはすべて異なる。2枚とも良品であっても、画素ごとに減算すると各繊維、各傷の箇所に「欠陥」が現れてしまう。<strong>変数モデル（variation model）</strong>の洞察は次の点にある。正常は1枚の画像ではなく<strong>バンド（band）</strong>であり、バンドの幅は技術者の勘で決めるべきではなく、<strong>訓練サンプル自体のばらつきによって定めるべき</strong>である、ということである。</p>
+<p><span class="math inline">\(n\)</span> 枚の良品訓練画像に対し、画素ごとにグレースケールの平均値 <span class="math inline">\(\mu(x,y)\)</span> と標準偏差 <span class="math inline">\(\sigma(x,y)\)</span> を計算すると、その画素の合格区間——<strong>容差バンド（tolerance band）</strong>——は</p>
+<p><span class="math display">\[
+\big[\,\mu - \max(a,\ k\sigma),\ \ \mu + \max(a,\ k\sigma)\,\big],
+\]</span></p>
+<p>となる。ここで <span class="math inline">\(a\)</span> は絶対閾値（absolute threshold）、<span class="math inline">\(k\)</span> は分散閾値係数（variation threshold）である。<span class="math inline">\(k\sigma\)</span> 項は各画素の真のばらつきに容差を適応させ、<span class="math inline">\(a\)</span> は下限値である——<span class="math inline">\(\sigma\)</span> がゼロに近い領域では、少数のサンプルから推定した <span class="math inline">\(\sigma\)</span> 自体が信頼できないため、絶対下限により容差バンドが幅ゼロに収縮して純粋なノイズを欠陥と判定することを防ぐ。検出時には、被検査画素がバンド外にあれば欠陥画素としてマークする。モデル本体は上限値画像と下限値画像の2枚である。</p>
+<p>しかし<strong>この実サンプルセットにより、変数モデルの前提条件はすぐに壁にぶつかる</strong>。教科書的な変数モデルには隠れた仮定がある。<span class="math inline">\(n\)</span> 枚の良品画像は<strong>画素ごとに再現可能</strong>でなければならない——同じ座標ではすべての良品で同じ構造が見え、差異はプロセスのばらつき（見当ずれの揺らぎ、インク量、照明）によるものだけである、という仮定である。印刷ラベルはこの条件を満たすが、疎な繊維フィルタ円盤は<strong>満たさない</strong>。5枚の円盤を重心で位置合わせ（平行移動によるセンタリング、強度の正規化）してSDKの変数モデルを訓練すると、テクスチャは画素レベルで全く一致せず、画素ごとの <span class="math inline">\(\sigma\)</span> はテクスチャの位置ずれによって膨れ上がり、結果として<strong>すべての円盤</strong>——最もきれいな金サンプルを含む——に対して千個近いテクスチャの誤検出領域が報告される（<a href="#sec-dd-experiment" class="quarto-xref"><span>セクション 26.2</span></a> で実測値692–1459を示す）。これが実サンプルが教える最初の教訓である。<strong>位置合わせした金サンプルを用いる変数モデルには「再現可能な外観」が必要であり、繊維、布地、粗面などの非再現的なテクスチャには対応できない</strong>。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>「再現可能な外観」は参照比較経路の不可視の敷居である。印刷、ラベル貼り、シルク印刷、成形品の表面は位置合わせ後に画素ごとに再現可能であり、変数モデルの得意領域である。一方、繊維紙、不織布、ヘアライン加工金属、磨りガラス面は画素ごとにランダムであり、サンプル間の位置合わせはテクスチャの位置ずれを容差バンドに焼き込むだけである。ある表面が位置合わせを用いる変数モデルに適用可能か判断するには、まず次の問いを立てるとよい。2枚の良品を位置合わせして減算したとき、差分画像は平坦か、それともテクスチャで覆われているか。</p>
+</div></div><p>解決策は「正常がどこから来るのか」の供給元を変えることである。サンプル間ではなく、<strong>同じ画像内</strong>で正常を探すのである。各円盤について、それ自身の盤面は大きなスケールでは緩やかに変化し（盤心は明るく、縁にはハローがあり、全体は平らな照明分布）、<strong>局所的な異常</strong>が欠陥となる。そこで「正常モデル」<span class="math inline">\(\mu\)</span> をその円盤自身の<strong>大きな窓による平滑化背景</strong>（半径150 pxの盤面マスクを用いたボックス平均）とする。これは傷と汚れを消去し、緩やかな照明変化のみを残す。バンド幅の <span class="math inline">\(\sigma\)</span> には<strong>金サンプル残差のロバストな尺度</strong> <span class="math inline">\(1.4826\cdot\mathrm{MAD}=8.69\)</span>（盤面の繊維テクスチャの通常のノイズレベル）を用い、下限値 <span class="math inline">\(a=10\)</span> とする。検出は残差 <span class="math inline">\(R=I-\mu\)</span> に対して行う：<span class="math inline">\(|R|&gt;\max(a,k\sigma)\)</span> なら欠陥である。これは依然として変数モデルと同じバンドの数学的枠組みであるが、<span class="math inline">\(\mu\)</span> は空間平滑化から、<span class="math inline">\(\sigma\)</span> は金サンプルのテクスチャから得られる——これは「参照比較」と「統計的外れ値」の両経路の交差点に位置する。</p>
+<p>1つの工学的な工夫を指摘しておく価値がある。盤面のセグメンテーションにはOtsu法を用いるが、<strong>暗い汚れの中心は閾値よりも暗いため背景に分類され、盤面マスクに穴が残る</strong>。そのため平滑化背景は穴の箇所で周囲の明るい繊維の値を用いる（<a href="#fig-dd-model-b" class="quarto-xref">図&nbsp;<span>26.2 (b)</span></a> の平均値画像では汚れは「明るく埋められ」きれいな盤面になっている）。その結果、穴の箇所の残差は強い負の値となり——この機構により汚れの穴は大きな負の残差を持つ欠陥としてきれいに露出する（<a href="#fig-dd-model-c" class="quarto-xref">図&nbsp;<span>26.2 (c)</span></a> の変動画像）。</p>
+<div id="fig-dd-model" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dd-model-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-dd-model" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-dd-model-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-dd-model-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/defect_detection/vm_train_sample.png" class="lightbox" data-gallery="fig-dd-model" title="図&nbsp;26.2&nbsp;(a): 金サンプル円盤（005、最もきれい）"><img src="figures/defect_detection/vm_train_sample.png" class="img-fluid figure-img" data-ref-parent="fig-dd-model"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-dd-model-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) 金サンプル円盤（005、最もきれい）
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-dd-model" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-dd-model-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-dd-model-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/defect_detection/vm_mean.png" class="lightbox" data-gallery="fig-dd-model" title="図&nbsp;26.2&nbsp;(b): 自己参照型「正常」背景 \mu"><img src="figures/defect_detection/vm_mean.png" class="img-fluid figure-img" data-ref-parent="fig-dd-model"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-dd-model-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) 自己参照型「正常」背景 <span class="math inline">\(\mu\)</span>
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-dd-model" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-dd-model-c" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-dd-model-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/defect_detection/vm_variation.png" class="lightbox" data-gallery="fig-dd-model" title="図&nbsp;26.2&nbsp;(c): 変動/残差画像 |R|"><img src="figures/defect_detection/vm_variation.png" class="img-fluid figure-img" data-ref-parent="fig-dd-model"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-dd-model-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) 変動/残差画像 <span class="math inline">\(|R|\)</span>
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dd-model-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;26.2: 自己参照型変数モデル。(a) 金サンプル円盤005。盤面には細かい傷のみが残っており、通常のテクスチャノイズの尺度 <span class="math inline">\(\sigma=8.69\)</span> を較正するために用いる。(b) 欠陥円盤002の大きな窓による平滑化背景 <span class="math inline">\(\mu\)</span>。傷と汚れは平滑化されて消え、汚れの穴は周囲の明るい繊維によって「明るく埋められ」きれいな盤面になっており、まさに「正常」があるべき姿である。(c) 残差画像 <span class="math inline">\(|R|\)</span>。盤面はほぼ全面的に黒（正常）であり、唯一左上の暗い汚れが塊全体として明るくなり、細かい傷が薄い明るい線として現れている。明るい縁のハロー環も明るくなっているが、後者は <code>interiorR</code> の円外で除外される。
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-dd-experiment" class="level2" data-number="26.2">
+<h2 data-number="26.2" class="anchored" data-anchor-id="sec-dd-experiment"><span class="header-section-number">26.2</span> 検出実験</h2>
+<p>まず、<strong>位置合わせした多サンプルSDK変数モデルの失効</strong>の実測結果を示す。内部がきれいな3枚の円盤003、004、005を良品参照とし（それらの実際の欠陥は縁にあり、内部の円形マスクで除外される）、重心で位置合わせし強度を正規化した後、SDKの変数モデル（<span class="math inline">\(a=12\)</span>, <span class="math inline">\(k=3\)</span>）を訓練し、円盤ごとに比較を行った：</p>
+<div id="tbl-dd-registered" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-dd-registered-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;26.1: 位置合わせした多サンプルSDK変数モデルの繊維表面に対する出力：すべての円盤——訓練に用いた金サンプル005自体を含む——がテクスチャの位置ずれにより千個近い誤検出領域で溢れ、実際の欠陥はその中に埋もれてしまい、使用不可能である。
+</figcaption>
+<div aria-describedby="tbl-dd-registered-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">被検査円盤</th>
+<th style="text-align: right;">001</th>
+<th style="text-align: right;">002</th>
+<th style="text-align: right;">003</th>
+<th style="text-align: right;">004</th>
+<th style="text-align: right;">005（金サンプル）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">欠陥領域数</td>
+<td style="text-align: right;">1017</td>
+<td style="text-align: right;">1298</td>
+<td style="text-align: right;">692</td>
+<td style="text-align: right;">1459</td>
+<td style="text-align: right;">1094</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>金サンプル005はモデルの訓練データの1つであるにもかかわらず、依然として1094個の「欠陥」が報告されている。これは問題を明確にしている：閾値の調整が不十分なのではなく、<strong>画素ごとに再現可能であるという前提が成立していない</strong>のである。<a href="#sec-dd-vm" class="quarto-xref"><span>セクション 26.1</span></a> の自己参照バンドに切り替えると、検出結果はすぐに可読になる。通常設定（<span class="math inline">\(k=5\)</span>、バンド幅 <span class="math inline">\(\max(10,5\times8.69)\approx43\)</span>、最小連結成分30）で円盤ごとに検出し、極性（暗欠陥/明るい傷）ごとに集計した結果は次の通りである：</p>
+<ul>
+<li><strong>002の暗い汚れ</strong>：検出された暗欠陥の面積は <strong>9811</strong> 画素、最大連結成分は <strong>9738</strong> 画素、平均コントラストは <strong>−101</strong> グレースケールレベル——盤面より100レベル暗い、約1万画素の汚れの塊であり、位置は(504, 676)である（<a href="#fig-dd-defects-a" class="quarto-xref">図&nbsp;<span>26.3 (a)</span></a>）。これは全セットで最も強く、最も曖昧さのない真の欠陥である。</li>
+<li><strong>001の異物</strong>：盤面に埋め込まれたカールした明るい繊維異物——明るい部分が検出され（最大連結成分のコントラストは <strong>+93</strong> グレースケールレベル）、同時にその暗い影も検出された（暗欠陥の面積は <strong>2960</strong>、最大は2771、コントラストは−82）。明と暗の両極性がバンドを越えている（<a href="#fig-dd-defects-c" class="quarto-xref">図&nbsp;<span>26.3 (c)</span></a>）。</li>
+<li><strong>005の金サンプル</strong>：暗欠陥の面積はわずか <strong>343</strong> 画素（汚れなし）であるが、盤面の実際の傷が <strong>2934</strong> の明るい画素として検出された（<a href="#fig-dd-defects-b" class="quarto-xref">図&nbsp;<span>26.3 (b)</span></a>）——金サンプルが「きれい」であるのは相対的なものに過ぎず、同様に傷で覆われている。</li>
+<li><strong>003 / 004</strong>：内部の暗欠陥の面積は480 / 440（軽微）である。それらの真の欠陥は<strong>エッジの欠け</strong>であり、内部検出円の外に位置するため、ルール経路で処理される（<a href="#sec-dd-rules" class="quarto-xref"><span>セクション 26.4</span></a>）。</li>
+</ul>
+<div id="fig-dd-defects" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dd-defects-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-dd-defects" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-dd-defects-a" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-dd-defects-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/defect_detection/vm_defect_blot.png" class="lightbox" data-gallery="fig-dd-defects" title="図&nbsp;26.3&nbsp;(a): 002の暗い汚れ"><img src="figures/defect_detection/vm_defect_blot.png" class="img-fluid figure-img" data-ref-parent="fig-dd-defects"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-dd-defects-a-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) 002の暗い汚れ
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-dd-defects" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-dd-defects-b" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-dd-defects-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/defect_detection/vm_defect_scratch.png" class="lightbox" data-gallery="fig-dd-defects" title="図&nbsp;26.3&nbsp;(b): 005の表面の傷"><img src="figures/defect_detection/vm_defect_scratch.png" class="img-fluid figure-img" data-ref-parent="fig-dd-defects"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-dd-defects-b-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) 005の表面の傷
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-dd-defects" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div id="fig-dd-defects-c" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-dd-defects-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/defect_detection/vm_defect_missing.png" class="lightbox" data-gallery="fig-dd-defects" title="図&nbsp;26.3&nbsp;(c): 001の明るい異物"><img src="figures/defect_detection/vm_defect_missing.png" class="img-fluid figure-img" data-ref-parent="fig-dd-defects"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-dd-defects-c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) 001の明るい異物
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dd-defects-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;26.3: 通常設定（<span class="math inline">\(k=5\)</span>）での検出結果。暗欠陥は反転した白で、明るい欠陥は反転した黒で重ね合わせ、最も強い領域には外接枠を付けている。(a) 002の暗い汚れの塊（9738画素、コントラスト−101）はきれいに囲まれている。(b) 005の盤面の実際の傷は一続きの明るい線として検出されている——金サンプルにも傷がある。(c) 001のカールした明るい異物とその暗い影が両極性で検出されている。
+</figcaption>
+</figure>
+</div>
+<p>002の例は自己参照経路のロバスト性を裏付けている。汚れの塊は盤面より100グレースケールレベル暗く、ノイズの裾から遠く離れているため、閾値の緩急にかかわらず確実にバンドを越える。一方、005の傷は別の極端を示している——それらは盤面よりわずか十数から数十グレースケールレベル明るいだけであり、ノイズの裾に接しており、閾値調整の真の戦場となる箇所である。</p>
+</section>
+<section id="sec-dd-threshold" class="level2 page-columns page-full" data-number="26.3">
+<h2 data-number="26.3" class="anchored" data-anchor-id="sec-dd-threshold"><span class="header-section-number">26.3</span> 閾値のジレンマ</h2>
+<p>正常設定の <span class="math inline">\(k=5\)</span> は根拠のない値ではない。同一の自参照モデルと5枚のディスクを用い、厳しい（<span class="math inline">\(k=3\)</span>、帯幅≈26）、正常（<span class="math inline">\(k=5\)</span>、≈43）、緩い（<span class="math inline">\(k=8\)</span>、≈70）の3水準で閾値走査（下限値 <span class="math inline">\(a=10\)</span>、最小連結成分30）を行った際の、極性ごとに分割した検出面積を以下に示す（手動で計算した決定論的帯域であり、<a href="#sec-dd-scivision" class="quarto-xref"><span>セクション 26.5</span></a> のSDK出力と交差検証済みである）。</p>
+<div id="tbl-dd-sweep" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-dd-sweep-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;26.2: 3水準の閾値における検出面積（ピクセル、最小連結成分30）。暗欠陥（002汚染、001異物）は全ての閾値を貫通して検出されるのに対し、明るい傷と粒状欠陥は閾値に応じて急激に減衰する——金サンプル005の明るい傷の検出量は、厳しい設定での13384から緩い設定での236まで一貫して減少する。
+</figcaption>
+<div aria-describedby="tbl-dd-sweep-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">ディスク（欠陥）</th>
+<th style="text-align: right;">暗欠陥 厳</th>
+<th style="text-align: right;">正常</th>
+<th style="text-align: right;">緩</th>
+<th style="text-align: right;">明るい傷 厳</th>
+<th style="text-align: right;">正常</th>
+<th style="text-align: right;">緩</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">001 明るい異物</td>
+<td style="text-align: right;">5939</td>
+<td style="text-align: right;">2960</td>
+<td style="text-align: right;"><strong>1935</strong></td>
+<td style="text-align: right;">4984</td>
+<td style="text-align: right;">864</td>
+<td style="text-align: right;">179</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">002 暗汚染</td>
+<td style="text-align: right;">12065</td>
+<td style="text-align: right;">9811</td>
+<td style="text-align: right;"><strong>9133</strong></td>
+<td style="text-align: right;">4592</td>
+<td style="text-align: right;">241</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">003 エッジ欠け</td>
+<td style="text-align: right;">5228</td>
+<td style="text-align: right;">480</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">8729</td>
+<td style="text-align: right;">1552</td>
+<td style="text-align: right;">74</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">004 エッジ欠け</td>
+<td style="text-align: right;">4168</td>
+<td style="text-align: right;">440</td>
+<td style="text-align: right;">109</td>
+<td style="text-align: right;">13345</td>
+<td style="text-align: right;">1520</td>
+<td style="text-align: right;">163</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">005 金サンプル</td>
+<td style="text-align: right;">2204</td>
+<td style="text-align: right;">343</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;"><strong>13384</strong></td>
+<td style="text-align: right;">2934</td>
+<td style="text-align: right;"><strong>236</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>表中の2種類の欠陥の検出結果の違いが、欠陥検出の根本的なジレンマである。<strong>暗汚染と異物は全ての閾値を貫通して検出される</strong>：002の暗欠陥は厳しい設定での12065から緩い設定での9133までほとんど変化せず、001の異物も5939から1935まで安定して検出されている——これらはコントラストが十分に強く、「必検出」の真の欠陥である。<strong>一方、スクラッチと粒状欠陥は閾値に極めて敏感である</strong>：金サンプル005の明るい欠陥の検出量は、厳しい設定での13384ピクセルから緩い設定での236ピクセルまで急減し、003、004の明るい傷も桁違いに減衰している。<a href="#fig-dd-threshold" class="quarto-xref">図&nbsp;<span>26.4</span></a> は005の両極端の結果を並べたものである：左図（厳しい設定）では盤面に検出された細かいスクラッチと繊維状の粒が密集しており——もしスクラッチが許容可能な外観上の瑕疵であれば、これらは<strong>虚警（false alarm）</strong>である；右図（緩い設定）では画面がほぼクリーンになり、最深の数本のスクラッチのみが残っている。</p>
+<div id="fig-dd-threshold" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dd-threshold-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/defect_detection/vm_threshold.png" class="lightbox" data-gallery="quarto-lightbox-gallery-8" title="図&nbsp;26.4: 閾値のジレンマ（両方の被検体は金サンプルディスク005）。左：厳しい設定（k=3）では13384ピクセルが検出され、盤面に細かいスクラッチと繊維状の粒が密集している；右：緩い設定（k=8）では最深のスクラッチのみが236ピクセル残っている。スクラッチが「瑕疵」か「欠陥」かは規格によって決まり——閾値はまさにその境界線が濃淡値上で位置する場所である。"><img src="figures/defect_detection/vm_threshold.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dd-threshold-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;26.4: 閾値のジレンマ（両方の被検体は金サンプルディスク005）。左：厳しい設定（<span class="math inline">\(k=3\)</span>）では13384ピクセルが検出され、盤面に細かいスクラッチと繊維状の粒が密集している；右：緩い設定（<span class="math inline">\(k=8\)</span>）では最深のスクラッチのみが236ピクセル残っている。スクラッチが「瑕疵」か「欠陥」かは規格によって決まり——閾値はまさにその境界線が濃淡値上で位置する場所である。
+</figcaption>
+</figure>
+</div>
+<p>これはまさに実物サンプルが合成シーンよりも正直である点である：<strong>ここに「クリーンな良品」は存在しない</strong>——全てのディスクにスクラッチがあり、「欠陥」と「瑕疵」の境界は物理ではなく規格によって決まる。チューニングの工学的な手法は<strong>両端からの挟み込み</strong>である：まず「合格」と判定されたディスクのセットで閾値を絞り、許容可能な瑕疵（浅いスクラッチ）がちょうど報告されなくなり、虚警が許容されるPPM水準まで押し下げられた時点で下限値が得られる；次に<strong>既知の必検出真欠陥</strong>（汚染、異物、欠け）で検出性能を検証し、上限値が得られる。2つの境界の間が動作窓である——もし窓が存在しない（最も浅い必検出欠陥と許容可能な瑕疵が濃淡値上分離不可能である）場合、変更すべきは閾値ではなく、照明角度、波長帯域、解像度といった撮像系である（<a href="illumination.html" class="quarto-xref"><span>チャプター 4</span></a> の暗視野/明視野の選択は、多くの場合この窓を拡げるために行われる）。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>これは <a href="thresholding.html" class="quarto-xref"><span>チャプター 7</span></a> の教訓と同型である：閾値の「自動」は単に閾値を選択する行為を自動化しただけで、自身のシーンへの適合を保証するものではない。変動モデルの「自動公差」も同様で——<span class="math inline">\(k\sigma\)</span> が自動的に適応するのは<strong>金サンプルに存在する</strong>テクスチャノイズであり、「どのずれが欠陥とみなされるか」は依然として規格によって引かれる人為的な境界線であり、「自動」であることは検査の免除を意味しない。</p>
+</div></div></section>
+<section id="sec-dd-rules" class="level2" data-number="26.4">
+<h2 data-number="26.4" class="anchored" data-anchor-id="sec-dd-rules"><span class="header-section-number">26.4</span> ルールベースルート：エッジと輪郭の欠陥</h2>
+<p>自参照変動モデルは<strong>盤面内部</strong>の汚染、異物、スクラッチには優れるが、003、004のような<strong>エッジ欠け</strong>には対応できない——これらは内部検出円の外側に位置し、本質的にはディスクの<strong>輪郭</strong>が本来の円からずれているものである。合否条件が<strong>幾何学的ルールとして記述できる</strong>場合（例えば「エッジは半径760の円であるべき」）、SciVisionはルールベースルートのモジュールを2つ提供しており、ここでは予備的な紹介にとどめる（本章では実演しない）。</p>
+<p><strong>単一エッジ欠陥検出</strong>（<code>SingleEdgeDefectDetection</code>、マニュアル8.11）は「エッジは直線/滑らかであるべき」という要求を対象とする：一連の探索線に沿って基準エッジと実エッジの点ペアをそれぞれ抽出し、各ペアについて距離と角度のずれを計算し、閾値を超えた場合にNGと判定する。本質的にはキャリパー式（<a href="caliper_measurement.html" class="quarto-xref"><span>チャプター 20</span></a>）のラインごとの測定と規格判定を組み合わせたものであり、プレス部品のバリ、刃先の欠け、シール材の切れ目といった<strong>片側局所異常</strong>に適する——まさに本セットの003、004フィルタエッジの欠けに対応する：ディスクの理論円を基準エッジとし、実エッジの内側への凹みが規格外となった箇所が欠けとなり、金サンプルは不要である。</p>
+<p><strong>輪郭欠陥検出</strong>（<code>ContourDefectDetection</code>、マニュアル8.14）は実輪郭とテンプレート輪郭を全体として比較し、規格外の判定に加えて<strong>欠陥の分類</strong>（断裂、凹み、隆起、微細バリ）を出力する。輪郭ペア（contour pair）間の幅欠陥検出にも対応し、テンプレートから塗布軌道を生成することもできる——これらの機能は明らかに<strong>点塗布/塗膜検査</strong>を対象としている：接着剤の経路が途切れていないか（断裂）、接着剤が堆積していないか（隆起）、接着剤が不足していないか（凹み）、接着剤の幅が規格内か（輪郭ペアの幅）。<a href="contour_analysis.html" class="quarto-xref"><span>チャプター 24</span></a> の輪郭比較（<code>ContrastContour</code>）と同系列である：後者は連続的なずれ曲線を出力するのに対し、前者は分類後の欠陥リストを直接出力する。</p>
+<p>2つのルートの役割分担は一言でまとめられる：<strong>幾何学的事前知識がありルールを記述できる場合はルールベースルート、再現可能なサンプルはあるがルールを記述できない場合は変動モデルを用いる</strong>。盤面の繊維テクスチャの「正常」を少数の幾何学的制約で記述することはできず、サンプル間の位置合わせで再現することもできないため、単一画像の自参照統計に依存するしかない；逆に、ディスクのエッジが「半径760の円であるべき」は明確なルールであり、このためにモデルを学習する必要はない。</p>
+</section>
+<section id="sec-dd-scivision" class="level2" data-number="26.5">
+<h2 data-number="26.5" class="anchored" data-anchor-id="sec-dd-scivision"><span class="header-section-number">26.5</span> SciVisionでの実装</h2>
+<p>変動モデルは <code>SCIMV::SciSvVariationModel</code> によって提供され、学習と比較にそれぞれ1つのインターフェースが用意されている：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSvVariationModel vm<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>SciImageArray trainImgs<span class="op">;</span>          <span class="co">// 良品学習画像（ピクセル単位で再現可能である必要がある）</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>SciROIArray   maskArr<span class="op">;</span>            <span class="co">// 画像ごとのマスク領域（盤内をGenCircleで囲む）</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>SciROI        trainRoi<span class="op">;</span>           <span class="co">// 学習領域</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>SciImageArray model<span class="op">;</span>              <span class="co">// 出力：[0]上限 8U [1]下限 8U [2]予約 [3]平均 32F</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> rc <span class="op">=</span> vm<span class="op">.</span>TrainModel<span class="op">(</span>trainImgs<span class="op">,</span> maskArr<span class="op">,</span> trainRoi<span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                        <span class="co">/*absThreshold*/</span> <span class="fl">12.0</span><span class="bu">f</span><span class="op">,</span> <span class="co">/*varThreshold*/</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="op">&amp;</span>model<span class="op">);</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>SciImage result<span class="op">;</span>  SciContourArray contours<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>SciVarArray lengths<span class="op">;</span>  SciPointArray centers<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>SciROI roi<span class="op">;</span>                       <span class="co">// UNDEF = 画像全体を比較（円形ROIは拒否される、後述）</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> vm<span class="op">.</span>CompareModel<span class="op">(</span>testImg<span class="op">,</span> model<span class="op">,</span> roi<span class="op">,</span> <span class="co">/*minLength*/</span> <span class="dv">30</span><span class="op">,</span> <span class="co">/*maxLength*/</span> <span class="dv">100000</span><span class="op">,</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                     <span class="op">&amp;</span>result<span class="op">,</span> <span class="op">&amp;</span>contours<span class="op">,</span> <span class="op">&amp;</span>lengths<span class="op">,</span> <span class="op">&amp;</span>centers<span class="op">);</span></span></code><button title="コピー" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>absThreshold</code> と <code>varThreshold</code> は <a href="#sec-dd-vm" class="quarto-xref"><span>セクション 26.1</span></a> の数式における <span class="math inline">\(a\)</span> と <span class="math inline">\(k\)</span> である。本章の実物サンプルに関する重要な発見は、<strong>位置合わせした複数サンプルの学習は繊維状の表面では使用できない</strong>ことである（<a href="#tbl-dd-registered" class="quarto-xref">表&nbsp;<span>26.1</span></a> 参照；金サンプル自身が1094の誤検出領域を報告する）。解決策は、<code>CompareModel</code> を汎用的な<strong>「帯域外ピクセル→輪郭抽出→長さフィルタリング」エンジン</strong>として扱い、<strong>画像ごとに自己合成した自参照モデル</strong>を入力することである——<code>model[3]</code> に当該ディスクの平滑化背景 <span class="math inline">\(\mu\)</span>、<code>model[0]/[1]</code> に <span class="math inline">\(\mu\pm\max(a,k\sigma)\)</span> を格納し、<code>model[2]</code> は0に設定する。これにより、位置合わせの前提条件を回避しつつ、SDKの輪郭抽出と長さフィルタリングを再利用できる。実測による交差検証（帯幅43、<span class="math inline">\(k=5\)</span>）の結果は以下の通りである：</p>
+<div id="tbl-dd-xval" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-dd-xval-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;26.3: SDK <code>CompareModel</code> エンジン（自参照合成モデル）と手動帯域のディスクごとの交差検証：欠陥ピクセルの総数は一致しており（002：9926 対 10052）、連結規則の違いによる領域の粒度のみが異なる。
+</figcaption>
+<div aria-describedby="tbl-dd-xval-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">ディスク</th>
+<th style="text-align: right;">SDK比較出力（盤内非ゼロピクセル数 / 領域数）</th>
+<th style="text-align: right;">手動帯域（面積 / 領域数）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">002 汚染</td>
+<td style="text-align: right;">9926 / 100</td>
+<td style="text-align: right;">10052 / 9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">001 異物</td>
+<td style="text-align: right;">3666 / 46</td>
+<td style="text-align: right;">3824 / 18</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">005 金サンプル</td>
+<td style="text-align: right;">2768 / 184</td>
+<td style="text-align: right;">3277 / 54</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>この一連のインターフェースは実測により、正確に記録しておくべきいくつかの落とし穴を露呈した：</p>
+<ul>
+<li><strong><code>minLength</code> は1以上である必要がある</strong>：0を渡すとエラー120001014が返される。ドキュメントには有効範囲が [0, 100000] と記載されているにもかかわらず、である。</li>
+<li><strong><code>maxLength</code> は100000以下である必要がある</strong>：1000000を渡すとエラー120001015が返される（「長さフィルタリングの上限値」という直感に反し、ドキュメントにも記載されていない）——本章の実測で発見された新たな落とし穴である。</li>
+<li><strong>4つの出力パラメータは全て実体を渡す必要がある</strong>：いずれか1つに <code>NULL</code> を渡すと（輪郭や中心に関心がない場合でも）、直ちにクラッシュする（0xC0000005）。</li>
+<li><strong><code>CompareModel</code> は円形ROIを受け付けない</strong>：<code>GenCircle</code> で生成したROIを渡すと120001015が返される（一方、<code>TrainModel</code> のマスクは円形を受け付ける）；比較にはUNDEF/矩形ROIのみ使用でき、盤内の制限は円形マスクによる後処理で独自に行う必要がある。</li>
+<li><strong>位置合わせした複数サンプルの学習は非再現性テクスチャ上で失効する</strong>：<a href="#tbl-dd-registered" class="quarto-xref">表&nbsp;<span>26.1</span></a> 参照；変動モデルのピクセルごとの <span class="math inline">\(\sigma\)</span> がサンプル間のテクスチャの位置ずれを「プロセス変動」とみなし、金サンプル自身も誤検出で埋め尽くされる。</li>
+</ul>
+<p>これらの落とし穴が本章の実験方法論を形成した：閾値走査と極性統計は全て<strong>手動で計算した <span class="math inline">\(\mu\pm\max(a,k\sigma)\)</span> モデル</strong>（32ビット浮動小数点、完全に決定論的）を用い、SDKの <code>CompareModel</code> 出力と交差検証を行った——002の汚染で9926対10052、001の異物で3666対3824、欠陥ピクセルの総数が一致したことで、両者が同一の数学的実装であることが確認された。これは <a href="camera_calibration.html" class="quarto-xref"><span>チャプター 5</span></a> のゴールデン実験方法論を継承したものである：ドキュメントが記述しているのは約束であり、既知の挙動を用いた対照実験が検証するのが真実である——ある種のデータによって商用ライブラリのある前提条件が無効になった場合は、自前で記述した数学的参照を仲裁者とすべきである。完全なプロジェクトは <code>code/defect_detection/</code> に格納されており、ファイルヘッダには全ての実測記録が保持されている。</p>
+<div class="industry-case">
+<p><span class="case-title">産業事例：「金サンプル」を万能薬と誤認する</span></p>
+<p>ある不織布フィルタ材の検査ラインで、印刷検査の経験を流用して位置合わせ変動モデルによる表面欠陥検出を試みた：20枚の「良品」画像を収集してモデルを構築し、ピクセルごとの平均と分散から帯域を形成して稼働させたところ、虚警率が30%を超え、ほぼ全てのフレームが小領域の誤検出で埋め尽くされた。調査の結果、根本原因は閾値でも照明でもなく、<strong>フィルタ材表面の繊維テクスチャがフレームごとにランダムであり、位置合わせ後にピクセルレベルで一致しないこと</strong>にあると判明した——変動モデルがテクスチャの位置ずれをプロセス変動とみなし、公差帯域が引き延ばされた結果、全体で虚警するか真の欠陥を見逃すかのいずれかになった。最終的な解決策はサンプル間の位置合わせを放棄し、<strong>単一画像自参照</strong>に切り替えることであった：各画像を自身の大窓平滑化背景と比較し、帯域幅を当該画像のテクスチャのロバストスケールで設定した。教訓は以下の通りである：<strong>変動モデルには目に見えない敷居——位置合わせ後のピクセル単位の再現性——が存在する</strong>。印刷、ラベル貼付、スクリーン印刷はこれを満たすが、繊維、織物、シボ加工、ヘアライン加工の表面は満たさない。稼働前にまず「2枚の良品を位置合わせして減算する」健全性チェックを行い、差分画像がテクスチャで埋め尽くされている場合は、位置合わせした金サンプルに期待するのをやめ、自参照またはテクスチャ統計のルートに切り替えるべきである。</p>
+</div>
+</section>
+<section id="sec-dd-summary" class="level2" data-number="26.6">
+<h2 data-number="26.6" class="anchored" data-anchor-id="sec-dd-summary"><span class="header-section-number">26.6</span> まとめ</h2>
+<ul>
+<li><strong>欠陥検出のパラダイムは逆方向からの定義である</strong>：欠陥の形態を列挙し尽くすことは不可能であり、運用可能な定義は「正常からのずれ」である——まず正常を定義し、次にずれを定量化する。正常は、位置合わせした良品（変動モデル）、幾何学的ルール（エッジ/輪郭欠陥）、または単一画像内の統計（自参照）から得ることができる。</li>
+<li><strong>位置合わせ変動モデルには目に見えない敷居：ピクセル単位の再現性が存在する</strong>。実物の繊維フィルタディスクはこれを満たさない——5枚のディスクを位置合わせして学習すると、金サンプル自身でさえ1094個のテクスチャ誤検出領域が発生する。印刷様の表面がこのモデルの得意分野であり、繊維/織物/シボ加工面は得意分野ではない。</li>
+<li><strong>解決策は単一画像自参照帯域</strong> <span class="math inline">\(|I-\mu|&gt;\max(a,k\sigma)\)</span> である：<span class="math inline">\(\mu\)</span> は当該画像自身の大窓平滑化背景、<span class="math inline">\(\sigma\)</span> は金サンプル残差のロバストスケール（8.69）とする。これにより、（大津の手法で背景に分類され、平滑化背景で明るく埋められた）汚染穴が大きな負の残差を持つ欠陥として明確に露呈される——002の汚染塊は9738ピクセル、コントラスト−101濃淡値であった。</li>
+<li><strong>閾値は両端からの挟み込みでチューニングする</strong>：許容可能な瑕疵で虚警を押し下げて下限値を得（金サンプルのスクラッチが厳しい設定で13384→緩い設定で236）、既知の必検出真欠陥で検出を検証して上限値を得る（汚染は全ての閾値を貫通する）。実物サンプルでは「欠陥」と「瑕疵」の境界線は物理ではなく規格によって決まる。</li>
+<li><strong>商用ライブラリの全ての前提条件はゴールデン実験を通過する必要がある</strong>：SDKの <code>CompareModel</code> を自参照検出エンジンとして再利用し、手動帯域との交差検証（9926対10052）によって初めて同一の数学的実装であることが確認された；実測により <code>maxLength≤100000</code>、円形ROIの拒否といった新たな落とし穴も明らかになった——ドキュメントは約束であり、実験こそが挙動である。</li>
+</ul>
+<p>ここに検出編は収束する：Blob分析は「分割と度量」をもたらし、輪郭分析は「点ごとの照合」をもたらし、形状特徴は「形状の言語」をもたらした。本章はこれらを「正常を定義し、逸脱を検出する」パラダイムへと昇華させる——そして一連の実際のフィルタ円板サンプルを用いて、パラダイムを現実に適用する際に最も重要なのは「正常はどこから来るのか」という正しい問いを立てることであると証明する。テクスチャ表面の欠陥検出に関する手法の全体像はXieの総説<span class="citation" data-cites="Xie2008">(<a href="references.html#ref-Xie2008" role="doc-biblioref">Xie 2008</a>)</span>を参照されたい。同総説はテクスチャ分析を主軸として、統計的、構造的、フィルタベース、モデルベースの4つのアプローチを系統的に整理している。テクスチャ特徴の統計に関する古典的な出典は依然としてHaralickらによるGLCMの論文<span class="citation" data-cites="Haralick1973">(<a href="references.html#ref-Haralick1973" role="doc-biblioref">Haralick, Shanmugam, と Dinstein 1973</a>)</span>である。本章では展開しなかった周波数領域（フーリエ）アプローチについては、TsaiとHsiehによる方向性テクスチャを対象とした欠陥検出が優れた模範例となっている<span class="citation" data-cites="TsaiHsieh1999">(<a href="references.html#ref-TsaiHsieh1999" role="doc-biblioref">Tsai と Hsieh 1999</a>)</span>。産業用欠陥検出に関するより体系的な工学的議論（テクスチャ表面や変動モデルの拡張を含む）については、Stegerらの著作<span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, と Wiedemann 2018</a>)</span>をさらに参照されたい。</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-Haralick1973" class="csl-entry" role="listitem">
+Haralick, Robert M., K. Shanmugam, と Its’hak Dinstein. 1973. <span>「Textural Features for Image Classification」</span>. <em>IEEE Transactions on Systems, Man, and Cybernetics</em> SMC-3 (6): 610–21.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, と Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2nd 版. Wiley-VCH.
+</div>
+<div id="ref-TsaiHsieh1999" class="csl-entry" role="listitem">
+Tsai, Du-Ming, と C.-Y. Hsieh. 1999. <span>「Automated Surface Inspection for Directional Textures」</span>. <em>Image and Vision Computing</em> 18 (1): 49–62.
+</div>
+<div id="ref-Xie2008" class="csl-entry" role="listitem">
+Xie, Xianghua. 2008. <span>「A Review of Recent Advances in Surface Defect Detection using Texture Analysis Techniques」</span>. <em>ELCVIA: Electronic Letters on Computer Vision and Image Analysis</em> 7 (3): 1–22.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "コピーしました");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "コピーしました");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./shape_features.html" class="pagination-link" aria-label="形状特徴">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">形状特徴</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./part_recognition.html" class="pagination-link" aria-label="認識">
+        <span class="nav-page-text">認識</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

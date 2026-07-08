@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.29">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>42&nbsp; 3D検査 – マシンビジョンアルゴリズム——原理と産業実践</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./references.html" rel="next">
+<link href="./3d_measurement.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-748b535e376f14d4692bf2b2e5fd6380.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0815c480559380816a4d1ea211a47e91.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b9e11ad5a37ead2aabff839d95ae3857.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "一致なし",
+    "search-matching-documents-text": "一致した文書",
+    "search-copy-link-title": "検索へのリンクをコピー",
+    "search-hide-matches-text": "追加の検索結果を非表示",
+    "search-more-match-text": "追加の検索結果",
+    "search-more-matches-text": "追加の検索結果",
+    "search-clear-button-title": "消去",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "検索",
+    "search-label": "サーチ"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="mvbook.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_3d_processing.html">3D 処理</a></li><li class="breadcrumb-item"><a href="./3d_inspection.html"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D検査</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="サーチ" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">マシンビジョンアルゴリズム——原理と産業実践</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="サーチ"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">記号の約束事</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">基礎</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./digital_images.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">デジタル画像基礎</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./math_preliminaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">数学予備</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">撮像とキャリブレーション</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cameras_and_lenses.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">カメラとレンズ</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./illumination.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">光源と照明</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_calibration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">カメラキャリブレーション</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">画像エンハンスメント</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./spatial_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">空間フィルタリング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./thresholding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">閾値処理</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./morphology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">モルフォロジー</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gray_transforms_histograms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">グレースケール変換とヒストグラム</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">幾何変換</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./fourier.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">周波数領域処理とFFT</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./advanced_enhancement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">高度強調</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_locating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">位置決め</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./edge_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">エッジ検出</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_primitives.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">幾何プリミティブの検出</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./hough_transform.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">ホフ変換</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./template_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">テンプレートマッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">形状マッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_color_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">特徴マッチングとカラーマッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./roi_and_fixturing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">ROI 生成と位置補正</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">測定</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./caliper_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">カリパー計測とサブピクセル位置決め</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./geometric_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">幾何計測</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intensity_color_gap_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">輝度、色、間隔の測定</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_inspection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">検査</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./blob_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Blob解析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./contour_analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">輪郭分析</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./shape_features.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">形状特徴</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./defect_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">欠陥検出</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_recognition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">認識</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./barcodes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">1Dおよび2Dバーコード認識</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ocr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">OCR 文字認識</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classical_classifiers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">古典的分類器</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_imaging.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D イメージング</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_imaging_overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">3次元イメージング概論</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./stereo_vision.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">ステレオビジョン</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./structured_light.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">構造化光3次元イメージング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./laser_triangulation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">レーザー三角測量</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./photometric_stereo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">照度差ステレオ</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./deflectometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">位相計測ディフレクトメトリー</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./confocal_focus_variation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">共焦点結像とフォーカスバリエーション</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./part_3d_processing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3D 処理</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">点群基礎</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./point_cloud_preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">点群の前処理</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./icp_registration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">ICP 位置合わせと3D校正</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_matching.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">3D マッチング</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_measurement.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D計測</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3d_inspection.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D検査</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目次</h2>
+   
+  <ul>
+  <li><a href="#sec-3i-blob" id="toc-sec-3i-blob" class="nav-link active" data-scroll-target="#sec-3i-blob"><span class="header-section-number">42.1</span> 多輪郭分割：3D Blob解析</a></li>
+  <li><a href="#sec-3i-profile" id="toc-sec-3i-profile" class="nav-link" data-scroll-target="#sec-3i-profile"><span class="header-section-number">42.2</span> 断面測定</a></li>
+  <li><a href="#sec-3i-concentration" id="toc-sec-3i-concentration" class="nav-link" data-scroll-target="#sec-3i-concentration"><span class="header-section-number">42.3</span> 局所的な欠陥と表面品質</a></li>
+  <li><a href="#sec-3i-limit" id="toc-sec-3i-limit" class="nav-link" data-scroll-target="#sec-3i-limit"><span class="header-section-number">42.4</span> 検出限界と最小検出可能寸法</a></li>
+  <li><a href="#sec-3i-scivision" id="toc-sec-3i-scivision" class="nav-link" data-scroll-target="#sec-3i-scivision"><span class="header-section-number">42.5</span> SciVision の実装</a></li>
+  <li><a href="#sec-3i-summary" id="toc-sec-3i-summary" class="nav-link" data-scroll-target="#sec-3i-summary"><span class="header-section-number">42.6</span> まとめ</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./part_3d_processing.html">3D 処理</a></li><li class="breadcrumb-item"><a href="./3d_inspection.html"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D検査</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-3d_inspection" class="quarto-section-identifier"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">3D検査</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>検査編（<a href="defect_detection.html" class="quarto-xref"><span>チャプター 26</span></a> が属する第6部）では、欠陥検出のパラダイムを一言にまとめ上げた：<strong>欠陥とは「正常」からの逸脱である</strong>——まず唯一の正常を定義し、次に多種多様な逸脱を定量化するのである。その編の舞台は2次元濃淡画像であり、正常も逸脱もすべて画素の輝度に記されていた。本章では同じパラダイムを3次元へと拡張する：検査対象はもはや濃淡画像ではなく、1枚の<strong>距離画像（range image / height map）</strong>である——各画素には輝度ではなく、その点における物体表面の真の高さ（mm）が格納されている。パラダイムに一言一句の変更はないが、次元が変わる：欠陥は3次元において初めて、2次元濃淡では到底見ることのできない<strong>高さ、体積、平面度</strong>といった次元を持つに至る。背景より25濃度階調暗いインク染みは、2次元ではコントラストに頼らなければ識別できない；しかし高さ0.99 mmの段差、高さ7 mmの円台は、3次元ではまさに0.99 mm、7 mmであり、過不足ない——次元すなわち物理量であり、これが2Dに対する3D検査の最も本質的な利点であると同時に、本章全体を貫く糸口である。</p>
+<p>本章では<strong>実際のSmart3距離画像</strong>1枚を全実験に用いる（<a href="#fig-3i-surface" class="quarto-xref">図&nbsp;<span>42.1</span></a>、Smart3 1.9.2.2の「3Dマルチ輪郭検出サンプルレシピ」に含まれる<code>001.srt</code>である）：被検査物は多段階の射出成形/機加工部品であり、俯瞰視野は32 mm×50 mm、横方向分解能は0.02 mm/px（1600×2500）、高さ分解能<code>ResolutionZ</code>はわずか0.01 µm/count（量子化は極めて細かい）である。その名の通り「マルチ輪郭」であり——表面は上下2段のプラットフォーム（段差は約1 mm）に分かれており、その上に高さの大きく異なる複数の輪郭特徴が分布している：<strong>高聳な中央円台</strong>（boss、基準面より約7 mm高い）、下段プラットフォーム上の<strong>低い円台</strong>、上段プラットフォーム先端の一周する<strong>沈み込んだ長円形溝</strong>とそれに囲まれた浮き上がったプラットフォーム、さらに高い円台の天面にある数箇所の<strong>微小な凹点</strong>である。<a href="#fig-3i-surface" class="quarto-xref">図&nbsp;<span>42.1</span></a> ではjet高さコーディングにより段階が一目でわかるようになっている：濃い青が下段プラットフォーム、薄い青が上段プラットフォーム、中央の深紅に染まった円台が高くそびえ、底部のシアン色の低い円台が中央に位置し、先端の長円形輪郭も鮮明に識別できる。特筆すべきは<strong>全画素のうち有効なのはわずか41.3%である</strong>ことで：残りの58.7%は無効（生カウント値<code>INT_MIN</code>）とマークされており、急峻な壁、深い穴、レーザー無反射領域に対応する——これが実際の3Dデータと合成データの最大の違いであり、後述するすべての手順ではまず「この画素にデータがあるか」を問わなければならない。</p>
+<div id="fig-3i-surface" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-3i-surface-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/3d_inspection/surface_3d.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="図&nbsp;42.1: 実際の距離画像（001.srt、1600×2500、jet高さコーディング）。被検査物は上下2段のプラットフォームに分かれている；中央の深紅の特徴は基準面より約7 mm高い円台であり、その天面に微小な凹点が見える；底部のシアン色の特徴は低い円台である；先端の長円形輪郭は沈み込んだ溝に囲まれた浮き上がったプラットフォームである。白は無効画素（急峻な壁/無反射、58.7%を占める）。横方向0.02 mm/px、視野32×50 mm。"><img src="figures/3d_inspection/surface_3d.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-3i-surface-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;42.1: 実際の距離画像（<code>001.srt</code>、1600×2500、jet高さコーディング）。被検査物は上下2段のプラットフォームに分かれている；中央の深紅の特徴は基準面より約7 mm高い円台であり、その天面に微小な凹点が見える；底部のシアン色の特徴は低い円台である；先端の長円形輪郭は沈み込んだ溝に囲まれた浮き上がったプラットフォームである。白は無効画素（急峻な壁/無反射、58.7%を占める）。横方向0.02 mm/px、視野32×50 mm。
+</figcaption>
+</figure>
+</div>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>距離画像は2.5Dデータとも呼ばれる：規則的な<span class="math inline">\(x,y\)</span>格子上に単一値の高さ<span class="math inline">\(z(x,y)\)</span>を格納しており、（高さを持たない）2D画像と、完全な3D点群（<a href="point_cloud_basics.html" class="quarto-xref"><span>チャプター 37</span></a>、各点が任意の<span class="math inline">\(x,y,z\)</span>を持ち、オーバーハングや閉曲面を表現できる）の中間に位置する。レーザー三角測量（<a href="laser_triangulation.html" class="quarto-xref"><span>チャプター 33</span></a>）、構造化照明（<a href="structured_light.html" class="quarto-xref"><span>チャプター 32</span></a>）といった装置の原生出力の大半はまさに距離画像である——本章では距離画像が既に生成されていることを前提とし、「距離画像を得た後にどのように輪郭や欠陥を判定するか」に焦点を当てる。急峻な壁や深い穴ではレーザーが反射しないため、センサーは当該画素を無効（本図では<code>INT_MIN</code>）とマークするしかなく、有効画素率は被加工物の凹凸に応じて大きく変動する。</p>
+</div></div><section id="sec-3i-blob" class="level2 page-columns page-full" data-number="42.1">
+<h2 data-number="42.1" class="anchored" data-anchor-id="sec-3i-blob"><span class="header-section-number">42.1</span> 多輪郭分割：3D Blob解析</h2>
+<p>2次元のBlob解析（<a href="blob_analysis.html" class="quarto-xref"><span>チャプター 23</span></a>）は「閾値分割＋連結成分＋特徴量計測」の3段階の処理である：まず画像を二値化し、次に白色の画素の塊を個々のオブジェクトとして組織して計測を行う。3次元検査の最初のツールは、これとほぼ逐語的に対応するものであるが、分割の根拠が「輝度が閾値を超える」から「<strong>高さ偏差</strong>が閾値を超える」に置き換わっている——これがまさに「多輪郭検査」の核心である：1枚の距離画像を高さが大きく異なる輪郭領域に切り分け、それぞれを個別に計測する。</p>
+<p>具体的には、まず<strong>参照面（reference surface）</strong>を推定する——全画像の有効高さの中央値はロバストな基準となる（実測値 <span class="math inline">\(h_\text{ref}=-1.694\)</span> mm であり、面積が最大の上台面にちょうど位置する。中央値は少数の高い特徴を持つ画素の影響を受けない）。次に画素ごとに偏差 <span class="math inline">\(\Delta h(x,y)=h(x,y)-h_\text{ref}\)</span> を計算する；<span class="math inline">\(\Delta h\)</span> が <span class="math inline">\(+\tau\)</span> を超える画素を「凸部候補」、<span class="math inline">\(-\tau\)</span> を下回る画素を「凹部候補」に分類し、<strong>それぞれについて</strong>連結成分解析を実行する（凸部と凹部を分けることで、隣接する凸領域と凹領域が境界で誤って1つの塊に統合されるのを防ぐ）。許容誤差は <span class="math inline">\(\tau=0.35\)</span> mm、最小面積は 1500 px（0.6 mm²）として、微細な異物を除去する。</p>
+<p>3D輪郭が2D blobに比べて持つ追加的な特徴は、まさに高さがもたらす新たな判定基準である。各輪郭には、2Dの面積、重心、外接矩形に加えて、以下の量を計算できる：<strong>符号付き高さ偏差</strong>（平均値の符号により凸部 <span class="math inline">\(\Delta h&gt;0\)</span> と凹部 <span class="math inline">\(\Delta h&lt;0\)</span> を区別する。これは2D二値画像が本質的に失う情報である）、<strong>等価直径</strong>、および<strong>体積</strong> <span class="math inline">\(V=\sum_{(x,y)}\Delta h(x,y)\cdot A_\text{px}\)</span>（<span class="math inline">\(A_\text{px}=0.02\times0.02=4\times10^{-4}\)</span> mm² は画素面積であり、単位は mm³ である。この値は「この輪郭がどれだけの材料を突出または陥没させているか」を直接的に示す）。</p>
+<p>実測により、この実際の距離画像から <strong>5つの輪郭特徴</strong> が分割された（<a href="#tbl-3i-contours" class="quarto-xref">表&nbsp;<span>42.1</span></a>、<a href="#fig-3i-defects" class="quarto-xref">図&nbsp;<span>42.2</span></a>）：最も目立つのは<strong>中央の円台</strong>である——等価直径 11.76 mm、参照面からの高さ 7.15 mm、体積 776 mm³ であり、部品全体の幾何学的な中心的特徴である；下台面上の<strong>低い円台</strong>は等価直径 6.23 mm、高さ 2.22 mm である（外接矩形は 7.8×4.8 mm であり、やや長円形である）；頂部の長円形の溝に囲まれた<strong>隆起した台座</strong>は面積 54.7 mm²、高さはわずか 0.47 mm である；そして部品全体の<strong>下台部</strong>は大面積の凹輪郭（247 mm²、平均 −0.89 mm）として正確に分離されている——これは約 1 mm の段差の低い側に相当する。</p>
+<div id="tbl-3i-contours" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-3i-contours-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;42.1: 多輪郭分割結果（参照面 <span class="math inline">\(h_\text{ref}=-1.694\)</span> mm、<span class="math inline">\(\tau=0.35\)</span> mm、最小面積 1500 px）
+</figcaption>
+<div aria-describedby="tbl-3i-contours-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 13%">
+<col style="width: 13%">
+<col style="width: 10%">
+<col style="width: 13%">
+<col style="width: 13%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">#</th>
+<th style="text-align: left;">種別</th>
+<th style="text-align: right;">面積 mm²</th>
+<th style="text-align: right;">等価直径 mm</th>
+<th style="text-align: left;">中心 (x,y) mm</th>
+<th style="text-align: right;">平均 Δh</th>
+<th style="text-align: right;">ピーク Δh</th>
+<th style="text-align: right;">体積 mm³</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">凸部</td>
+<td style="text-align: right;">108.6</td>
+<td style="text-align: right;">11.76</td>
+<td style="text-align: left;">(16.3, 24.0)</td>
+<td style="text-align: right;">+7.145</td>
+<td style="text-align: right;">+7.696</td>
+<td style="text-align: right;">+775.9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">凹部</td>
+<td style="text-align: right;">247.0</td>
+<td style="text-align: right;">17.74</td>
+<td style="text-align: left;">(16.6, 37.3)</td>
+<td style="text-align: right;">−0.892</td>
+<td style="text-align: right;">−3.868</td>
+<td style="text-align: right;">−220.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">凸部</td>
+<td style="text-align: right;">54.7</td>
+<td style="text-align: right;">8.34</td>
+<td style="text-align: left;">(15.9, 5.1)</td>
+<td style="text-align: right;">+0.465</td>
+<td style="text-align: right;">+0.917</td>
+<td style="text-align: right;">+25.5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">凸部</td>
+<td style="text-align: right;">30.5</td>
+<td style="text-align: right;">6.23</td>
+<td style="text-align: left;">(16.2, 41.9)</td>
+<td style="text-align: right;">+2.222</td>
+<td style="text-align: right;">+2.428</td>
+<td style="text-align: right;">+67.8</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">凸部</td>
+<td style="text-align: right;">2.6</td>
+<td style="text-align: right;">1.81</td>
+<td style="text-align: left;">(16.0, 6.2)</td>
+<td style="text-align: right;">+0.367</td>
+<td style="text-align: right;">+0.406</td>
+<td style="text-align: right;">+1.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="fig-3i-defects" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-3i-defects-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/3d_inspection/defects_3d.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="図&nbsp;42.2: 多輪郭分割結果（高さをグレースケールで表した元画像）。赤枠＝凸輪郭（\Delta h>0：中央の円台、低い円台、頂部の隆起台座）、青枠＝凹輪郭（\Delta h<0：下台部の段差領域）。中央の円台の上面にある2つの白点は、後節で検査する微小な凹点である。"><img src="figures/3d_inspection/defects_3d.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-3i-defects-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;42.2: 多輪郭分割結果（高さをグレースケールで表した元画像）。赤枠＝凸輪郭（<span class="math inline">\(\Delta h&gt;0\)</span>：中央の円台、低い円台、頂部の隆起台座）、青枠＝凹輪郭（<span class="math inline">\(\Delta h&lt;0\)</span>：下台部の段差領域）。中央の円台の上面にある2つの白点は、後節で検査する微小な凹点である。
+</figcaption>
+</figure>
+</div>
+<p>ここから3D検査の根本的な利点が浮かび上がる：<strong>判定基準が物理量により近い</strong>ことである。2D blobは面積や円形度といった画素ベースの幾何学量で分類を行うが、これらは解像度や視点によって変化する；一方、3D輪郭の高さ（mm）、体積（mm³）、等価直径（mm）はキャリブレーションされた真の寸法である（まさに <a href="3d_measurement.html" class="quarto-xref"><span>チャプター 41</span></a> で強調された「3D計測は直接物理単位を得られる」という点である）。「円台の高さは7±0.1 mm、段差は1±0.05 mmでなければならない」という規定を、画素単位に翻訳することなくそのまま仕様書に記載できる——次元の統一により、規則書とアルゴリズムが同じ言語で記述されるようになる。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>実際には、体積による判定基準は高さによる判定基準よりもロバストであることが多い：先端が鋭く高いバリ（高さが大きく、体積が小さい）と、浅く広い膨らみ（高さが小さく、体積が大きい）では、危害の程度が異なることが多く、高さだけを見ると両者を混同してしまう。高さと体積の<strong>二重判定基準</strong>を併用し——「高さがAを超えるか体積がVを超えたらNG」——とすることは、いかなる単一判定基準よりも「この輪郭が不良を引き起こすかどうか」という実際の問題に適合している。本件の中央の円台776 mm³と低い円台67.8 mm³の体積差は、直径差よりも両者の寸法の違いをより直感的に反映している。</p>
+</div></div></section>
+<section id="sec-3i-profile" class="level2 page-columns page-full" data-number="42.2">
+<h2 data-number="42.2" class="anchored" data-anchor-id="sec-3i-profile"><span class="header-section-number">42.2</span> 断面測定</h2>
+<p>Blob分析は「輪郭がどこにあるか、体積がどれだけか」を回答するが、生産ラインではしばしば、より鋭い質問が求められる。ある<strong>指定された直線</strong>に沿って、表面の高さプロファイルは具体的にどのような形状をしているのか？ これが<strong>断面測定（profile measurement / cross-section）</strong>である。距離画像上の1つの線分に沿って高さ系列を抽出し、1次元のプロファイル曲線を得る。これは3次元世界におけるノギスである（<a href="caliper_measurement.html" class="quarto-xref"><span>チャプター 20</span></a>）。ノギスは探索線に沿ってグレースケール画像上でエッジを探し距離を測定するのに対し、断面は線に沿って距離画像上で高さを読み取り、段差や峰・谷を測定する。両者は同型である。どちらも2次元/3次元データを1本の線に沿って1次元に削減した後、古典的な1次元信号処理ツールで解析する。</p>
+<p>実験では、高い円台と低い円台の両方を通る鉛直中心線 <span class="math inline">\(x=16.1\)</span> mm に沿って断面を抽出した（<a href="#fig-3i-profile" class="quarto-xref">図&nbsp;<span>42.3</span></a>）。この線は、上台面、頂部の溝、持ち上げられたプラットフォーム、地から立ち上がった中央の円台頂部（頂面の2つの凹点による下向きの切り欠きを含む）、下台面向きに落ちる段差、そして低い円台へと上る、すべての段階を一気に通る。実測された断面には<strong>有効点が2054個</strong>あり、高さ範囲は [−6.562, 5.987] mm である。円台の頂上は<strong>5.987 mm</strong>（<span class="math inline">\(y=22.2\)</span> mm の位置）で、上台面（−1.668 mm）より<strong>7.66 mm</strong>高い。上台面と下台面の落差は<strong>段差高さ 0.988 mm</strong>である。これらはすべて <a href="#fig-3i-profile" class="quarto-xref">図&nbsp;<span>42.3</span></a> で明確に読み取れる。2本の水平な参照線が上台面と下台面を示し、中央の急激に持ち上がった高台が円台頂部（赤点が頂上を示す）であり、頂上の2つの下向きの鋭い切り欠きが後述する凹点であり、右側の半分の高さの小さな台が低い円台である。</p>
+<div id="fig-3i-profile" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-3i-profile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/3d_inspection/profile_section.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="図&nbsp;42.3: x=16.1 mm の鉛直中心線に沿った高さ断面（黒線）。左から右へ順に上台面、中央の円台頂部（頂上 5.987 mm、赤点）、段差、下台面、低い円台を通る。2本の水平線は上台面/下台面の参照線である。円台頂部の2つの下向きの切り欠きが頂面の凹点である。"><img src="figures/3d_inspection/profile_section.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-3i-profile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;42.3: <span class="math inline">\(x=16.1\)</span> mm の鉛直中心線に沿った高さ断面（黒線）。左から右へ順に上台面、中央の円台頂部（頂上 5.987 mm、赤点）、段差、下台面、低い円台を通る。2本の水平線は上台面/下台面の参照線である。円台頂部の2つの下向きの切り欠きが頂面の凹点である。
+</figcaption>
+</figure>
+</div>
+<p>特筆すべき点として、本章の3つのSDK 3D検査モジュールのうち、<strong>実測で使用可能</strong>な唯一のものが断面測定である。<code>SciSv3DProfileMeasure::ExtractData</code> は同じ線に沿って <code>rc=0</code>、<strong>2054個のサンプル点</strong>、Z範囲 [−6.562, 5.987] mm を返し、手書きで1行ずつ列を読み取った結果と<strong>点ごとに一致する</strong>。これは状態を持たず、単に「線に沿って読み取り＋補間」を行うだけであるため、堅牢で使用可能である。断面の価値は「プロファイルを読み取る」ことだけにとどまらない。2.5次元データを線に沿って1次元に削減した後、<a href="geometric_primitives.html" class="quarto-xref"><span>チャプター 14</span></a> の1次元サブピクセルツール一式がすべて使用可能になる。頂上で放物線フィッティングを行えばサブピクセルの頂上位置が得られ、エッジモデルで段差の幅と勾配が測定でき、基線区間に直線フィッティングを行えば傾きが推定できる。<strong>断面は3次元データと古典的な1次元計測ツールをつなぐ架け橋である</strong>。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>断面線をどこに引くかはアルゴリズムの問題ではなく、工学的な判断である。欠陥の最深部を通る断面は最大偏差を与え、ワークの稜線に沿った断面は段差やエッジの崩れを検査し、キズに垂直な断面は溝の深さと幅を測定する。実務では、まず <a href="#sec-3i-blob" class="quarto-xref"><span>セクション 42.1</span></a> の輪郭重心を求め、次に重心位置に1本（または放射状に複数本）の断面線を自動的に配置して精密測定を行うことが多い。輪郭が「見つける」役割を担い、断面が「正確に測る」役割を担うという役割分担は、2Dにおける「Blobで位置決めし、次にノギスで精密測定する」という流れとまったく同じである。本章の中心線の情報密度が高いのは、まさにこの1本の線がすべての段階をつないでいるからである。</p>
+</div></div></section>
+<section id="sec-3i-concentration" class="level2 page-columns page-full" data-number="42.3">
+<h2 data-number="42.3" class="anchored" data-anchor-id="sec-3i-concentration"><span class="header-section-number">42.3</span> 局所的な欠陥と表面品質</h2>
+<p>前2節では「どのような輪郭が存在し、それぞれの大きさはどの程度か」という問いに答えたが、検査にはさらに細かい側面がある。本来平坦であるべき面について、<strong>それ自体が平坦か、局所的な欠陥は存在しないか</strong>という点である。これにより、検査のスケールが「輪郭同士の間」から「単一の輪郭の内部」へと絞り込まれる。本節では中央の円台の<strong>上面</strong>を対象とする。この面は名目上は平坦な円形の台座であり、「唯一の正常状態を定義し、そこからのずれを定量化する」というパラダイムを最も純粋な形で実践する例となる。まず上面自体を「正常状態」として近似し、そこからずれた局所的な凹点を抽出する。</p>
+<p>手法は2段階に分かれる。第一段階として、<strong>上面を基準平面に近似する</strong>。まず高さ閾値（<span class="math inline">\(z&gt;1.5\)</span> mm）を用いた連結成分処理により円台を抽出し、さらに内側に14回収縮処理を行って斜壁と縁部を除去する（清浄な内部の上面のみを残し、面積は96.85 mm²となる）。この領域に対して最小二乗法による平面近似を行い、<span class="math inline">\(z=ax+by+c\)</span>を求める。近似された上面には約1.4°の治具による傾きが存在する（<span class="math inline">\(a,b=-0.0074,-0.0230\)</span>）。この傾きを除去した後、上面の残差の<strong>平面度RMSはわずか15.4 µm</strong>となる。0.01 µmの量子化精度で高さ7 mmの円台の上面として、これは非常に平坦な面である。第二段階として、<strong>基準平面からずれた局所的な凹点を欠陥として標識する</strong>。残差が<span class="math inline">\(-0.25\)</span> mmを下回る画素を「凹点候補」とし、連結成分ごとに統計を行う。実測では<strong>2つの凹点</strong>が検出された。1つは面積0.440 mm²、深さ644 µmであり、もう1つは面積わずか0.014 mm²、深さ818 µmである。<a href="#fig-3i-concentration" class="quarto-xref">図&nbsp;<span>42.4</span></a> は上面の残差を発散型カラーマップで示したヒートマップである（青=凹点、赤=隆起、白=基準平面に一致）。上面全体は白色が主体であり（実際に平坦であることの証明）、中央にある青い芯と赤い縁を持つ斑が0.44 mm²の凹点、その下方の黒い枠で囲まれた小点が0.014 mm²の微小な凹点である。上部にある白い空洞は、上面に存在するレーザーの反射がない深い穴である（無効画素であり、凹点には計上されない）。</p>
+<div id="fig-3i-concentration" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-3i-concentration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/3d_inspection/concentration_map.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="図&nbsp;42.4: 中央の円台の上面の残差ヒートマップ（治具による傾きを除去、発散型カラーマップ ±300 µm；青=凹点、白=基準平面に一致）。全体的に白色が主体であり、平面度RMSはわずか15.4 µm。中央の青い斑が0.44 mm²/644 µmの凹点、黒い枠が0.014 mm²/818 µmの微小な凹点。上部の白い空洞は反射のない深い穴（無効画素）。"><img src="figures/3d_inspection/concentration_map.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-3i-concentration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;42.4: 中央の円台の上面の残差ヒートマップ（治具による傾きを除去、発散型カラーマップ ±300 µm；青=凹点、白=基準平面に一致）。全体的に白色が主体であり、平面度RMSはわずか15.4 µm。中央の青い斑が0.44 mm²/644 µmの凹点、黒い枠が0.014 mm²/818 µmの微小な凹点。上部の白い空洞は反射のない深い穴（無効画素）。
+</figcaption>
+</figure>
+</div>
+<p>本節では欠陥検出のパラダイムを論理的な極限まで推し進める。<strong>「正常状態」は図面上の公称値である必要はなく、データからその場で近似した基準平面であってもよい</strong>。上面の平面度RMS 15.4 µmと凹点の深さ644/818 µmは、次元が一致する2つの物理量であり、図面の公差に対して直接閾値を設定できる。前者は「この面は十分に平坦か」という問いに答え、後者は「傷は存在しないか」という問いに答える。本節、さらには検査編全体の方法論を一言で総括すると、<strong>欠陥の定義が、どのような量を用い、どのような基準に対してそれを測定するかを決定する</strong>ということである。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>SDKには「濃度/密度検出」（<code>SciSv3DConcentrationDetection</code>）という名前のモジュールが存在する。これは本来、<strong>統計的な欠陥</strong>を検出するためのものである。つまり、平均値は正常であるものの局所的な分散が異常な欠陥（つや消し面の局所的な研磨、塗膜のゆず肌、焼結部品の多孔質化など）を、高さ閾値ではなく局所的な高さの分散によって抽出する手法である。しかし本装置ではこのモジュールは<strong>何も出力せず動作しない</strong>（<a href="#sec-3i-scivision" class="quarto-xref"><span>セクション 42.5</span></a> 参照）ため、本章では幾何学的な経路（残差の平面度 + 凹点）によって同じパラダイムを実演する。統計的な欠陥と幾何学的な欠陥の共通点は「まず正常状態を定義し、次にずれを定量化する」ことである。ただし前者の「ずれ」は分散に、後者の「ずれ」は高さに表れる。誤った尺度を用いれば、どれほど優れたアルゴリズムであっても、零誤差を精密に算出するに過ぎない。</p>
+</div></div></section>
+<section id="sec-3i-limit" class="level2 page-columns page-full" data-number="42.4">
+<h2 data-number="42.4" class="anchored" data-anchor-id="sec-3i-limit"><span class="header-section-number">42.4</span> 検出限界と最小検出可能寸法</h2>
+<p><a href="#sec-3i-concentration" class="quarto-xref"><span>セクション 42.3</span></a> で検出された2つの凹点は寸法が大きく異なり、一方は0.440 mm²、他方はわずか0.014 mm²（約35画素、幅3–4画素）である。後者はこのシステムの検出限界に接しており、「どれほど深いか」ではなく「どれほど小さくなると検出できなくなるか」を問うている。</p>
+<p>まず限界の性質を明確にする。2つの凹点はいずれも深さが600–820 µmで、天面の15 µmという平面度のノイズフロア（SNR約40）をはるかに超えているため、「検出の可否」は<strong>深さと無関係</strong>であり、真のボトルネックは<strong>横方向寸法</strong>と連結成分の最小面積の下限である。そこで凹点検出の最小面積 <span class="math inline">\(A_\text{min}\)</span> を、深さ閾値を0.25 mmに固定したまま「厳しい」「標準」「緩い」の3段階で掃引した結果は以下の通りである。</p>
+<div id="tbl-3i-limit" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-3i-limit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;42.2: 凹点検出の最小検出可能寸法（深さ閾値固定0.25 mm、最小面積を掃引）
+</figcaption>
+<div aria-describedby="tbl-3i-limit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">設定</th>
+<th style="text-align: right;">最小面積</th>
+<th style="text-align: center;">検出凹点数</th>
+<th style="text-align: center;">散在する小斑点(≥1 px)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">厳しい</td>
+<td style="text-align: right;">6 px</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;"><strong>0</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">標準</td>
+<td style="text-align: right;">25 px</td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">緩い</td>
+<td style="text-align: right;">200 px</td>
+<td style="text-align: center;"><strong>1</strong></td>
+<td style="text-align: center;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>この表は、<strong>合成データとは著しく異なり、かつより真実に近い</strong>結論を与えている。<a href="defect_detection.html" class="quarto-xref"><span>チャプター 26</span></a> の2Dの世界では、閾値のジレンマは「厳しくすると誤報、緩くすると見逃し」であり、閾値を厳しくするとノイズのピークが領域単位で閾値を超えてしまっていた。しかし、この高品質な実スキャンの天面は非常に清浄であり、最小面積を<strong>6 px</strong>まで下げても<strong>ノイズの小斑点は一切誤報されなかった</strong>（虚警=0）。言い換えれば、<strong>ここには誤報と見逃しのジレンマは存在せず、片側の寸法下限のみが存在する</strong>のである。緩い設定（200 px）では0.014 mm²の微小凹点が完全に見逃され（検出数は1つのみとなる）、「最小でどれほど小さく検出できるか」を真に決定するのは0.02 mmという横方向分解能そのものである。幅3–4画素の凹点は、「単一画素の抜け落ちか、真の凹点か」の判別が困難になる境界にすでに迫っている。<a href="#fig-3i-limit" class="quarto-xref">図&nbsp;<span>42.5</span></a> は2つの設定を並べて示しており、左図（厳しい設定6 px）では2つの凹点が両方とも枠で囲まれているのに対し、右図（緩い設定200 px）では中央の大きな凹点のみが残り、微小凹点の位置は空白となっている。</p>
+<div id="fig-3i-limit" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-3i-limit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/3d_inspection/detection_limit.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="図&nbsp;42.5: 検出限界：厳しい/緩い設定の最小面積の比較（中央円台の天面残差グレースケール画像、赤枠=検出された凹点）。左：厳しい設定6 px、2つの凹点がすべて検出され虚警は0。右：緩い設定200 px、0.014 mm²の微小凹点が見逃され、中央の大きな凹点のみが残る。上部の白斑は無エコーの深孔である。"><img src="figures/3d_inspection/detection_limit.png" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-3i-limit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;42.5: 検出限界：厳しい/緩い設定の最小面積の比較（中央円台の天面残差グレースケール画像、赤枠=検出された凹点）。左：厳しい設定6 px、2つの凹点がすべて検出され虚警は0。右：緩い設定200 px、0.014 mm²の微小凹点が見逃され、中央の大きな凹点のみが残る。上部の白斑は無エコーの深孔である。
+</figcaption>
+</figure>
+</div>
+<p>整定方法は依然として <a href="defect_detection.html" class="quarto-xref"><span>チャプター 26</span></a> の「両端からの挟み込み」と同じ系統である。<strong>既知の最小の実欠陥</strong>を用いて検出を検証し上界（寸法下限）を求め、<strong>良品</strong>を用いて虚警を抑え下界を求める——ただし、この清浄なスキャンでは虚警が元々0であるため下界は緩く、ボトルネックはすべて上界（横方向分解能）にある。この寸法下限をさらに下げるには、面積閾値ではなく、横方向分解能の高いレンズと走査線ピッチの密な撮像方案に変更すべきである（<a href="3d_imaging_overview.html" class="quarto-xref"><span>チャプター 30</span></a> のセンサ選定は、まさにこの限界を広げるために存在する）。そして、この点で3D検査は2D検査にはない切り札を持っている。<strong>深さ判定基準は物理単位（µm）である</strong>——「凹点の深さは100 µm未満でなければならない」という基準は、装置間で再現可能な絶対的なプロセス量であり、照明や露光のドリフトの影響を受けないため、3Dの閾値整定は2Dのグレースケール閾値よりも安定し、移植性が高くなる。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>実データの「検出限界」は多くの場合、アルゴリズムではなくサンプリングに存在する。58.7%もの無効画素（急峻な壁面/深孔での無エコー）が最初に直面する壁なのである。天面のその無エコーの深孔がその証拠である——これは欠陥ではないが、完全なデータの空洞であり、天面の平面度評価ではいずれも最初に除外しなければならない。3D検査エンジニアの最初の課題は多くの場合「どこにデータがないか」であり、次に「データが存在する箇所の判定が正確か」となる。</p>
+</div></div></section>
+<section id="sec-3i-scivision" class="level2 page-columns page-full" data-number="42.5">
+<h2 data-number="42.5" class="anchored" data-anchor-id="sec-3i-scivision"><span class="header-section-number">42.5</span> SciVision の実装</h2>
+<p>本章は、SciVision の 3 つの 3D 検出モジュールが本機上でこの<strong>実距離画像</strong>に対して動作した実測状態を忠実に記録する——これ自体が本書の方法論の最後の実践である：<strong>商用ライブラリのあらゆる約束は黄金実験を通過しなければならない</strong>。</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 実距離画像の読み込み（Sci3DFileOperation.lib をリンク；rc=0 なら成功；</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// 標準エラー出力に無害な "Directory does not exist." が出力される）</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>SciRangeImage ri<span class="op">;</span>  SCIMV<span class="op">::</span>Sci3DFileOperation fop<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="dt">long</span> rc <span class="op">=</span> fop<span class="op">.</span>LoadRangeImage<span class="op">(</span>SciVar<span class="op">(</span><span class="st">"sample</span><span class="sc">\\</span><span class="st">001.srt"</span><span class="op">),</span> <span class="op">&amp;</span>ri<span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> z <span class="op">=</span> ri<span class="op">.</span>GetValue<span class="op">(</span>r<span class="op">,</span> c<span class="op">)</span> <span class="op">*</span> ri<span class="op">.</span>ResolutionZ<span class="op">();</span>   <span class="co">// 生カウント×Z解像度 = 物理高さ mm</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// 無効ピクセルは INT_MIN(-2147483648) でマークされる（急峻な壁/無反射）、明示的に除外する必要がある</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// ① プロファイル測定（実測で使用可！線上から高さデータを抽出）</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>SciROI line<span class="op">;</span>  line<span class="op">.</span>GenLine<span class="op">(</span>SciPoint<span class="op">(</span><span class="dv">805</span><span class="op">,</span><span class="dv">120</span><span class="op">),</span> SciPoint<span class="op">(</span><span class="dv">805</span><span class="op">,</span><span class="dv">2380</span><span class="op">));</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSv3DProfileMeasure pm<span class="op">;</span>  SciFloatArray wz<span class="op">;</span> <span class="co">/* ... */</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> pm<span class="op">.</span>ExtractData<span class="op">(</span>ri<span class="op">,</span> line<span class="op">,</span> shield<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="op">&amp;</span>wxy<span class="op">,</span> <span class="op">&amp;</span>ixy<span class="op">,</span> <span class="op">&amp;</span>wz<span class="op">,</span> NULL<span class="op">,</span> <span class="op">&amp;</span>idxZ<span class="op">,</span> <span class="op">&amp;</span>dist<span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">// rc=0, wz.Length()==2054, Z∈[-6.562,5.987]mm —— 手書きのプロファイルと1点単位で一致</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">// ② 3D Blob 解析（実測でサイレント：rc=0 だが blobs.Length()==0）</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>SciSv3DBlobAnalysis ba<span class="op">;</span>  SciRegionArray blobs<span class="op">;</span>  SciMatrix res<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> ba<span class="op">.</span>BlobAnalysis3D<span class="op">(</span>ri<span class="op">,</span> roi<span class="op">,</span> base<span class="op">,</span> lo<span class="op">,</span> hi<span class="op">,</span> mn<span class="op">,</span> mx<span class="op">,</span> ft<span class="op">,</span> rt<span class="op">,</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                       <span class="kw">false</span><span class="op">,</span> <span class="kw">false</span><span class="op">,</span> <span class="op">&amp;</span>blobs<span class="op">,</span> <span class="op">&amp;</span>res<span class="op">);</span>   <span class="co">// rc=0, blobs=0, res 0×0</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">// ③ 濃度検出（実測でサイレント：rc=0 だが dst は 0×0 の空画像）</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>SCIMV<span class="op">::</span>Sci3DConcentrationDetection cd<span class="op">;</span>  SciImage dst<span class="op">;</span> <span class="co">/* ... */</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>rc <span class="op">=</span> cd<span class="op">.</span>DetectConcentration<span class="op">(</span>ri<span class="op">,</span> roi<span class="op">,</span> <span class="fl">0.05</span><span class="op">,</span> <span class="dv">9</span><span class="op">,</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>         SCI_CONCENTRATION_FILTER_MEAN<span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="op">&amp;</span>diff<span class="op">,</span> <span class="op">&amp;</span>dst<span class="op">,</span> <span class="op">&amp;</span>reg<span class="op">);</span>   <span class="co">// dst 0×0</span></span></code><button title="コピー" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>実測の結論は明確である：<code>SciSv3DProfileMeasure::ExtractData</code> は<strong>使用可</strong>——指定された線分に沿って 2054 個のサンプル点を返し、Z 範囲は [−6.562, 5.987] mm であり、手書きのプロファイルと1点単位で一致する。3 つのモジュールの中で唯一、直接生産に使用できる 3D 検出プリミティブである。一方、<code>SciSv3DBlobAnalysis::BlobAnalysis3D</code> と <code>Sci3DConcentrationDetection::DetectConcentration</code> はいずれも<strong>サイレントで出力なし</strong>——戻りコードは <code>rc=0</code>（公称成功）であるが、前者の <code>blobs</code> は長さ 0、後者の <code>dst</code> は 0×0 の空画像であり、実質的な出力は一切ない。これは Part IX の複数の 3D モジュールにおける「サイレントで出力なし」の特徴と一致するため、本章の主要アルゴリズムはすべて手書きで代替する：高さ偏差の連結成分解析による多輪郭分割（<a href="#sec-3i-blob" class="quarto-xref"><span>セクション 42.1</span></a>）、最小二乗法による頂面+残差による平面度と凹点検出（<a href="#sec-3i-concentration" class="quarto-xref"><span>セクション 42.3</span></a>）。サイレント/クラッシュのリスクを隔離するため、3 つの SDK モジュールはいずれも<strong>サブプロセスプローブ</strong>経由で呼び出される——メインフローはまず <code>system()</code> でサブプロセスを起動してプローブを実行し、その戻り値と出力を記録した後、手書きアルゴリズムを実行する。これにより、いかなる SDK の異常もメインフローを崩壊させることはない。この工学的姿勢自体が 1 つの結論である：<strong>現在の 3D 検出の SDK の成熟度は 2D よりも顕著に低く</strong>、ほとんどの検出演算子は依然として独自開発が必要である——これは驚くべきことではない。3D 検出は機械視覚の中で最も若い分野であり、標準化された演算子ライブラリはまだ形成途上にある。</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>なぜプロファイルは使用可で、blob と濃度はサイレントなのか？妥当な推測として：プロファイルは単に「線上の読み取り+補間」に過ぎず、状態を持たず外部リソースにも依存しない；一方、blob と濃度はセグメンテーションとフィルタリングの内部パイプラインを伴い、本機の複数の 3D モジュールと共通して「Directory does not exist.」というリソース不足の特徴を共有している（本書全体の Part IX の実測記録を参照）。根本原因が何であれ、工学的な対応は同じである——実測を基準とし、サイレントであれば独自開発する。</p>
+</div></div><div class="industry-case">
+<p><span class="case-title">産業事例：精密構造部品の多輪郭オンライン検査</span></p>
+<p>あるコネクタ・構造部品メーカーは、本章の対象と同様の多層射出成形部品に対し、レーザラインスキャンセンサを用いて全数のオンライン3D検査を実施している。検査項目は単一の欠陥ではなく、<strong>多輪郭寸法</strong>の一式である：円台高さ（7±0.1 mm）、段差量（1±0.05 mm）、低円台の直径、天面の平面度、および天面の凹点・異物の有無である。各項目は本章の3つのツールに対応している——高さ偏差に基づく連結成分で各輪郭を分離し、高さ・直径・体積を計測し（<a href="#sec-3i-blob" class="quarto-xref"><span>セクション 42.1</span></a>）、中心断面で段差とピーク高さを計測し（<a href="#sec-3i-profile" class="quarto-xref"><span>セクション 42.2</span></a>）、天面の残差平面度で局所的な欠陥を確認する（<a href="#sec-3i-concentration" class="quarto-xref"><span>セクション 42.3</span></a>）。真の技術的課題は2つある。1つ目は<strong>無効画素</strong>である——急峻な壁面や深い穴の部分ではレーザの反射波が得られず、全画素の58%にデータが存在しないため、すべての評価で「有効性マスク」を先に作成する必要がある。そうしなければ、データの空洞が深い凹みと誤判定されてしまう。2つ目は<strong>市販の3D演算器の性能のばらつき</strong>である——本章で実測した通り、断面計測は使用可能だがBlobや濃度演算は動作しないため、プロジェクトのスケジュールには「SDKの各演算器を1つずつ実測で検証し、使用不可なものは自前で開発する」ための予算を確保しなければならない。得られた教訓は以下の通りである：<strong>3D検査プロジェクトの第一原理は、まず「どこにデータがあるか」を問い、次に「判定の精度は十分か」を論じること</strong>である——これは2D検査ではほとんど考慮する必要のない、3D検査では避けて通れない課題である。</p>
+</div>
+</section>
+<section id="sec-3i-summary" class="level2" data-number="42.6">
+<h2 data-number="42.6" class="anchored" data-anchor-id="sec-3i-summary"><span class="header-section-number">42.6</span> まとめ</h2>
+<ul>
+<li><strong>3D検査は「欠陥＝正常からの偏差」というパラダイム（<a href="defect_detection.html" class="quarto-xref"><span>チャプター 26</span></a>）に従うが、次元が物理量へと昇格する</strong>：輪郭は3Dにおいて、高さ（mm）、体積（mm³）、平面度（µm）といった2Dグレースケールでは不可視の次元を持ち、仕様書とアルゴリズムが初めて同じ言語で記述される。</li>
+<li><strong>多輪郭セグメンテーション＝高さ偏差しきい値＋連結成分＋物理特徴</strong>（<a href="blob_analysis.html" class="quarto-xref"><span>チャプター 23</span></a> の3D版）：実際の距離画像から5つの輪郭が分離され、中央円台（直径11.76 mm／高さ7.15 mm／体積776 mm³）、低円台（直径6.23 mm／高さ2.22 mm）、段差0.988 mmがそれぞれ計測される。凸部と凹部を別々の連結成分として処理することで、誤った統合を防ぐ。</li>
+<li><strong>断面計測は3Dのノギスである</strong>（<a href="caliper_measurement.html" class="quarto-xref"><span>チャプター 20</span></a>）：中心線に沿って2.5Dを1Dに還元することで、すべての層を1本の線でつなぐ。<code>SciSv3DProfileMeasure::ExtractData</code> は実測で使用可能であり、その2054点は手書きの逐点計算と完全に一致し、円台の頂点は5.987 mmであった。</li>
+<li><strong>局所欠陥では「正常」をその場で基準面にフィッティングする</strong>：中央円台の天面の最小二乗平面度のRMSはわずか15.4 µmであり、残差から2つの凹点（0.440 mm²/644 µm、0.014 mm²/818 µm）が検出される——欠陥の定義によって、どの物理量を、どの基準に対して計測するかが決まる。</li>
+<li><strong>実際の高品質スキャンにおける検出限界は、片側の寸法下限である</strong>：深さ600 µm以上の凹点は15 µmのノイズレベルをはるかに超えており、虚警のジレンマは生じない。0.014 mm²の微小凹点（幅3–4画素）は0.02 mmの横方向分解能に迫っている一方、58.7%の無効画素（反射波なし）が3D検査で最初に直面する壁となっている。</li>
+</ul>
+<p>工業用3D表面検査のより体系的な解説（欠陥の分類、テクスチャと統計モデルを含む）については、Stegerらの著作 <span class="citation" data-cites="Steger2018">(<a href="references.html#ref-Steger2018" role="doc-biblioref">Steger, Ulrich, と Wiedemann 2018</a>)</span> を参照されたい。本章の「欠陥＝正常からの偏差」という自動光学検査のパラダイムは、距離画像・2.5Dに基づく検査手法とともに、NewmanとJainの自動視覚検査に関するレビューにおいて、歴史的・方法論的に網羅的に整理されている <span class="citation" data-cites="NewmanJain1995">(<a href="references.html#ref-NewmanJain1995" role="doc-biblioref">Newman と Jain 1995</a>)</span>。</p>
+<hr>
+<p>ここに至り、全42章が最後のページを閉じる。我々は第1章のデジタル画像——光がセンサーによって格子状の濃淡値に標本化されること（<a href="digital_images.html" class="quarto-xref"><span>チャプター 1</span></a>）——から出発し、最終章の3次元検査——アルゴリズムが物理的な高さに基づき、高さ7 mmの円台、1 mmの段差、644 µmの凹部の良否を判定すること——に到達した。その間に展開されているのは、機械視覚の完全な1本のエンジニアリングチェーンである：撮像は情報の上限を定め、光で引き出せないコントラストやレーザーが到達できない急峻な壁面は、どれほど強力なアルゴリズムでも生み出すことはできない；前処理は後続のあらゆるステップの道を敷く；位置決め、計測、検査、認識がそれぞれの役割を果たし、画素を「それが何であるか、どこにあるか、どれほどの大きさか、良否はどうか」へと層を重ねて翻訳する；そして2Dから3Dへの移行は、これらすべてにさらなる次元を追加し、輪郭に高さと体積を与え、計測に現実のミリメートルを与えるのである。</p>
+<p>しかし、この42章からたった1つの言葉だけを残すとしたら、それはいかなる具体的なアルゴリズムでもない。大津の手法はより優れた閾値処理法に置き換えられ、手書きで実装された連結成分処理はより高速な実装に置き換えられ、今日は無応答のSDKも明日は修正されるかもしれない。本書全体を真に貫き、携えていく価値のあるものは、<strong>エンジニアリング方法論</strong>である：<strong>物理を理解する</strong>——光、レンズ、センサーがどのように見えるものを決定するのかを知ること、それには反射波が全く存在しない58.7%の画素も含まれる；<strong>誤差を定量化する</strong>——あらゆる数値には誤差棒が伴うべきであり、15 µmの平面度は「非常に平ら」という2つの言葉よりもはるかに誠実である；<strong>不具合の限界を誠実に受け止める</strong>——無反射のデータ空洞、急峻な壁面を跨ぐ不感帯、無出力の商用ライブラリを、そのまま書き留めることは、それらを隠蔽するよりも百倍も有用である；そして<strong>あらゆることを実験で検証する</strong>——依存する商用ライブラリを検証すること、特にそれを含めて、である。なぜならドキュメントは約束であり、既知の挙動に対する対照実験（断面は動作、Blobと濃度は無応答）だけが真実だからである。この方法論は2Dにも3Dにも属さず、特定のSDKやベンダーにも属さない；それは現実の生産ライン上でアルゴリズムに日々信頼できる判定をさせることを求められる、すべてのエンジニアに属するものである。</p>
+<p>アルゴリズムは更新されるが、方法論は永遠に残る。これを携えて、より広い世界を見に行かんことを願う。</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-NewmanJain1995" class="csl-entry" role="listitem">
+Newman, Timothy S., と Anil K. Jain. 1995. <span>「A Survey of Automated Visual Inspection」</span>. <em>Computer Vision and Image Understanding</em> 61 (2): 231–62.
+</div>
+<div id="ref-Steger2018" class="csl-entry" role="listitem">
+Steger, Carsten, Markus Ulrich, と Christian Wiedemann. 2018. <em>Machine Vision Algorithms and Applications</em>. 2nd 版. Wiley-VCH.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "コピーしました");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "コピーしました");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./3d_measurement.html" class="pagination-link" aria-label="3D計測">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">3D計測</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./references.html" class="pagination-link" aria-label="参考文献">
+        <span class="nav-page-text">参考文献</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
