@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Surface Inspection | 潘威</title><link>https://willpan.xyz/zh/tags/surface-inspection/</link><atom:link href="https://willpan.xyz/zh/tags/surface-inspection/index.xml" rel="self" type="application/rss+xml"/><description>Surface Inspection</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>FPD: Fringe Photometric Deflectometry when Fringe Meets Photometric Stereo</title><link>https://willpan.xyz/zh/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>许多工业零件的表面既不是纯粹的哑光面，也不是纯粹的镜面。以手机后盖为例，中间的标志高度反光，周围表面的镜面反射则较弱，而划痕、指纹脏污等缺陷在这两类区域上都需要检出。两种成熟的光学方法各自只能覆盖其中一半。光度立体（PS）利用多个光照方向下的图像恢复表面法向，在漫反射（朗伯）区域效果良好，但遇到镜面高光时性能下降。相位测量偏折术（PMD）通过正弦条纹的反射测量表面梯度，在镜面上精度很高，但在哑光区域由于条纹对比度低，数据并不可靠。&lt;/p>
+&lt;p>因此，当镜面高光或漫反射纹理占主导时，现有检测方法常常检测不到细微缺陷。此前把两类方法结合起来的工作很少：有的将摄影测量与 PS 结合，有的将线结构光与 PS 加权融合，但在高反光区域仍有困难。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-problem.webp" alt="左：同轴模式示意图，相机经分光镜垂直向下拍摄，侧面为图案屏；中：实验装置照片，镜头位于发光的图案屏上方，下方为被测物，部件标号 1 至 4；右：银色手机后盖照片，可见镜头、中间的标志及其下方的指纹脏污。" loading="lazy">
+&lt;/a>&lt;figcaption>实验平台：(a) 同轴系统示意图；(b) 硬件装置，1 为安装结构，2 为相机，3 为投影仪，4 为被测物体；(c) 待检测的手机后盖，带有高光标志和指纹脏污。引自论文图 3，各子图并排放置。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>FPD 在一个采集周期内同时获取两种方法所需的数据，分别经过 PMD 分支和 PS 分支处理，再逐像素融合二者的输出。PMD 分支还会测出每个像素的镜面反射强弱，并据此确定融合权重。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>一个采集周期。&lt;/strong> 投影仪依次显示三类图案：模拟四象限照明、供 PS 使用的二值图案，以及供 PMD 使用的水平（fringe-x）和竖直（fringe-y）正弦条纹。相机每个周期采集 12 幅图像。&lt;/li>
+&lt;li>&lt;strong>PMD 分支。&lt;/strong> 每个像素有四幅相移条纹图像：其均值为平均强度 A，由条纹调制计算镜面反射分量 S，漫反射分量为 D = A − S，光泽度为 S / A。多频相位展开得到绝对相位，其在 x、y 方向的导数构成相位梯度幅值 P。&lt;/li>
+&lt;li>&lt;strong>PS 分支。&lt;/strong> 四幅二值图案图像以 PMD 得到的反射分量图为先验，构成“图像数 × 像素数”的强度矩阵。对其做奇异值分解得到表面法向，再由法向计算表面梯度和平均曲率 H，计算过程采用 CUDA 加速。&lt;/li>
+&lt;li>&lt;strong>按反射特性计算权重。&lt;/strong> 每个像素的权重为 w&lt;sub>PMD&lt;/sub> = S / (S + D)，w&lt;sub>PS&lt;/sub> = D / (S + D)。高光像素更依赖 PMD，偏漫反射的像素更依赖 PS，两者之间平滑过渡。&lt;/li>
+&lt;li>&lt;strong>融合。&lt;/strong> 结果为 R = w&lt;sub>PMD&lt;/sub>·P + w&lt;sub>PS&lt;/sub>·H。在条纹可靠的区域以 PMD 为主，在需要保留漫反射细节的区域以 PS 为主。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-method.webp" alt="红色方框组成的纵向流程图：投影仪上的条纹图案（二值、竖直条纹、水平条纹）；图像采集（各图案下的手机图像）；PMD 特征提取面板，含平均强度、漫反射、光泽度和镜面反射图；PS 分支输出曲率图；计算自适应权重；相位梯度图；自适应融合；最终结果图。" loading="lazy">
+&lt;/a>&lt;figcaption>FPD 框架：图案投射、图像采集、PMD 特征提取（平均强度、漫反射、光泽度、镜面反射图及相位梯度）、PS 曲率图、自适应权重计算与自适应融合。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>高光标志上的划痕：&lt;/strong> PS 平均曲率图未能呈现，PMD 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>标志以外的指纹脏污：&lt;/strong> PMD 相位梯度图未能重建，PS 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>Smart3 缺陷检测：&lt;/strong> 基于 PS 的检测在强镜面反射区域失效，基于 PMD 的检测在反射较弱的区域失效，FPD 结果则能同时支持两类缺陷的检测（图 7）。&lt;/aside>
+&lt;p>测试对象是同时具有漫反射和镜面反射的 iPhone 后盖。实验平台由投影仪、相机和安装结构组成，每个周期采集二值、fringe-x 和 fringe-y 三类图案共 12 幅图像，处理所用电脑配备 Intel Core i5-13500 CPU 和 NVIDIA GeForce RTX 3060 GPU。对比在同一次采集得到的三幅重建图之间进行：PS 平均曲率图、PMD 相位梯度图和 FPD 融合结果；作者认为 FPD 对两类特征的重建都更完整、更一致。随后，在 OPT Machine Vision 的商用检测软件 Smart3 中分别对三幅图做缺陷检测：一是划痕检测，二是基于高斯线提取的指纹/脏污检测。FPD 也已集成到商用缺陷检测软件中。&lt;/p>
+&lt;p>作者将集成系统的标定以及复杂表面的高度测量列为未来工作。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-results.webp" alt="三幅灰色浮雕状的手机后盖图。左：PS 平均曲率图，可见标志轮廓，下方指纹较淡；中：PMD 相位梯度图，大部分为平坦灰色，中央有一条细斜划痕；右：FPD 融合结果，边缘清晰，标志上的划痕和下方的指纹都清楚可见。" loading="lazy">
+&lt;/a>&lt;figcaption>表面重建结果：(a) PS 平均曲率图，(b) PMD 相位梯度图，(c) FPD 融合结果。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-detection.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-detection.webp" alt="同样三幅图加上检测框。左：PS，标志上的检测框几乎为空，指纹框内布满绿色检测结果；中：PMD，标志框内有一条绿色划痕线，指纹框为红色且为空；右：FPD，标志框内有绿色划痕线，指纹框内布满绿色检测结果。" loading="lazy">
+&lt;/a>&lt;figcaption>在 Smart3 中对各图进行缺陷检测：(a) 基于 PS，(b) 基于 PMD，(c) 基于 FPD。引自论文图 7。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

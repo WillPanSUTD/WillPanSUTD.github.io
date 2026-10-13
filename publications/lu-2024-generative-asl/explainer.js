@@ -36,45 +36,20 @@ export default function mount(el, { kit, lang }) {
     },
   }, lang);
 
-  const ink = kit.token("--c-ink") || "#0a0a0a";
-  const body = kit.token("--c-body") || "#525252";
-  const accent = kit.token("--c-accent") || "#1e3a8a";
-  const mute = kit.token("--c-mute") || "#a3a3a3";
-  const rule = kit.token("--c-rule") || "#e5e5e5";
-  const bg = kit.token("--c-bg") || "#ffffff";
+  const { ink, body, accent, mute, rule, bg } = kit.palette();
   // Literal colours identifying the four projected patterns P1..P4 (as the coloured bars in the paper's Fig. 1).
   const PC = ["#d64545", "#e0a020", "#2e9d4f", "#2f6db5"];
   const BAD = PC[0];
 
-  const ease = (t) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
   const seg01 = (t, a, b) => Math.max(0, Math.min(1, (t - a) / (b - a)));
 
-  const text = (parent, x, y, str, o = {}) => {
-    const n = kit.svg("text", {
-      x, y, "font-size": o.size || 22, fill: o.fill || ink, "text-anchor": o.anchor || "middle",
-      "font-weight": o.weight || 400, "font-family": "var(--f-sans)", "paint-order": "stroke",
-      stroke: o.halo === false ? "none" : bg, "stroke-width": 4, "stroke-linejoin": "round", opacity: o.opacity ?? 1,
-    }, parent);
-    n.textContent = str;
-    return n;
-  };
+  const { text, line, arrow } = kit.pen({ textSize: 22, stroke: body });
   // Text with a subscript part rendered as a real subscript (e.g. I + "n" -> Iₙ).
   const subText = (parent, x, y, base, sub, o = {}) => {
     const n = text(parent, x, y, "", o);
     kit.svg("tspan", {}, n).textContent = base;
-    kit.svg("tspan", { "baseline-shift": "sub", "font-size": Math.round((o.size || 22) * 0.72) }, n).textContent = sub;
+    kit.svg("tspan", { "baseline-shift": "sub", "font-size": Math.max(14, Math.round((o.size || 22) * 0.72)) }, n).textContent = sub;
     return n;
-  };
-  const line = (parent, a, b, o = {}) => kit.svg("line", {
-    x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: o.stroke || body, "stroke-width": o.w || 1.5,
-    "stroke-dasharray": o.dash || "none", opacity: o.opacity ?? 1, "stroke-linecap": "round",
-  }, parent);
-  const arrow = (parent, a, b, o = {}) => {
-    line(parent, a, b, o);
-    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), s = 9;
-    const p1 = [b[0] - s * Math.cos(ang - 0.45), b[1] - s * Math.sin(ang - 0.45)];
-    const p2 = [b[0] - s * Math.cos(ang + 0.45), b[1] - s * Math.sin(ang + 0.45)];
-    kit.svg("polygon", { points: [b, p1, p2].map((q) => q.join(",")).join(" "), fill: o.stroke || body, opacity: o.opacity ?? 1 }, parent);
   };
 
   // Fringe thumbnail: vertical sinusoidal stripes. comps = [{ phase, w }], weights summing to 1.
@@ -125,14 +100,14 @@ export default function mount(el, { kit, lang }) {
     lang,
     render(stage, i, t) {
       stage.replaceChildren();
-      const e = ease(t);
+      const e = kit.easeOut(t);
       const s = kit.svg("svg", { viewBox: "0 0 640 360", role: "img", "aria-label": L.steps[i] }, stage);
       const g = kit.svg("g", {}, s);
 
       if (i === 0) {
         timingAxes(g);
         for (let m = 0; m < 4; m++) {
-          const v = ease(seg01(t, m * 0.18, m * 0.18 + 0.35));
+          const v = kit.easeOut(seg01(t, m * 0.18, m * 0.18 + 0.35));
           const a = X0 + m * SLOT + 10, b = a + SLOT - 20;
           line(g, [a, YP + BH], [a, YC], { stroke: accent, w: 1.6, dash: "4 3", opacity: v });
           if (v > 0) exposure(g, a, b, v);
@@ -177,7 +152,7 @@ export default function mount(el, { kit, lang }) {
           { x: 164, y: 110, h: 110 }, { x: 202, y: 150, h: 76 }, { x: 240, y: 186, h: 50 }, { x: 278, y: 214, h: 32 },
           { x: 360, y: 186, h: 50 }, { x: 398, y: 150, h: 76 }, { x: 436, y: 110, h: 110 },
         ];
-        const flow = ease(seg01(t, 0, 0.75));
+        const flow = kit.easeOut(seg01(t, 0, 0.75));
         lv.forEach((b, k) => {
           const lit = flow * (lv.length - 1) >= k - 0.01;
           kit.svg("rect", {
@@ -193,7 +168,7 @@ export default function mount(el, { kit, lang }) {
         text(g, 426, 98, L.dec, { size: 20, fill: body });
         text(g, 320, 290, L.net, { size: 24, fill: accent, weight: 600 });
         text(g, 320, 330, L.train, { size: 20, fill: body });
-        const v = ease(seg01(t, 0.6, 1));
+        const v = kit.easeOut(seg01(t, 0.6, 1));
         arrow(g, [462, 150], [482, 112], { stroke: body, w: 1.6, opacity: v });
         arrow(g, [462, 200], [482, 238], { stroke: body, w: 1.6, opacity: v });
         fringe(g, 488, 52, 104, 104, [{ phase: phase(0), w: 1 }], { opacity: v, stroke: PC[0], sw: 2.5 });
@@ -208,7 +183,7 @@ export default function mount(el, { kit, lang }) {
         for (let n = 0; n < 3; n++) {
           fringe(g, 26, 72 + n * 82, 68, 68, [{ phase: phase(n), w: 0.5 }, { phase: phase(n + 1), w: 0.5 }], { stroke: BAD, sw: 2 });
         }
-        const v = ease(seg01(t, 0, 0.45));
+        const v = kit.easeOut(seg01(t, 0, 0.45));
         arrow(g, [104, 190], [132, 190], { stroke: body, w: 1.6 });
         text(g, 210, 54, L.pats, { size: 20, fill: body, weight: 600 });
         for (let m = 0; m < 4; m++) {
@@ -221,8 +196,8 @@ export default function mount(el, { kit, lang }) {
         const px0 = 340, px1 = 620, py0 = 290, py1 = 80;
         arrow(g, [px0, py0], [px1 + 6, py0], { stroke: mute, w: 1.2 });
         arrow(g, [px0, py0], [px0, py1 - 6], { stroke: mute, w: 1.2 });
-        const w2 = ease(seg01(t, 0.25, 0.6));
-        const u2 = ease(seg01(t, 0.6, 1));
+        const w2 = kit.easeOut(seg01(t, 0.25, 0.6));
+        const u2 = kit.easeOut(seg01(t, 0.6, 1));
         const N = 120, periods = 4;
         let dWrap = "", dUn = "";
         for (let k = 0; k <= N; k++) {
@@ -267,7 +242,7 @@ export default function mount(el, { kit, lang }) {
           }
           return d;
         };
-        const a1 = ease(seg01(t, 0, 0.4)), a2 = ease(seg01(t, 0.3, 0.7)), a3 = ease(seg01(t, 0.6, 1));
+        const a1 = kit.easeOut(seg01(t, 0, 0.4)), a2 = kit.easeOut(seg01(t, 0.3, 0.7)), a3 = kit.easeOut(seg01(t, 0.6, 1));
         kit.svg("path", { d: pathOf(prof), fill: "none", stroke: mute, "stroke-width": 7, "stroke-linecap": "round", opacity: 0.55 * a1 }, g);
         const raw = (u) => prof(u) + 16 * Math.sin(2 * Math.PI * 9 * u) * Math.exp(-u * 1.6) + 8 * Math.sin(2 * Math.PI * 23 * u + 1);
         kit.svg("path", { d: pathOf(raw, (u) => (u * 9) % 1 > 0.82), fill: "none", stroke: BAD, "stroke-width": 2, opacity: a2 }, g);

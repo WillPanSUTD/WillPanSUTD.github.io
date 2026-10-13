@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Renjie Zhou | 潘威</title><link>https://willpan.xyz/zh/author/renjie-zhou/</link><atom:link href="https://willpan.xyz/zh/author/renjie-zhou/index.xml" rel="self" type="application/rss+xml"/><description>Renjie Zhou</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>Volume Measurement Technology of Dispensing Transparent Adhesives Based on Line Laser Scanning</title><link>https://willpan.xyz/zh/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>气动点胶机通过气压大小和阀门开启时间控制出胶，而气压波动会使出胶量不均匀。出胶过多会溢胶，过少则会导致粘接强度不足或气密性不良。测量每条胶的体积，可以为出胶量校准提供数据依据。然而对透明胶而言，传统光学三维测量方法误差较大，甚至无法完整重建胶体。&lt;/p>
+&lt;p>线激光扫描仪通过在相机图像中定位明亮的激光光条来测量。照到透明胶条上时，部分激光会进入胶体并穿透出去。这部分透射光会在胶体内部产生散射和反射干扰，从而降低三维重建质量。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-problem.webp" alt="截面示意图：绿色斜线基板上一个拱形的透明胶条，紫色虚线箭头穿过胶体射向基板。" loading="lazy">
+&lt;/a>&lt;figcaption>部分激光穿过胶体到达基板（紫色虚线箭头）；黄绿色基板会吸收这部分互补色的透射激光。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法从两个层面入手。光学层面，互补光谱背景优化（CSBO）仅靠基板颜色就能抑制透射光。算法层面，改进的光条中心提取方法在每个图像行中先收集多个候选点再打分筛选，避免噪声混入中心线。随后的几何分析把重建出的表面转换为体积。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>吸收透射光（CSBO）。&lt;/strong> 物质吸收某种颜色的光，呈现的是其互补色，而紫色的互补色正是黄绿色。三维传感器使用紫色激光，因此把胶点在黄绿色基板上。基板吸收穿透胶条的激光，从而抑制散射和镜面反射，且无需额外的测量工具或设备。&lt;/li>
+&lt;li>&lt;strong>逐行寻找候选区域。&lt;/strong> 先对图像做均值滤波，再在光条图像的每个像素行中搜索候选区域：灰度上升至少达到阈值 K 处为区域起点，灰度下降至少达到 K 处为区域终点。一行中可能有多个候选区域。&lt;/li>
+&lt;li>&lt;strong>每个区域求一个候选中心。&lt;/strong> 在每个区域内，用权重为 w(I) = I / (256 − I) 的灰度重心法求出一个候选中心点，该权重突出最亮的像素。&lt;/li>
+&lt;li>&lt;strong>打分筛选（DWMF-SC）。&lt;/strong> 动态加权多因素评分约束方法对每个候选点打分：0.5 × 连续性（相邻行中位置偏移不超过阈值的点数）+ 0.1 × 灰度强度 + 0.4 × 历史位置（与上一行选定点的接近程度）。灰度低于该行最亮候选点 10% 的候选点，或所在区域宽度超过 20 像素的候选点，得分记为 0。每行保留得分最高的一个点。&lt;/li>
+&lt;li>&lt;strong>由中心线到体积。&lt;/strong> 所有中心线被投影到深度图空间。在随机采样的平台区域上用主成分分析（PCA）拟合平面作为基准面，再通过刚体变换将深度图校正水平。3D Otsu 阈值分割与八邻域连通域分析将胶体区域分割出来。胶体区域中的每个像素视为底面 Δx × Δy、高为 z 的长方体柱，体积为 V = Δx·Δy·Σz。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-method.webp" alt="示意图：一叠轮廓图像，其中一幅图像上有一条红色水平像素行；下方是一排灰色像素，其中三段被标为 I、II、III，区域 I 的像素标为 a 到 e，红色箭头表示灰度上升方向，蓝色箭头表示灰度下降方向。" loading="lazy">
+&lt;/a>&lt;figcaption>候选区域定位。对轮廓图像集中的每幅图像逐行处理；沿一行，先上升（红）后下降（蓝）的灰度梯度界定出候选区域 I、II、III。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>黄绿色基板上体积测量的平均相对误差为 1.39%&lt;/strong>（最大 1.55%），蓝、粉、紫色基板分别为 9.05%、8.03% 和 8.63%（表 II、图 13）。&lt;br>在一幅表面粗糙、边缘扩散噪声明显的图像上，&lt;strong>提取的光条中心线连续、平滑&lt;/strong>，而 Steger 法和细化法会混入噪声点，灰度重心法则提取失败（图 11）。&lt;/aside>
+&lt;p>体积实验中，用精密点胶针头在四种基板（黄绿、蓝、粉、紫）上点出相近的直线透明胶条，并用精密电子天平称量各样件，作为参考真值。每个样件在车间环境中扫描，测量 5 次；预测重量为测得体积乘以胶的密度 0.0011 g/mm³。黄绿色基板上 5 次测量的相对误差在 1.32% 到 1.55% 之间，其余三种基板则在 8.01% 到 9.16% 之间。作者据此认为，CSBO 提高了透明胶的三维重建精度。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-specimens.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-specimens.webp" alt="四张照片：黄绿、蓝、粉、紫色基板上各有一条直线状透明胶条，分别标为样件 1 至 4。" loading="lazy">
+&lt;/a>&lt;figcaption>四个测试样件：黄绿、蓝、粉、紫色基板上相近的透明胶条。引自论文图 12。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-results.webp" alt="四个样件的最大和平均相对误差柱状图：样件 1（绿）1.55% 和 1.39%；样件 2（蓝）9.16% 和 9.05%；样件 3（粉）8.05% 和 8.03%；样件 4（紫）8.69% 和 8.63%。" loading="lazy">
+&lt;/a>&lt;figcaption>各样件体积测量的最大和平均相对误差，样件 1 为黄绿色基板。引自论文图 13。&lt;/figcaption>
+&lt;/figure>
+&lt;p>中心线提取实验使用一幅金属零件的光条图像：表面粗糙使光条轮廓不均匀，金属光泽又带来边缘扩散噪声。Steger 法假设光条截面服从高斯分布，在噪声明显的边缘附近会提取出多个中心点；灰度重心法对整列计算重心，在噪声干扰下无法准确提取中心线；细化法同样受边缘扩散噪声影响，部分骨架取自噪声点。所提方法提取的中心点贴合光条形状，连续而平滑，作者将其归功于候选点机制和 DWMF-SC 筛选。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-centerline.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-centerline.webp" alt="四幅暗背景图像，均为同一条明亮、中部下凹的激光光条及红色的提取中心点，分别标为 (a) 至 (d)；(b) 和 (c) 中部分红点偏离光条，(d) 中红点紧贴光条。" loading="lazy">
+&lt;/a>&lt;figcaption>噪声光条图像上的中心线提取：(a) Steger 法，(b) 灰度重心法，(c) 细化法，(d) 所提方法。引自论文图 11。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

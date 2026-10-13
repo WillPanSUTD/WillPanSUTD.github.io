@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Image Processing | 潘威</title><link>https://willpan.xyz/zh/tags/image-processing/</link><atom:link href="https://willpan.xyz/zh/tags/image-processing/index.xml" rel="self" type="application/rss+xml"/><description>Image Processing</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>A Grayscale-Compatible Color Encoding via 8-bit HSV Bit-Packing and Lightweight Refinement</title><link>https://willpan.xyz/zh/publications/pan-2026-a-grayscale-compatible-color-encoding-via/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2026-a-grayscale-compatible-color-encoding-via/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>把彩色图像转换为灰度图，可以让图像更紧凑，并与灰度处理流程兼容，但所有色度信息也随之丢失。图像着色网络试图仅凭灰度图恢复颜色，这类模型通常规模庞大；而且输入中没有任何显式的颜色锚点，生成的颜色来自学习到的先验，可能与实际场景不符。&lt;/p>
+&lt;p>可逆灰度方法则把颜色隐藏在一幅 8 位的类灰度图中：或者修改像素值（可逆信息隐藏），或者借助可学习的可逆网络。得到的图像看起来像灰度图，但并不保证与标准灰度图逐位一致，而且神经网络类方法通常需要较重的编码器–解码器网络。本文选择了不同的设计点：采用 16 位单通道载体，其高字节&lt;em>就是&lt;/em>标准 BT.601 灰度图，第二个字节则用来存放显式的颜色提示。它有意不取代严格的 8 位存储：每个像素使用 16 位而非 8 位，但仍少于 RGB 的 24 位。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>编码器是一条固定的位打包规则，没有可学习参数。解码器先由打包的比特确定性地重建一幅粗略的彩色图像，再由一个小型 U-Net 进行细化。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2026-a-grayscale-compatible-color-encoding-via/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2026-a-grayscale-compatible-color-encoding-via/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>灰度写入高字节。&lt;/strong> 对每个像素，把标准 ITU-R BT.601 灰度值（0.299 R + 0.587 G + 0.114 B，取整到 8 位）存入 16 位字的最高 8 位。&lt;/li>
+&lt;li>&lt;strong>量化色相和饱和度。&lt;/strong> 像素的色相（OpenCV 取值 0–179）和饱和度（0–255）各量化为 4 位。这种均衡分配 H4S4 由比特分配消融实验选定。&lt;/li>
+&lt;li>&lt;strong>打包低字节。&lt;/strong> 4 位色相和 4 位饱和度打包进低字节。把该字右移 8 位即可精确取回标准灰度图：灰度 PSNR 为无穷大，灰度 SSIM 为 1.0。&lt;/li>
+&lt;li>&lt;strong>直接解码。&lt;/strong> 无需任何训练：拆出各字段，对色相和饱和度反量化，以灰度值作为 V，再由 HSV 转回 RGB，得到一幅粗略的彩色图像。&lt;/li>
+&lt;li>&lt;strong>残差细化。&lt;/strong> 一个两级、0.47 M 参数的 U-Net 以粗略 RGB 以及灰度、色相、饱和度三个平面（共 6 通道）为输入，叠加一个乘以 0.25 的残差，结果再截断到有效范围。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-a-grayscale-compatible-color-encoding-via/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-a-grayscale-compatible-color-encoding-via/fig-method.webp" alt="流程图：一幅两只鹦鹉的 RGB 照片被编码为看起来像灰度图的 16 位图像，再解码回 RGB；下方是由 8 位灰度、4 位色相和 4 位饱和度组成的 16 位字，以及概括三项特性的三个方框。" loading="lazy">
+&lt;/a>&lt;figcaption>框架总览：无参数的确定性编码器把量化后的 HSV 提示打包进 16 位图像的低字节，其高字节为标准灰度图；混合解码器（直接逆变换加 0.47 M 参数的 U-Net）恢复 RGB。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>灰度平面与 BT.601 灰度图逐位一致&lt;/strong>：按构造，灰度 PSNR = ∞，SSIM = 1.0（第 II-E 节，表 XI）。&lt;br>输入提示引导 U-Net 的显式色度提示从每像素 0 位增加到 8 位时，&lt;strong>Kodak 24 上的 PSNR 从 23.89 dB 升至 40.64 dB，CIEDE2000 ΔE00 从 10.40 降至 1.63&lt;/strong>（表 VIII）。&lt;br>在 256 × 256 输入下，提示引导 U-Net 的&lt;strong>参数量 0.47 M、计算量 14.77 GFLOPs、速度 1474 FPS&lt;/strong>（残差变体为 757 FPS）；WIN 2025 为 2.34 M / 76.75 GFLOPs / 68 FPS，Zhao 2021 为 14.63 M / 129.05 GFLOPs / 18 FPS（表 VI）。&lt;/aside>
+&lt;p>所有网络均在 PASCAL VOC 2012 的 5,000 幅图像子集上训练（训练/验证按 80/20 划分），并在 256 × 256 分辨率下于 Kodak 24、DIV2K 验证集（100 幅）和 McMaster 18 上测试。颜色主要来自低字节提示：同时输入灰度、色相和饱和度的 U-Net（UNet-hints）在 Kodak 24、DIV2K 和 McMaster 上分别达到 40.64 dB、38.10 dB 和 35.41 dB，而只输入灰度平面的同一网络仅为 23.89、22.98 和 18.61 dB。不用任何网络、仅靠直接解码器，在 Kodak 24 上为 26.05 dB。残差变体分别为 37.88、37.60 和 31.26 dB；作者认为它在高饱和度的 McMaster 图像上差距较大，是因为 0.25 的残差缩放限制了它对较弱直接重建结果的修正幅度。在重新测量的基线中，WIN 2025 在多数指标上更高（Kodak 24 为 40.96 dB，DIV2K 为 38.16 dB，McMaster 为 39.43 dB）。作者强调，这些比较并未做码率归一化：基线使用 8 位载体，本方法使用 16 位载体。&lt;/p>
+&lt;p>对 16 位图像做有损处理时，这种格式比较脆弱。质量因子为 90 的 JPEG 会使残差流程在 Kodak 上的 PSNR 从 37.88 dB 降到 22.02 dB，σ = 0.5 的高斯模糊则降到 16.32 dB，因为两者都会混合或丢弃提示字节中的比特。若完全丢弃提示字节，输出会退化为接近灰度的图像（22.79 dB，SSIM 0.931）。因此作者建议在能无损保存 16 位图像的流程中使用该格式，例如 16 位 PNG。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-a-grayscale-compatible-color-encoding-via/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-a-grayscale-compatible-color-encoding-via/fig-results.webp" alt="两幅以显式色度边信息比特数（0 到 8）为横轴的折线图：Kodak 24 上的 PSNR 从仅灰度经 H1S1、H2S2、H3S3 升至 H4S4，CIEDE2000 随之下降；橙色圆点表示位于零显式比特处的 Zhao 2021 和 WIN 2025。" loading="lazy">
+&lt;/a>&lt;figcaption>Kodak 24 上的率失真曲线：显式提示从 0 位（仅灰度）增加到 8 位（H4S4）时的 PSNR (a) 与 CIEDE2000 ΔE00 (b)。Zhao 2021 和 WIN 2025 把颜色隐式编码在 8 位类灰度载体中，因此画在零显式比特处。引自论文图 15。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-a-grayscale-compatible-color-encoding-via/fig-qualitative.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-a-grayscale-compatible-color-encoding-via/fig-qualitative.webp" alt="四幅 Kodak 图像（帽子、房屋、女孩、鹦鹉）的五列对比：真值、直接解码器、UNet-gray（几乎为灰度）、UNet-hints 和 UNet-residual，每个结果下方标有 PSNR。" loading="lazy">
+&lt;/a>&lt;figcaption>直接解码器、UNet-gray、UNet-hints 和 UNet-residual 对四幅 Kodak 24 图像的重建结果及单幅 PSNR。没有提示时（UNet-gray），输出接近灰度图。引自论文图 10。&lt;/figcaption>
+&lt;/figure></description></item><item><title>A Reversible Grayscale Method Based on Bit-Field Multi-Channel Fusion Encoding</title><link>https://willpan.xyz/zh/publications/wang-2025-a-reversible-grayscale-method-based-on/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/wang-2025-a-reversible-grayscale-method-based-on/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>灰度图像能降低计算复杂度、存储和传输开销，因而应用广泛。但在许多应用中，后续仍需要找回原始颜色，这就要求转换可逆：灰度图像本身必须携带足够的颜色信息，以便恢复出 RGB 图像。&lt;/p>
+&lt;p>直方图平移、小波包数据隐藏等传统可逆灰度化方法，把颜色线索嵌入亮度通道，通常需要附加变换域约束或多个辅助通道，增加了计算量和内存开销。深度学习方法的重建保真度较高，但推理延迟大、模型体积大、可解释性有限，并且强烈依赖训练数据。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法无需训练。每个 RGB 像素先转换到 HSV 颜色空间，把色度部分（色调 H、饱和度 S）与亮度部分（明度 V）分开；三个分量分别量化为 a、b、c 位（a + b + c = 16），并依次写入一个 16 位灰度像素的各个位域。解码时用移位和掩码把各字段读回。整个流程只用到量化和位运算，除量化误差外完全可逆。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/wang-2025-a-reversible-grayscale-method-based-on/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/wang-2025-a-reversible-grayscale-method-based-on/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>归一化。&lt;/strong> 将 8 位 RGB 像素的三个通道除以 255，映射到 [0, 1]。&lt;/li>
+&lt;li>&lt;strong>RGB 转 HSV。&lt;/strong> 按标准公式得到以角度表示（0°–360°）的色调 H、饱和度 S 和明度 V，再把 H 缩放到 [0, 1)。&lt;/li>
+&lt;li>&lt;strong>分配 16 个比特。&lt;/strong> 输出像素的 16 位划分为 H 的 a 位、S 的 b 位和 V 的 c 位。划分可以依据图像统计量：a、b 分别与 H、S 的方差成比例，余下的位数留给 c。论文还给出了四种示例方案，其中均衡的方案 1 为 (6, 4, 6)。&lt;/li>
+&lt;li>&lt;strong>量化与打包。&lt;/strong> H、S、V 先经过非线性（gamma）映射，以侧重人眼敏感的范围，再分别量化为 2&lt;sup>a&lt;/sup>、2&lt;sup>b&lt;/sup>、2&lt;sup>c&lt;/sup> 个等级，并按 I&lt;sub>G&lt;/sub> = (H&lt;sub>q&lt;/sub> ≪ (b + c)) | (S&lt;sub>q&lt;/sub> ≪ c) | V&lt;sub>q&lt;/sub> 打包，得到单通道的 16 位灰度图像。&lt;/li>
+&lt;li>&lt;strong>解码。&lt;/strong> 通过位掩码和移位取回 H&lt;sub>q&lt;/sub>、S&lt;sub>q&lt;/sub>、V&lt;sub>q&lt;/sub>，经反量化和标准的 HSV 转 RGB 变换，恢复出 8 位 RGB 像素。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2025-a-reversible-grayscale-method-based-on/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2025-a-reversible-grayscale-method-based-on/fig-method.webp" alt="流程图。上行：一张木桁架房屋的原始 RGB 照片依次经过 Normalize、RGB to HSV、Bit-field Encode 模块，得到可逆灰度图像。下行（红色）：灰度图像依次经过 Bit-field Decode、Fusion to HSV、HSV to RGB 模块，得到重建的 RGB 图像。" loading="lazy">
+&lt;/a>&lt;figcaption>可逆灰度化框架：编码（归一化、RGB 转 HSV、位域编码）把 RGB 图像转换为可逆灰度图像；解码（位域解码、融合为 HSV、HSV 转 RGB）恢复彩色图像。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;p>(a, b, c) 的取值决定了精度在各通道之间如何分配。人眼对色调变化较为敏感，作者建议 a ≥ 5（32 个色调等级），以免出现明显色偏；c ≥ 6（64 个明度等级）可避免条带伪影；对颜色较少的图像，b 可以适当减小。由于色调是环形量，非线性量化可减小 0°/360° 附近的误差，Floyd–Steinberg 误差扩散则把剩余的量化误差在空间上分散开。&lt;/p>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在 Kodak 上，方案 1 每幅图像编码 3.71 ms、解码 7.01 ms&lt;/strong>，而 IDN 为 175.30 / 125.24 ms，CNN-based 方法为 2486.75 / 2453.82 ms（表 II）。&lt;br>&lt;strong>方案 1 在 Kodak 上 PSNR 为 34.80 dB，SSIM 为 0.9726&lt;/strong>（表 II）。&lt;br>&lt;strong>方案 1 在 Urban100 / BSD500 / McMaster 上 PSNR 分别为 34.06 / 34.48 / 32.20 dB&lt;/strong>，编码和解码时间在 2.80–3.82 ms 之间（表 III）。&lt;/aside>
+&lt;p>实验在四个数据集上进行：Kodak PhotoCD（24 幅图像）、Urban100（100 幅城市场景）、BSD500（500 幅自然风景）和 McMaster（18 幅图像）。对比对象为两种基于学习的可逆灰度化方法 IDN 和 CNN-based 方法，评价指标包括 MAE、PSNR、SSIM、FSIM 和 LPIPS，计时平台为 AMD Ryzen 9 7945HX 与 NVIDIA GeForce RTX 4060。四种比特分配方案中，方案 1 (6, 4, 6) 的综合表现最均衡；方案 2 (5, 5, 6) 在 Kodak 上的 SSIM 为四者最高（0.9779）；方案 4 (6, 5, 5) 速度最快，编码 3.21 ms、解码 4.49 ms。在 Kodak 上，16 位文件也略小：方案 1 为 633.20 KB，IDN 为 721.47 KB，CNN-based 方法为 660.87 KB（表 II）。&lt;/p>
+&lt;p>速度优势是以保真度为代价的。在 Kodak 上，IDN 的 PSNR 为 42.16 dB，CNN-based 方法为 37.40 dB，而本方法为 34.80 dB；作者也指出，近期一种可逆数据隐藏方法报告的 PSNR 达到 43.69 dB。作者将本方法定位为面向边缘计算和嵌入式系统等资源受限场景的轻量、可解释方案，并计划通过自适应分配算法和可逆压缩来缩小质量差距，通过 FPGA/ASIC 实现进一步降低延迟。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2025-a-reversible-grayscale-method-based-on/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2025-a-reversible-grayscale-method-based-on/fig-results.webp" alt="三行 Kodak 照片（山间溪流、载着划桨者的黄色橡皮艇、彩绘房屋），每行依次为原图、本方法的灰度图像，以及 IDN、CNN-based 方法和本方法方案 2 的彩色重建结果。" loading="lazy">
+&lt;/a>&lt;figcaption>三幅 Kodak 图像的视觉对比：(k) 原图，(l) 本方法的灰度图像，(m) IDN，(n) CNN-based 方法，(o) 本方法（方案 2）。引自论文图 2。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Parallel Curvature Filter for High Performance Image Processing</title><link>https://willpan.xyz/zh/publications/pan-2019-parallel/</link><pubDate>Tue, 01 Jan 2019 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2019-parallel/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>曲率滤波通过隐式地降低曲率能量（如高斯曲率、平均曲率或全变分）来实现图像平滑和去噪。它把图像视为一张曲面，对每个像素反复施加计算量很小的局部算子，每一轮迭代都使正则化能量下降。曲率滤波本身已经很快，但许多待增强的图像分辨率很高，或者需要实时、准实时处理；在 CPU 上，处理一幅 2048 × 2048 的大图仍需数分钟。&lt;/p>
+&lt;p>曲率滤波中计算量最大的部分是对图像的 8 次卷积。受 GPU 处理卷积神经网络中卷积运算的启发，作者将这些卷积放到 GPU 上并行计算。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>曲率滤波的每次迭代为每个像素枚举 8 种候选更新量，从中选出最小的一个并加以应用。PCF 在 GPU 上用卷积核一次性为所有像素计算这 8 个候选量。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2019-parallel/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2019-parallel/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>把图像看作曲面。&lt;/strong> 图像灰度 U 被视为定义在像素网格上的曲面。各种曲率正则项都作用于每个像素周围的 3 × 3 局部邻域。&lt;/li>
+&lt;li>&lt;strong>8 个切平面投影。&lt;/strong> 曲面在局部可以用切平面近似。在 3 × 3 邻域内枚举 8 个经过相邻像素的切平面，得到中心像素的 8 个投影距离 d&lt;sub>1&lt;/sub> … d&lt;sub>8&lt;/sub>。&lt;/li>
+&lt;li>&lt;strong>在 GPU 上执行 8 次卷积。&lt;/strong> 每种距离都以一次图像卷积的形式对所有像素同时计算。这 8 次卷积是算法中计算量最大的部分；PCF 用 CUDA 实现它们，并借助 GPU 的共享内存加速。&lt;/li>
+&lt;li>&lt;strong>选取最小距离并更新。&lt;/strong> 对每个像素，选出绝对值最小的距离 d&lt;sub>m&lt;/sub>（ABSMIN），并将其加到该像素上：U&lt;sup>t+1&lt;/sup> = U&lt;sup>t&lt;/sup> + d&lt;sub>m&lt;/sub>。最小距离意味着该像素最接近期望的几何形态，同时与原始图像拟合得最好。&lt;/li>
+&lt;li>&lt;strong>迭代。&lt;/strong> 反复执行这一更新，图像曲面便逐步得到正则化；论文通过绘制图像中一条直线上经 10 次和 30 次迭代后的灰度分布展示了这一过程。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-method.webp" alt="流程图：8 种 3 × 3 投影模式；红色 GPU 框内的卷积核将一张照片变换为 d1 到 d8 的一叠距离图；ABSMIN 步骤得到距离图 dm；加号节点将其反馈回图像。" loading="lazy">
+&lt;/a>&lt;figcaption>并行曲率滤波流程：在 3 × 3 邻域内枚举 8 个投影距离，在 GPU 上通过卷积为每个像素计算这些距离；每次迭代用其中最小的距离（d&lt;sub>m&lt;/sub>）更新图像。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">单块 GPU 每秒处理 &lt;strong>332 亿像素（33.2 Gpixel/s）&lt;/strong>（摘要）。&lt;br>对同一幅图像迭代 3000 次，&lt;strong>CPU 约需 87 秒，GPU 约需 6 秒&lt;/strong>（图 3）。&lt;/aside>
+&lt;p>PCF 的 CUDA 实现在 GPU 线程块大小为 16 到 32 的设置下运行，所用 GPU 为 NVIDIA GeForce GTX 1080 Ti（3584 个 CUDA 核心、11264 MB 全局内存、每个线程块 49152 字节共享内存），对比对象是在 Intel Xeon E5-1620 v4（3.50 GHz）CPU 上运行的原始曲率滤波。图 3 中，两者的计算时间都随迭代次数增长，但 GPU 上的增长要慢得多。作者据此认为，这样的速度使曲率滤波可以用于视频处理、生物医学图像处理等实时应用。&lt;/p>
+&lt;p>论文还将高斯曲率和平均曲率两种 PCF 应用于一张照片，并绘制图中一条直线上经 10 次和 30 次迭代后的灰度分布。两种方法下，灰度剖面都随迭代次数增加而变得更平滑；作者认为平均曲率 PCF 比高斯曲率 PCF 更高效。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-timing.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-timing.webp" alt="计算时间（秒）随迭代次数（0 到 3000）变化的折线图：蓝色虚线（CPU）升至约 87 秒，红色实线（GPU）始终低于约 7 秒。" loading="lazy">
+&lt;/a>&lt;figcaption>同一幅图像在 CPU 和 GPU 上的计算时间随迭代次数的变化。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-results.webp" alt="一张大型雕塑前人群照片的三个版本，上面横贯一条橙色虚线；每张下方是沿该线的灰度剖面，从左到右逐渐平滑。" loading="lazy">
+&lt;/a>&lt;figcaption>平均曲率 PCF 处理一张照片的结果：原图，以及迭代 10 次和 30 次后的结果。下方曲线为沿橙色虚线的灰度分布。引自论文图 5。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

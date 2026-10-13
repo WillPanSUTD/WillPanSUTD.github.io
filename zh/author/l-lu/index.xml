@@ -1,4 +1,41 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>L Lu | 潘威</title><link>https://willpan.xyz/zh/author/l-lu/</link><atom:link href="https://willpan.xyz/zh/author/l-lu/index.xml" rel="self" type="application/rss+xml"/><description>L Lu</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Mon, 01 Jan 2024 00:00:00 +0000</lastBuildDate><item><title>Generative deep-learning-embedded asynchronous structured light for three-dimensional imaging</title><link>https://willpan.xyz/zh/publications/lu-2024-generative-asl/</link><pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2024-generative-asl/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>L Lu | 潘威</title><link>https://willpan.xyz/zh/author/l-lu/</link><atom:link href="https://willpan.xyz/zh/author/l-lu/index.xml" rel="self" type="application/rss+xml"/><description>L Lu</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Mon, 01 Apr 2024 00:00:00 +0000</lastBuildDate><item><title>Reconstruction of transparent objects using phase shifting profilometry based on diffusion models</title><link>https://willpan.xyz/zh/publications/zhang-2024-transparent-diffusion/</link><pubDate>Mon, 01 Apr 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2024-transparent-diffusion/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）向物体投射一组正弦条纹，根据采集到的条纹光强求解相位，再结合系统标定参数恢复三维形貌。由于它依赖条纹光强的正确性，对漫反射表面的物体效果很好。但对于玻璃等透明物体，投射的条纹会同时被前表面和后表面反射，还有部分光在两个表面之间多次反射后才进入相机。这样采集到的是多组条纹相互混叠的图像，由它求出的相位并不对应被测表面。&lt;/p>
+&lt;p>已有的透明物体重建方法可分为三类：基于反射的方法（例如用激光加热物体表面、再用红外相机成像，耗时较长）、追踪光线穿过物体路径的基于折射的方法，以及深度学习方法。本文保留标准的 PSP 系统，转而从条纹图像本身去除无用的光。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2024-transparent-diffusion/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2024-transparent-diffusion/fig-problem.webp" alt="示意图：投影仪和相机位于灰色透明块下方，黄、红、橙三色光线分别经前表面反射、后表面反射和内部多次反射，落在同一组传感器像素上。" loading="lazy">
+&lt;/a>&lt;figcaption>混叠的形成：经前表面反射的光（F，黄色）、经后表面反射的光（B，红色）和多次反射的光（M，橙色）到达相机的同一组像素，叠加成一幅采集图像 S。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>作者将每幅采集到的条纹图建模为前表面条纹、后表面条纹、多次反射条纹与背景光之和，然后训练一个条件扩散模型，从混叠条纹图中只生成前表面条纹，再把生成的条纹图交给常规 PSP 处理。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2024-transparent-diffusion/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2024-transparent-diffusion/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>三条光路。&lt;/strong> 条纹经前表面反射（F）、经后表面一次反射（B）以及在前后表面之间多次反射（M）后进入相机。通常 F 和 B 的光强最强，M 最弱。&lt;/li>
+&lt;li>&lt;strong>需要拆开的叠加。&lt;/strong> 每幅采集到的条纹图为 S = F + B + M + A，其中 A 为背景光。只有 F（连同背景光）可用于重建前表面，因此训练网络 p，采样得到估计值 F* ∼ p(S; θ)。&lt;/li>
+&lt;li>&lt;strong>训练。&lt;/strong> 在物体表面喷涂显像剂后采集前表面条纹图 x&lt;sub>0&lt;/sub>，同时采集同一场景的混叠条纹图 y。前向扩散过程向 x&lt;sub>0&lt;/sub> 逐步加入高斯噪声 e（T = 2600 步，β 从 0.0001 线性增加到 0.002）；带残差块的 U-Net 以含噪条纹图 x&lt;sub>t&lt;/sub>、步数 t 和条件 y 为输入，学习预测所加的噪声。&lt;/li>
+&lt;li>&lt;strong>采样。&lt;/strong> 从纯高斯噪声出发，训练好的网络以采集到的混叠条纹图 y 为条件，逐步估计并去除噪声，直到 t = 0，得到前表面条纹图 F*。&lt;/li>
+&lt;li>&lt;strong>常规 PSP。&lt;/strong> 用四步相移算法处理估计出的条纹图，求得包裹相位，进而重建前表面的三维形貌。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2024-transparent-diffusion/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2024-transparent-diffusion/fig-method.webp" alt="两部分流程图。训练：噪声 e 与条纹图 x 加权求和得到 x_t，与 y 一起输入网络 p_θ，输出 e*，并在损失 L 中比较。采样：从噪声开始，训练好的网络结合 y 反复输出 e* 并更新 x_t，最终得到 F*。" loading="lazy">
+&lt;/a>&lt;figcaption>训练（上）：由前表面条纹图 x 和噪声 e 构成的含噪条纹图 x&lt;sub>t&lt;/sub> 与混叠条纹图 y 一起输入网络 p&lt;sub>θ&lt;/sub>，其噪声估计 e* 与 e 在损失 L 中比较。采样（下）：从 x&lt;sub>t&lt;/sub> = e 出发，训练好的网络反复估计噪声并更新 x&lt;sub>t&lt;/sub>，直到输出 F*。引自论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">透明立方体的 &lt;strong>RMS 重建误差为 0.0420 mm&lt;/strong>，透明半球为 &lt;strong>0.0423 mm&lt;/strong>（表 1）。&lt;br>半透明物体为 &lt;strong>0.0437 mm&lt;/strong>，局部透明物体为 &lt;strong>0.0388 mm&lt;/strong>（表 1）。&lt;/aside>
+&lt;p>实验系统采用 2048 × 1536 分辨率的相机、1280 × 1024 分辨率的 DLP 投影仪和四步相移算法。为获得干净的前表面条纹，作者尝试过仿真和在表面粘贴卡纸两种方式，但仿真图像与实拍图像差异明显，卡纸又难以贴合非平面物体，最终采用喷涂显像剂的方法构建数据集。每个物体使用 15,000 对图像训练、1500 对图像测试，物体的位置和姿态随机摆放。测试物体包括亚克力透明立方体（边长 25 mm）、玻璃透明半球（半径 20 mm）、亚克力半透明物体和玻璃局部透明物体。&lt;/p>
+&lt;p>对每个物体，作者将估计的前表面条纹图与喷涂显像剂后采集的条纹图在光强、包裹相位和重建形貌三个方面进行比较。两者光强并不严格一致，但估计的条纹图具有相同的特征，物体区域内的相位值也高度吻合。半透明物体不透光，基于折射的方法无法适用；局部透明物体的透明部分和不透明部分需要不同的重建算法，大多数现有方法难以完整重建。本文方法则把非前表面来的光视为噪声，由扩散模型去除。&lt;/p>
+&lt;p>作者也指出了一个局限：由于生成的条纹图源自高斯噪声，会残留肉眼不可见的噪声，可能降低相位估计精度和三维重建质量。增加扩散步数可以缓解这一问题，但实验发现这会增加训练和采样的计算开销。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2024-transparent-diffusion/fig-objects.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2024-transparent-diffusion/fig-objects.webp" alt="四个测试物体的照片：深色透明立方体、深色透明半球、白色磨砂半透明块，以及一部分透明、一部分不透明的球冠。" loading="lazy">
+&lt;/a>&lt;figcaption>四个测试物体：(a) 透明立方体，(b) 透明半球，(c) 半透明物体，(d) 局部透明物体。引自论文图 8。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2024-transparent-diffusion/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2024-transparent-diffusion/fig-results.webp" alt="透明立方体的九幅子图：采集的混叠条纹、估计条纹与喷涂显像剂后的条纹、差值图、重合的灰度曲线、彩色三维点云、两幅包裹相位图和重合的相位曲线。" loading="lazy">
+&lt;/a>&lt;figcaption>透明立方体：(a) 采集的混叠条纹图，(b) 本文方法估计的条纹图，(c) 喷涂显像剂后采集的条纹图，(d) (b) 与 (c) 之差，(e) 沿红线的光强曲线，(f) 重建结果，(g)–(h) 分别由 (c) 和 (b) 求得的包裹相位，(i) 二者的相位曲线。引自论文图 9。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Generative deep-learning-embedded asynchronous structured light for three-dimensional imaging</title><link>https://willpan.xyz/zh/publications/lu-2024-generative-asl/</link><pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2024-generative-asl/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
 &lt;p>结构光三维测量向物体投射一系列条纹图像，再从另一视角拍摄。物体表面会使条纹发生弯曲，每个像素处的条纹相位编码了深度信息。条纹投影轮廓术（FPP）是这类技术中最常用的方法之一，它要求相机在某一幅图案单独显示期间完成拍摄，因此投影仪与相机之间必须同步，通常依靠硬件触发信号实现。&lt;/p>
 &lt;p>同步在工程上是一种负担。硬件触发电路只见于昂贵的工业设备，而低成本的消费级设备往往没有相应接口，尽管如今智能手机、平板和笔记本电脑的相机已具备很高的分辨率和帧率。软件同步需要在两幅图案之间等待比曝光时间更长的间隔，帧率因此降低，而且并不总能稳定工作。信号线还限制了相机与投影仪之间的距离，并容易受到电磁干扰。然而，如果投影仪和相机各自独立运行，投影仪就可能在相机曝光中途切换图案，拍到的图像便是相邻两幅图案的混合，即&lt;em>混叠条纹图&lt;/em>（aliased fringe pattern，AFP）。直接从这类图像计算相位会导致重建误差。已有的非同步结构光研究使用的是简单的二值（黑白）图案，或只处理了异步问题的其他方面；据作者所知，此前尚无针对广泛使用的正弦条纹进行异步采集的研究。&lt;/p>
 &lt;figure class="rfig">
@@ -6,7 +43,7 @@
 &lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-problem.webp" alt="两幅示意图。(a) 投影仪与相机之间由红色同步信号线相连，投影仪与相机的时序色块一一对齐。(b) 信号线被打叉，相机色块跨越两种投影颜色，采集到的图案出现混叠。" loading="lazy">
 &lt;/a>&lt;figcaption>(a) 同步采集：信号线连接投影仪与相机，相机的每次曝光只看到一幅图案（每个色块一种颜色）。(b) 异步采集：没有信号连接时，曝光会跨越图案切换时刻，采集到的图像混入相邻图案。论文图 1。&lt;/figcaption>
 &lt;/figure>
-&lt;h2 id="方法">方法&lt;/h2>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
 &lt;p>混叠本身的形式很简单。AFP 中每个像素的值，是曝光期间两幅图案各自贡献的累加，两者所占比例取决于投影仪切换图案的时刻（式 5）。混叠不会移动像素，在每个位置都以相同方式发生，这一性质正适合用卷积网络来处理。但切换时刻未知，且很难测量，因此从一幅图像恢复出两幅图像是一个病态的“一对多”问题。论文将其视为图像生成问题：由生成式网络学习生成两幅干净的条纹图，之后即可直接沿用标准的相移重建方法。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/lu-2024-generative-asl/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
@@ -27,7 +64,7 @@
 &lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-separation.webp" alt="左侧为雕像的两幅源条纹图，中间为异步系统产生的混叠图像，右侧为 APSNet 分离出的两幅图像，最右侧为两幅深蓝色的差值图。" loading="lazy">
 &lt;/a>&lt;figcaption>分离一幅 AFP。(a、b) 同步采集记录的两幅源图案；(c) 异步系统记录的 AFP；(d、e) APSNet 从 (c) 中分离出的两幅图案；(f、g) 二者与源图案的绝对差，数值很小且随机分布。论文图 9。&lt;/figcaption>
 &lt;/figure>
-&lt;h2 id="结果">结果&lt;/h2>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
 &lt;aside class="keypoint">&lt;strong>与同步重建结果的偏差不超过 0.008 mm&lt;/strong>：沿雕像的一条深度剖面，标准差为 0.003 mm；而直接用 AFP 计算的深度误差在 −5.000 到 3.600 mm 之间，标准差为 1.713 mm（图 13）。&lt;br>沿一条采样线，&lt;strong>包裹相位与同步结果的最大差值为 0.035 rad&lt;/strong>（图 11）。&lt;br>&lt;strong>螺旋桨和 3D 打印螺栓的绝对误差均小于 0.006 mm&lt;/strong>，这两个物体表面曲率大，此前的验证中未曾出现（标准差分别为 0.002 mm 和 0.001 mm；图 16）。&lt;/aside>
 &lt;p>测试对象包括雕像、汽车模型和球体，网络在训练和验证中都没有见过它们。所有对比都以同步图案的重建结果为基准。直接用 AFP 重建会丢失大量形状信息，而用 APSNet 分离出的图案重建的形状与基准非常接近（图 12）。论文总结指出，相比直接使用混叠条纹，重建精度提高了三个数量级。&lt;/p>
 &lt;figure class="rfig">
@@ -45,4 +82,81 @@
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-objects.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-objects.webp" alt="五个测试对象（两尊雕像、球体、汽车模型和第三尊雕像）及其混叠条纹图，下面三行分别为由同步、异步和 APSNet 图案得到的重建结果。" loading="lazy">
 &lt;/a>&lt;figcaption>未参与训练的测试对象（首行，附其 AFP），分别由同步图案（第二行）、原始 AFP（第三行）和 APSNet 分离出的图案（末行）重建。左侧两尊雕像使用正弦条纹；球体、汽车模型和第三尊雕像使用二值条纹。论文图 14。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Kinematic target surface sensing based on improved deep optical flow tracking</title><link>https://willpan.xyz/zh/publications/lu-2023-kinematic-tracking/</link><pubDate>Wed, 01 Nov 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2023-kinematic-tracking/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）用一台投影仪和一台相机测量三维形貌：投影仪向物体投射至少三幅相移正弦条纹，相机从另一角度记录条纹因物体高度而产生的变形，再由这组图像解算出的相位得到物体表面。由于联合使用多幅图像，环境光和表面反射率的影响得以消除，使 PSP 具有高精度和高鲁棒性。然而，PSP 要求物体在采集条纹图像期间保持静止：一旦物体在两次采集之间发生运动，各幅图像便不再对应，相位计算就会引入误差。&lt;/p>
+&lt;p>如果已知物体的运动（以旋转矩阵和平移向量表示），就可以把运动信息纳入相位计算，从而消除误差。难点在于如何从布满条纹的图像中测得这一运动。早期工作在物体表面预先粘贴标记点进行跟踪，后续工作改用 SIFT 特征。周期性条纹对 SIFT 而言相当于“噪声”，会导致误匹配，因此基于 SIFT 的方法将条纹投射在彩色相机的某一颜色通道中，并在提取特征前滤除该通道；这需要彩色设备，其成本高于单色相机，帧率也更低。另有方法直接在条纹图像上跟踪物体，但仅限于二维平移运动，无法跟踪发生旋转的物体。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-problem.webp" alt="同一胶囊形物体的两幅灰度图像左右并列，物体上布满竖直的明亮条纹，两图之间连有许多彩色线，其中若干条斜线连接的是并不对应的点。" loading="lazy">
+&lt;/a>&lt;figcaption>对运动物体的条纹图像应用 SIFT：许多匹配的特征点（彩色连线）是错误的。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>本方法直接在条纹图像上跟踪物体，只需一台价格低廉的单色相机，并能处理包括旋转在内的任意二维运动。改进的 RAFT 光流网络估计物体上每个像素的位移，筛选步骤只保留精确的估计，所得运动再代入相位计算。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2023-kinematic-tracking/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>运动破坏了 PSP 的前提。&lt;/strong> 条纹保持固定，而物体在两次采集之间旋转和平移，因此同一像素在各幅图像中对应的是表面的不同位置。论文在每幅条纹图像中，于运动后的坐标处计算参考相位，以此描述这一过程。&lt;/li>
+&lt;li>&lt;strong>以 NCC 代替点积计算相关。&lt;/strong> 特征编码器将两幅相邻的条纹图像映射为 1/8 分辨率的特征图，上下文编码器则只处理第一幅图像。原始 RAFT 以点积比较所有特征对；而在条纹照明下，特征点穿过条纹时其周围的光强分布会随之改变。改进网络采用归一化互相关（NCC），对局部光照变化进行归一化，以此构建四维相关体和四层相关金字塔。&lt;/li>
+&lt;li>&lt;strong>迭代更新光流。&lt;/strong> 从零光流出发，基于 GRU 的更新算子查询相关金字塔，经多次迭代逐步修正光流。1/8 分辨率的结果再上采样至全分辨率，得到每个像素的位移。&lt;/li>
+&lt;li>&lt;strong>只保留精确的点。&lt;/strong> RANSAC 先剔除明显的离群点；随后拟合旋转矩阵和平移向量，用它们变换各点，若变换后的位置与跟踪位置之差超过阈值（如 0.5 像素），则舍弃该点。反复进行拟合与检验，直至所有剩余点都满足阈值。&lt;/li>
+&lt;li>&lt;strong>结合运动信息重建。&lt;/strong> 最终的旋转矩阵和平移向量描述了物体运动，据此计算运动物体的正确相位（论文式 7–11），进而得到其表面。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-method.webp" alt="网络结构图：标注为 Frame2 和 Frame1 的两幅条纹图像分别进入特征编码器和上下文编码器；特征图在 NCC 节点处生成四维 NCC 相关体；一串带有查找算子 L C 的 GRU 更新模块从 0 开始迭代，输出彩色编码的光流图。" loading="lazy">
+&lt;/a>&lt;figcaption>改进的 RAFT 网络：特征编码器与上下文编码器、四维 NCC 相关体，以及输出光流的 GRU 迭代更新。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>五个运动物体的均方根误差为 0.082–0.098 mm&lt;/strong>，以各物体静止时的重建结果为真值（表 1）。&lt;br>&lt;strong>与基于 SIFT 的方法相当&lt;/strong>（0.078–0.089 mm），后者依赖彩色相机分离条纹（表 1）。&lt;br>&lt;strong>约 1.2 万个&lt;/strong>光流精度高的点被保留，用于计算运动（第 3 节）。&lt;/aside>
+&lt;p>实验系统采用分辨率为 1280 × 720 的投影仪和同分辨率的相机，使用四步相移。训练数据为 2000 对运动前后的条纹图像，按 8:1:1 划分为训练集、验证集和测试集。标签来自同一位置采集的无条纹图像：在这些图像上用 SIFT 求得旋转和平移，进而得到每个像素的运动信息。训练损失在 900 个 epoch 后收敛至 0.25 像素。若估计位移与基于 SIFT 的真值相差不足半个像素即计为正确点，则改进网络在条纹图像上得到的正确点多于原始 RAFT（图 10）。&lt;/p>
+&lt;p>同一训练好的网络还被用于另外四个物体（图 13），均在运动状态下完成了重建。对每个物体，本方法的均方根误差都略高于基于 SIFT 的方法，作者认为二者性能相当，而本方法不再需要彩色设备。该方法适用于平面内的二维运动；对复杂三维运动物体的表面重建留待后续工作。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-results.webp" alt="同一胶囊形物体的两幅灰度条纹图像，正确跟踪的点以蓝色标出：左图蓝点稀疏零散，右图蓝点密集地覆盖物体。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 原始 RAFT 网络与 (b) 引入 NCC 的改进网络估计出的正确点（蓝色）。引自论文图 10。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-surfaces.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-surfaces.webp" alt="四行图像。每行左侧为运动物体的一对条纹图像，以绿色连线标出对应点；右侧为重建物体的彩色三维表面图，高度及 X、Y 坐标轴以毫米为单位。" loading="lazy">
+&lt;/a>&lt;figcaption>另外四个运动物体：一对条纹图像之间的正确对应点（a、c、e、g）及重建表面（b、d、f、h）。引自论文图 13。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Automated reconstruction of multiple objects with individual movement based on PSP</title><link>https://willpan.xyz/zh/publications/lu-2020-automated-multiple/</link><pubDate>Tue, 01 Sep 2020 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2020-automated-multiple/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）向物体投射多幅带相移的正弦条纹图（通常至少三幅），并根据相机拍到的相位恢复物体形貌。由于需要采集多幅图像，采集期间物体必须保持静止。一旦物体运动，各幅条纹图之间不再对应，预先设计的相移量也被破坏，重建结果随之产生误差。&lt;/p>
+&lt;p>作者此前的工作用旋转矩阵和平移向量描述物体运动，并将这一信息引入重建模型，以此处理运动问题。该方法也能重建多个相互分离的物体，但要求它们的运动完全相同。而实际中更常见的是各物体运动各不相同；在重建多个各自运动的物体时，已有方法会引入误差。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-problem.webp" alt="暗背景上两个玩具车模的四幅俯视图：(a) 中车模呈蓝色、无条纹；(b) 至 (d) 中车模覆盖红蓝相间的水平条纹，且在各图之间发生平移和转动。" loading="lazy">
+&lt;/a>&lt;figcaption>实验所用的两个车模：(a) 无条纹图像；(b)–(d) 两车各自运动时采集到的 3 步 PSP 条纹图。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>本方法为每个物体单独描述其运动：先找出各个物体，再在条纹图序列中逐一跟踪，分别计算其旋转和平移，最后结合各物体自身的运动信息求解相位。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2020-automated-multiple/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>分离条纹与物体图像。&lt;/strong> 以红色投射条纹图，用彩色相机采集。红色分量包含条纹信息，用于求解相位；蓝色分量滤除了条纹，得到纯物体图像，用于跟踪和特征提取。&lt;/li>
+&lt;li>&lt;strong>识别物体。&lt;/strong> 在蓝色分量图像中，用 OTSU 方法将物体与背景分开。阈值分割可能把一个物体分成几块，因此再用膨胀运算将其重新合并，并由每个物体的轮廓得到包围框。&lt;/li>
+&lt;li>&lt;strong>用 KCF 跟踪各物体。&lt;/strong> 以每个包围框内的物体为模板，核相关滤波（KCF）跟踪算法在下一幅条纹图中找到其新的包围框，新包围框再作为后续图像的模板。&lt;/li>
+&lt;li>&lt;strong>估计各物体的运动。&lt;/strong> SIFT 提取物体运动前后的特征点及其对应关系；利用这些点，通过奇异值分解（SVD）为每个物体求出旋转矩阵和平移向量。&lt;/li>
+&lt;li>&lt;strong>逐个物体重建。&lt;/strong> 结合各自的运动信息，从红色分量中以最小二乘法求解含运动信息的重建模型，得到每个物体的相位并完成重建，直到最后一个物体。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-method.webp" alt="四格示意图：标为 Object1 至 Object3 的三个轮廓图形（两个星形和一个三角形）、套有虚线包围框的同样图形，以及从各包围框指向图形运动后新位置的箭头。" loading="lazy">
+&lt;/a>&lt;figcaption>多物体跟踪：(a) 三个待测物体；(b) 每个物体的包围框；(c)–(d) 用 KCF 在运动前后的图像之间跟踪各物体。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-components.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-components.webp" alt="同一幅双车模图像的三种形式：带条纹的彩色原图、只含红色条纹的暗图像，以及无条纹的蓝色车模图像。" loading="lazy">
+&lt;/a>&lt;figcaption>一幅采集图像 (a) 分解为只含条纹信息的红色分量 (b) 和作为纯物体图像的蓝色分量 (c)。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">对两个各自运动的车模，本文方法的 &lt;strong>RMS 误差为 0.0773 mm&lt;/strong>，传统 PSP 为 &lt;strong>8.981 mm&lt;/strong>（第 4 节，图 10）。&lt;/aside>
+&lt;p>实验系统采用彩色相机（Allied Vision Manta 504C，分辨率 2452 × 2056）和投影仪（Wintech DLP PRO 4500，分辨率 912 × 1140）。两个车模在参考平面上各自做旋转和平移运动，采用红色条纹的 3 步 PSP 进行测量，并以静止物体的 6 步 PSP 重建结果为参考。传统 PSP 的结果存在明显的运动误差，在物体边缘等高度突变处尤为严重；本文方法则消除了这些误差。此外，只需在识别物体后选定感兴趣的对象，该方法也可以只重建指定物体而忽略其他物体。&lt;/p>
+&lt;p>作者也说明了方法的适用条件：只考虑刚体的二维运动；物体与背景之间的灰度差异足够大时，物体识别效果更好，且由于膨胀会扩大物体区域，各物体之间需保持一定距离；条纹颜色应与物体颜色有较大差异，环境光较弱时应在投射图案中加入蓝色背景光；对运动速度没有限制，但采集速度需足够快，以获得清晰图像。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-results.webp" alt="两个车模的四幅彩色高度图：上排表面平滑，下排出现水平条状伪影和参差不齐的边缘。" loading="lazy">
+&lt;/a>&lt;figcaption>本文算法的重建结果 (a) 正视图和 (b) 网格显示，以及传统 PSP 的 (c) 正视图和 (d) 网格显示。引自论文图 10。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-error.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-error.webp" alt="两个车模的残差图：左图为约 0.1 mm 及以下的均匀噪声，右图为约 −12 至 8 mm 的条状误差。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 本文算法与 (b) 传统 PSP 的残差，注意两者色标范围不同。引自论文图 11。&lt;/figcaption>
 &lt;/figure></description></item></channel></rss>

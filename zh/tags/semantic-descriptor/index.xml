@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Semantic Descriptor | 潘威</title><link>https://willpan.xyz/zh/tags/semantic-descriptor/</link><atom:link href="https://willpan.xyz/zh/tags/semantic-descriptor/index.xml" rel="self" type="application/rss+xml"/><description>Semantic Descriptor</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>DeSC: Learning Deep Semantic Descriptor for NeRF Registration</title><link>https://willpan.xyz/zh/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>神经辐射场（NeRF）把场景存储在神经网络之中。大场景常被拆分成多个 NeRF 分别训练；而在缺少可靠全局相机位姿的条件下采集的图像，训练出的各个 NeRF 也各自处于不同的坐标系中。要把它们合并起来，就需要估计两个独立训练的 NeRF 之间的刚体旋转和平移，即 NeRF 配准。&lt;/p>
+&lt;p>现有方法要么依赖几何信息，要么依赖渲染颜色。DReg-NeRF 从每个 NeRF 中采样点云并直接回归对应关系，但由于体密度估计不准确，尤其在 NeRF 训练不充分时，这些点云噪声大、伪影多。VF-NeRF 借助光度损失进行优化，因而在无纹理和高度对称的情形下容易失效。两者都没有利用 NeRF 内部为每个三维点计算的、与视角无关的嵌入特征，而这种嵌入同时包含几何与外观信息。不过，直接使用它也并不容易：两个 NeRF 分别训练，嵌入空间并不一致。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-problem.webp" alt="一个红色消防栓的 RGB 渲染图、按原始 NeRF 嵌入和学习到的描述子着色的点云，以及两组由绿线和红线连接的消防栓点云对。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 物体的两个视角；(b) 原始 NeRF 嵌入，与颜色相关性强，但在两个 NeRF 之间不一致；(c) DeSC 的深度语义描述子，两者保持一致；(d, e) DeSC 与 GeoTransformer 得到的对应关系，绿线为正确匹配，红线为错误匹配。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>DeSC 不仅把 NeRF 视为几何来源，也把它当作点特征的来源。它从每个 NeRF 中采样点云，用 KPConv 骨干网络提取几何特征，并通过深度语义聚合模块（DSAM）把 NeRF 自身的嵌入转化为在两个 NeRF 之间一致的描述子。随后由 Transformer 和粗到精匹配建立对应关系，最终用 SVD 求解位姿。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>对每个 NeRF 采样。&lt;/strong> DeSC 取 NeRF 占据栅格中非空体素的中心点，保留密度大于阈值 σt 的点。KP-FCNN 对该点云做分层下采样，同时提取多层级几何特征。&lt;/li>
+&lt;li>&lt;strong>在稀疏点周围查询嵌入。&lt;/strong> 对每个稀疏点，取半径 τ 内的 k 个最近稠密点组成局部块。块内每个点向 NeRF 查询与视角无关的嵌入，并通过正弦编码融入该点的颜色和密度，使特征带上两个 NeRF 共有的光度信息。&lt;/li>
+&lt;li>&lt;strong>用纹理感知图卷积聚合。&lt;/strong> 在每个局部块上运行图卷积，其边权突出距离近而特征差异大的点对，从而捕捉局部高频纹理。输出再与几何特征融合，得到深度语义描述子。&lt;/li>
+&lt;li>&lt;strong>引入上下文并匹配。&lt;/strong> 几何自注意力和交叉注意力让每个点云从自身和另一个点云中获取上下文信息。基于得到的特征选出粗对应关系，再在稠密点上用最优传输层细化。&lt;/li>
+&lt;li>&lt;strong>求解位姿。&lt;/strong> 剔除外点后，用 SVD 求出对齐两个 NeRF 的旋转和平移。训练时，密度感知光度一致性损失还要求匹配的局部块具有相近的密度加权颜色。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-method.webp" alt="网络结构图：两个 NeRF 点云 X 和 Y 进入深度语义聚合模块，再依次经过含几何自注意力和交叉注意力的 Transformer、点匹配模块以及外点剔除与 SVD；下方面板展示 KP-FCNN、NeRF 查询和局部图网络的细节。" loading="lazy">
+&lt;/a>&lt;figcaption>方法总览。每个深度语义聚合模块将 KP-FCNN 几何特征与经局部图网络聚合的 NeRF 嵌入相结合；Transformer、点匹配、外点剔除和 SVD 给出最终的对齐结果。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在 Objaverse 上的配准召回率为 97.7%&lt;/strong>，VF-NeRF 为 92.1%，SIRA-PCR 为 94.5%；旋转误差为 2.57°（表 I）。&lt;br>&lt;strong>在 30% 重叠率下，DTU、LLFF 和 Mip-NeRF360 上的配准召回率分别为 90.6%、91.0% 和 88.1%&lt;/strong>，VF-NeRF 分别为 86.6%、88.5% 和 84.8%（表 III–V）。&lt;br>去掉全部所提模块后，Objaverse 上的召回率降至 &lt;strong>93.2%&lt;/strong>，旋转误差升至 &lt;strong>9.19°&lt;/strong>（表 VI）。&lt;/aside>
+&lt;p>物体级基准基于 Objaverse 构建：每个物体渲染 120 张图像并分成两组，每组施加一个随机变换，再分别训练独立的 NeRF；测试使用训练中未见过的 44 个物体。配准召回率统计估计变换的 RMSE 小于 0.2 m 的样本对所占比例。对比方法包括 NeRF 配准方法 DReg-NeRF 和 VF-NeRF，以及八种在 NeRF 采样点上运行的点云配准方法。加入幅度为场景尺寸 10% 的均匀噪声后，DeSC 的召回率仍为 95.74%（表 II）。&lt;/p>
+&lt;p>在真实场景数据集 DTU、LLFF 和 Mip-NeRF360 上，每个场景被划分为重叠率 30%、50% 和 80% 的图像子集。DeSC 在全部九种设置下的配准召回率均为最高，且在 30% 重叠率时优势最大；不过在部分设置下，VF-NeRF 的旋转误差略低。消融实验中，依次加入深度语义聚合、光度编码、纹理感知边权和光度一致性损失，Objaverse 上的召回率逐步提升：93.2%、93.9%、95.1%、96.9%、97.7%。&lt;/p>
+&lt;p>作者指出了两点局限。DeSC 依赖 NeRF 的隐式嵌入，因此不能直接用于 3D Gaussian Splatting、体素网格或基于哈希的方法等显式表示。对于形状和纹理都高度对称的物体（例如交通锥），提取的特征同样呈对称分布，可能导致错误匹配，即便渲染出的对齐结果看起来合理。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-objaverse.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-objaverse.webp" alt="三个物体（香蕉、椅子、电话）及红绿两色的相机视锥环，分别对应 DeSC、DReg-NeRF 和 GeoTransformer；DeSC 一列中两环重合，呈黄色。" loading="lazy">
+&lt;/a>&lt;figcaption>Objaverse 示例：源 NeRF 的相机位姿为红色，目标 NeRF 的为绿色，配准后两者重合处呈黄色。部分 NeRF 在空白区域存在高密度（第 2、3 行），干扰了 DReg-NeRF 和 GeoTransformer。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-results.webp" alt="DTU、LLFF 和 Mip-NeRF360 场景的渲染图网格，每幅图沿对角线分为源和目标两半，依次为输入、真值、DReg-NeRF、VF-NeRF 和 DeSC。" loading="lazy">
+&lt;/a>&lt;figcaption>来自 DTU、LLFF 和 Mip-NeRF360、重叠率为 30% 的真实场景。每幅图沿对角线分为源 NeRF 与目标 NeRF 的渲染结果。引自论文图 6。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

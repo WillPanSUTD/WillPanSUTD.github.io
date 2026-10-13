@@ -29,23 +29,12 @@ export default function mount(el, { kit, lang }) {
     },
   }, lang);
 
-  const ink = kit.token("--c-ink") || "#0a0a0a";
-  const body = kit.token("--c-body") || "#525252";
-  const accent = kit.token("--c-accent") || "#1e3a8a";
-  const mute = kit.token("--c-mute") || "#a3a3a3";
-  const rule = kit.token("--c-rule") || "#e5e5e5";
-  const bg = kit.token("--c-bg") || "#ffffff";
+  const { ink, body, accent, mute, rule, bg } = kit.palette();
   // Literal colours: source scan, target scan, inlier match, outlier match (as in the paper's figures).
   const SRC_C = "#c99a12", TGT_C = "#2f6db5", GOOD = "#2e9d4f", BAD = "#d64545";
 
   // --- Deterministic scene (side view, local units, y down) -------------------
-  let seed = 11;
-  const rnd = () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let r = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
+  const rnd = kit.rng(11);
   const pts = [];
   const seg = (x0, y0, x1, y1, step = 7) => {
     const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0) / step));
@@ -97,23 +86,10 @@ export default function mount(el, { kit, lang }) {
     cx: A.cx + (B.cx - A.cx) * u, cy: A.cy + (B.cy - A.cy) * u,
     ox: A.ox + (B.ox - A.ox) * u, oy: A.oy + (B.oy - A.oy) * u, a: A.a + (B.a - A.a) * u,
   });
-  const ease = (t) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
   const seg01 = (t, a, b) => Math.max(0, Math.min(1, (t - a) / (b - a)));
   const partial = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
 
-  const text = (parent, x, y, str, o = {}) => {
-    const n = kit.svg("text", {
-      x, y, "font-size": o.size || 22, fill: o.fill || ink, "text-anchor": o.anchor || "middle",
-      "font-weight": o.weight || 400, "font-family": "var(--f-sans)", "paint-order": "stroke",
-      stroke: bg, "stroke-width": 4, "stroke-linejoin": "round", opacity: o.opacity ?? 1,
-    }, parent);
-    n.textContent = str;
-    return n;
-  };
-  const line = (parent, a, b, o = {}) => kit.svg("line", {
-    x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: o.stroke || accent, "stroke-width": o.w || 1.5,
-    "stroke-dasharray": o.dash || "none", opacity: o.opacity ?? 1, "stroke-linecap": "round",
-  }, parent);
+  const { text, line } = kit.pen({ textSize: 22, stroke: accent, width: 1.5 });
   const dots = (g, set, pose, colour, alpha = () => 1, r = 2.9) => {
     for (const p of set) {
       const [x, y] = place(p, pose);
@@ -143,7 +119,7 @@ export default function mount(el, { kit, lang }) {
     lang,
     render(stage, i, t) {
       stage.replaceChildren();
-      const e = ease(t);
+      const e = kit.easeOut(t);
       const s = kit.svg("svg", { viewBox: "0 0 640 360", role: "img", "aria-label": L.steps[i] }, stage);
       const g = kit.svg("g", {}, s);
 
@@ -216,7 +192,7 @@ export default function mount(el, { kit, lang }) {
           const cx = 112 + n * 208, cy = 170;
           kit.svg("rect", { x: cx - 92, y: cy - 88, width: 184, height: 176, rx: 10, fill: "none", stroke: rule, "stroke-width": 1.5 }, g);
           const ct = CT[c.b];
-          const slide = (1 - ease(seg01(t, 0, 0.6))) * 30;
+          const slide = (1 - kit.easeOut(seg01(t, 0, 0.6))) * 30;
           const toCard = (x, y, off) => [cx + (x - ct[0]) * KC + off, cy + (y - ct[1]) * KC - off * 0.4];
           for (const p of within(T, ct)) {
             const [x, y] = toCard(p.x, p.y, 0);
@@ -227,7 +203,7 @@ export default function mount(el, { kit, lang }) {
             kit.svg("circle", { cx: x, cy: y, r: 2.4, fill: SRC_C, opacity: 0.95 }, g);
           }
           // consensus verdict after alignment
-          const v = ease(seg01(t, 0.55, 1));
+          const v = kit.easeOut(seg01(t, 0.55, 1));
           const w = c.ok ? 0.88 : 0.18;
           kit.svg("rect", { x: cx - 70, y: cy + 104, width: 140, height: 10, rx: 5, fill: rule, opacity: v }, g);
           kit.svg("rect", { x: cx - 70, y: cy + 104, width: 140 * w * v, height: 10, rx: 5, fill: c.ok ? GOOD : BAD, opacity: v }, g);
@@ -238,13 +214,13 @@ export default function mount(el, { kit, lang }) {
       }
 
       if (i === 4) {
-        const u = ease(seg01(t, 0.35, 1));
+        const u = kit.easeOut(seg01(t, 0.35, 1));
         const sp = lerpPose(SRC, MID, u);
         const tp = lerpPose(TGT, MID, u);
         titles(g, 1 - u);
         dots(g, T, tp, TGT_C, () => 0.75);
         dots(g, S, sp, SRC_C, () => 0.9);
-        const lu = ease(seg01(t, 0, 0.35));
+        const lu = kit.easeOut(seg01(t, 0, 0.35));
         if (u < 0.95) {
           for (const p of anchorPts) {
             const a = place(p, sp);

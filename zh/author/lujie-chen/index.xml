@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Lujie Chen | 潘威</title><link>https://willpan.xyz/zh/author/lujie-chen/</link><atom:link href="https://willpan.xyz/zh/author/lujie-chen/index.xml" rel="self" type="application/rss+xml"/><description>Lujie Chen</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Mon, 01 Jan 2018 00:00:00 +0000</lastBuildDate><item><title>Transformation of LEGO Models</title><link>https://willpan.xyz/zh/publications/pan-2018-transformation/</link><pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2018-transformation/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>集装箱堆垛引出一个实际问题：如何高效地把集装箱从一个堆垛移到另一个堆垛？本文借助乐高研究一个与之有一定关联的问题：利用现有乐高模型上拆下的积木搭建一个新的乐高模型。把三维形状转换成乐高模型的算法已有很多，但用另一个模型的积木来搭建乐高模型，此前尚未见于公开文献。这一任务有两个相互制约的目标：每次拾放（pick-and-place，PnP）一块积木都计为一次移动成本；同时，源模型的积木应尽可能多地用到目标模型上。&lt;/p>
+&lt;p>物理约束使移动顺序变得关键。完全或部分压在其他积木下面的积木无法拾取，积木也不能放在悬空的位置。此外，位于顶面但四周被其他积木完全包围的积木，作者也视为不可移动，因为要取出它需要额外的拾放操作。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-transformation/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2018-transformation/fig-problem.webp" alt="一个小型乐高组件：顶面上一块黄色 2×2 积木被绿色积木完全包围。" loading="lazy">
+&lt;/a>&lt;figcaption>黄色 2×2 积木虽位于顶面，但四周被绿色积木完全包围，因此算法将其视为不可移动。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>源模型自上而下逐层拆解，目标模型自下而上逐层搭建。两种基本方法决定目标模型使用哪些积木，三种策略决定每块积木的来源：直接取自源模型、取自存放已拆下积木的缓冲区，或取自供应无限的库存。两者组合得到 RT1–RT3 和 FT1–FT3 共六种算法，使用七种形状的积木。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2018-transformation/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2018-transformation/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>移动与约束。&lt;/strong> 每拾放一块积木（源模型到缓冲区、源模型到目标、缓冲区到目标或库存到目标）计成本 1。只有可移动的积木才能被拾取，即上方没有积木、且未被四周完全包围的积木。&lt;/li>
+&lt;li>&lt;strong>刚性目标或柔性目标。&lt;/strong> 刚性变换（RT）在变换开始前生成目标乐高模型，每层优先使用大积木。柔性变换（FT）则在变换过程中由中间体素模型即时生成目标：评分规则按源模型当前可提供的某类可移动积木的数量为该类积木加权，从而优先使用源模型上的积木。&lt;/li>
+&lt;li>&lt;strong>策略 1。&lt;/strong> 先把源模型全部拆到缓冲区，再用缓冲区中的积木搭建目标，缓冲区缺少的积木由库存补足。&lt;/li>
+&lt;li>&lt;strong>策略 2。&lt;/strong> 源模型上的可移动积木直接移到目标。若没有匹配的积木，就到缓冲区中查找；缓冲区也没有时，再把源模型拆下一层放入缓冲区，露出新的积木。只有源模型拆完后才使用库存。&lt;/li>
+&lt;li>&lt;strong>策略 3。&lt;/strong> 不使用缓冲区。源模型上有匹配的可移动积木就直接移到目标，否则由库存提供。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-transformation/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2018-transformation/fig-method.webp" alt="左：三行示意图，每行以黑白乐高足球为源模型、粉金配色的乐高造型为目标模型，第 1、2 行的积木经过青色缓冲区，第 3 行只有灰色库存。右：以乐高足球为源模型，RT 直接得到乐高目标模型，FT 经由中间体素模型得到目标，放大图对比两者的积木排布。" loading="lazy">
+&lt;/a>&lt;figcaption>左为每种基本方法下的三种策略（引自论文图 4）：箭头大小表示各路径的优先级，策略 1 全部经过缓冲区，策略 2 优先直接移动、必要时借助缓冲区，策略 3 只使用源模型和库存。右为两种基本方法（引自论文图 3）：RT 预先生成目标乐高模型，FT 在变换过程中由中间体素模型生成目标。此处将两幅图并排展示。&lt;/figcaption>
+&lt;/figure>
+&lt;p>算法用三项指标评价：成本 C，即搭建目标所需的拾放次数；复用率 R = N&lt;sub>r&lt;/sub>/N&lt;sub>s&lt;/sub>，即源模型 N&lt;sub>s&lt;/sub> 块积木中最终用到目标上的比例；以及综合性能 P = V·R/C，其中 V 是目标模型的体素数。&lt;/p>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>FT3 的综合性能在六种算法中最好&lt;/strong>：结果为八个模型两两互变、在七种模型尺寸下各 56 次变换的平均值；在 RT 算法中 RT2 最好（图 7c）。&lt;br>&lt;strong>策略 1 与策略 2 的复用率非常接近&lt;/strong>，说明一开始就把源模型全部拆掉并不划算（图 7b）。&lt;br>&lt;strong>足球变小屋（考虑颜色匹配）：FT3 以 2673 次拾放复用了 73.0% 的积木&lt;/strong>，而 FT1 需要 4502 次拾放，复用率为 74.8%（图 8）。&lt;/aside>
+&lt;p>测试使用八个转换为乐高的三角网格模型。第一项测试把模型 A 分别变换为其余七个模型，每个模型约 2500 个体素。第二项测试在七种模型尺寸下让八个模型两两互变。成本随模型尺寸线性增长，策略 1、2、3 的成本依次递减且始终如此。FT 算法的成本高于对应的 RT 算法，因为 FT 搭出的目标模型积木更多。FT3 的复用率与最好的 RT 算法相当。RT3 的复用率明显低于 RT1 和 RT2：目标积木事先确定、又没有缓冲区时，很难在源模型上找到匹配的积木，平均一半以上的目标积木来自库存。模型尺寸超过每模型 1700 个体素后，复用率对尺寸变化不太敏感；模型更小时复用率会下降。&lt;/p>
+&lt;p>第三项测试加入颜色：外表面积木必须与表面颜色一致，内部积木可以是任意颜色。在足球变小屋的例子中，RT1 和 RT2 的复用率分别为 61.9% 和 59.9%，RT3 仅为 9.2%（图 9）。作者也指出了其中的取舍：FT 的复用率更高，但使用的积木更多、更小，结构内部存在滑移面，强度较弱；综合性能只是一个经验指标，其他场景可能对成本有不同的权衡。本研究每次只移动一块积木，把一组积木作为模块整体复用留待未来工作；其结论也未必能直接用于货运集装箱堆垛等具体的工业应用。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-transformation/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2018-transformation/fig-results.webp" alt="FT1–FT3 与 RT1–RT3 随模型尺寸（体素数）变化的三幅折线图：(a) 成本线性上升，(b) 复用率基本平稳、RT3 远低于其余算法，(c) 综合性能 FT3 最高。" loading="lazy">
+&lt;/a>&lt;figcaption>八个模型在七种模型尺寸下两两互变的平均结果：(a) 成本，(b) 复用率，(c) 综合性能。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-transformation/fig-sequences.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2018-transformation/fig-sequences.webp" alt="三行渲染快照：FT1、FT2、FT3 分别把乐高足球改搭成乐高小屋，画面中有库存、缓冲区积木堆和累计拾放次数。" loading="lazy">
+&lt;/a>&lt;figcaption>FT1、FT2、FT3 在考虑颜色的情况下把模型 A（足球）变换为模型 H（小屋），每张快照下方为累计拾放次数。FT3 不使用缓冲区，成本是三者中最低的。引自论文图 8。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Pick-and-place process sequencing for transformation of rasterized 3D structures</title><link>https://willpan.xyz/zh/publications/pan-2017-pick/</link><pubDate>Sun, 01 Jan 2017 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2017-pick/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>建筑可以用砖块或预制构件搭建；同样，一个结构也可以由尺寸相同的零件（即体素）通过取放（pick-and-place，PnP）方式组装：机器每次抓起一个零件，再把它放到另一个位置。论文把这一任务表述为：将一个栅格化结构（源结构）变换为另一个栅格化结构（目标结构）。用料垛中的材料搭建新结构，是源结构恰为料垛形状的特例。要回答的问题是：机器应按怎样的顺序搬运，才能使总工作量尽可能小。&lt;/p>
+&lt;p>难点有两个。其一，决定哪个零件搬到哪个位置是一个指派问题：暴力搜索需要比较 n! 种序列，而实验中的结构各有约 2,250 至 2,550 个体素。其二，代价最低的对应关系未必能够执行。本文研究的机器是至少三轴的笛卡尔机器人，配有从零件顶面吸附的真空吸盘，因此只能在结构的顶面取放体素。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2017-pick/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2017-pick/fig-problem.webp" alt="四组图：阶梯形网格与山体形网格、两者的体素模型、两个体素模型重叠后以绿色标出待搬运体素，以及阶梯逐步变为山体的三个快照。" loading="lazy">
+&lt;/a>&lt;figcaption>以一个例子展示各处理阶段：(a) 源与目标的网格模型，(b) 栅格化为体素，(c) 模型对齐，(d) 将源结构变换为目标结构的运动序列。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>两个形状均以封闭三角网格输入。每个网格先栅格化为体素，并用泛洪填充标出内部体素；随后对齐两个体素模型；剩下的工作是运动排序，即决定每个体素搬到哪里、按什么顺序搬。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2017-pick/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2017-pick/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>对齐与分类。&lt;/strong> 假设两个结构在竖直方向上已经对齐，只在水平面内对平移量做穷举搜索，使两者的重叠体积最大。只在源结构中的体素称为搬运体素（Mover，M），只在目标结构中的体素称为空位（Void，V），两者重叠的体素保持不动。若 M 与 V 的数量不等，多出的体素放到料垛上或从料垛中取用，料垛取为一个线性堆叠。&lt;/li>
+&lt;li>&lt;strong>单次搬运的代价。&lt;/strong> 把 M&lt;sub>i&lt;/sub> 搬到 V&lt;sub>j&lt;/sub> 的代价为 &lt;em>c&lt;sub>ij&lt;/sub>&lt;/em> = |x&lt;sub>j&lt;/sub> − x&lt;sub>i&lt;/sub>| + |y&lt;sub>j&lt;/sub> − y&lt;sub>i&lt;/sub>| + 2z&lt;sub>max&lt;/sub> − z&lt;sub>i&lt;/sub> − z&lt;sub>j&lt;/sub>，以体素尺寸为单位（式 1）。零件先被提升到安全平面 z&lt;sub>max&lt;/sub>，为避免碰撞，只在这一高度上沿 x、y 方向移动，然后下降到 V&lt;sub>j&lt;/sub>。&lt;/li>
+&lt;li>&lt;strong>在完整代价矩阵上应用匈牙利算法。&lt;/strong> 所有 M–V 配对的代价构成一个 n × n 矩阵。匈牙利算法的时间复杂度为 O(n³)，输出总代价最小的 n 个配对。这一全局优化策略（GOS）给出总代价的下界，但并不给出可执行的运动序列。&lt;/li>
+&lt;li>&lt;strong>顶面取放约束。&lt;/strong> 代价最低的配对未必对应可行的序列。在论文的八体素示例中，一组总代价最小（27）的配对可以按合适的顺序执行，而另一组代价相同的配对在两步之后陷入死锁。&lt;/li>
+&lt;li>&lt;strong>局部优化策略（LOS）。&lt;/strong> LOS 只用位于顶面的 M 和 V 构造代价矩阵，并对其应用匈牙利算法；当 M 多于 V 时，算法会让部分 M 暂不参与这一阶段，使所选配对的总代价最小。得到的配对可以按任意顺序搬运；随后更新顶面，重复上述过程，直到所有 M 搬运完毕。在该示例中，LOS 分两个阶段完成，总代价为 27，恰好等于下界。&lt;/li>
+&lt;/ol>
+&lt;p>论文还将 LOS 与另外两种同样能生成有效序列的策略比较。贪心选择策略（GSS）使用相同的顶面代价矩阵，但不用匈牙利算法，每一步只搬运代价最低的一个配对；随机选择策略（RSS）每一步随机搬运一个顶面配对。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2017-pick/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2017-pick/fig-method.webp" alt="两幅带标注的体素网格。(a) 中 1, 5′ 和 8, 6′ 两格高亮，位于灰色格之上，右侧为绿色格 4 和 5；(b) 中 4, 7′ 和 5, 8′ 两格高亮，位于两列堆叠的顶部。" loading="lazy">
+&lt;/a>&lt;figcaption>LOS 在论文八体素示例上的运行过程：(a) 第一阶段，1 → 5′ 与 8 → 6′；(b) 第二阶段，4 → 7′ 与 5 → 8′。标为“1, 5′”的格表示目标位置 5′ 已由源体素 1 填入；绿色格为尚待搬运的 M 体素。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>墙 → 城堡（2,153 个 M–V 配对）：LOS 用 14.9 s 达到 GOS 下界 91,192，而 GOS 本身耗时 10,718 s&lt;/strong>（表 1）。&lt;br>&lt;strong>海星 → 城堡（2,016 个配对）：总代价 GOS（下界）为 75,891，LOS 为 76,065，GSS 为 77,929，RSS 为 88,209&lt;/strong>（表 1）。&lt;br>&lt;strong>表 1 中每一组变换，LOS 的计算时间都在 1.8–30.4 s 之间；GOS 为 6.1–10,718 s&lt;/strong>（表 1）。&lt;/aside>
+&lt;p>实验使用八个模型（wall、pyramid、starfish、cube、igloo、castle、stairs 和 Eiger mountain，即墙、金字塔、海星、立方体、冰屋、城堡、阶梯和艾格峰），栅格化为 2,250 至 2,550 个体素的相近规模，并两两相互变换。计时基于在 Intel Core i3-2310M 2.10 GHz、8 GB 内存的 PC 上运行的 C++ 程序。工作量取决于 M–V 配对的数量，而非体素总数：金字塔 → 墙需要 1,643 个配对，金字塔 → 冰屋只需 325 个，因为这两个形状更相似、对齐得更好。按代价衡量，GOS 最优，因为它给出的就是下界，但它的配对并不直接给出运动序列，有时甚至根本无法执行。LOS 居第二，其各阶段的分组自然构成运动序列；GSS 略逊于 LOS，但明显优于 RSS。按时间衡量，RSS 最快，GSS 与 LOS 相近，而 GOS 要在一个巨大的矩阵上运行一次匈牙利算法，耗时最长。作者的结论是：LOS 在代价与计算时间之间取得了良好的平衡，并优于其他能生成可行序列的策略。&lt;/p>
+&lt;p>在海星 → 城堡这一变换上，以六种分辨率（139 至 2,016 个 M–V 配对）重复实验，总代价随配对数量大致线性增长；除 GOS 外，各策略的计算时间也是如此。LOS 虽然基于 O(n³) 的匈牙利算法，其计算时间却不会随分辨率呈三次方增长。所有结果均来自计算机仿真。顶面取放约束也使悬挑结构无法搭建，例如带天花板的房间或开窗的墙；作者认为，LOS 的思路，即先挑出满足约束的体素、再优化 M–V 配对，可以推广到其他零件和约束。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2017-pick/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2017-pick/fig-results.webp" alt="两幅以 M–V 配对数为横轴的图：六种分辨率下 GOS、LOS、GSS、RSS 总代价的柱状图，以及计算时间的折线图，其中 GOS 急剧上升，LOS、GSS、RSS 保持在约 22 秒以下。" loading="lazy">
+&lt;/a>&lt;figcaption>海星 → 城堡在六种栅格化分辨率下的结果：(a) 四种策略的总代价（以千个体素单位计），(b) 计算时间。高分辨率下的 GOS 结果未画入 (b)。引自论文图 9。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2017-pick/fig-sequence.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2017-pick/fig-sequence.webp" alt="八行体素模型快照：墙依次变为金字塔、海星、立方体、冰屋、城堡、阶梯，最后变为山体，体素以红、绿、灰三色标示。" loading="lazy">
+&lt;/a>&lt;figcaption>用 LOS 计算的一连串变换，分辨率高于表 1 的实验：墙、金字塔、海星、立方体、冰屋、城堡、阶梯和艾格峰。红色为当前阶段正在搬运的 M 体素，绿色为其余 M 体素，灰色为目标结构的体素。引自论文图 10。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

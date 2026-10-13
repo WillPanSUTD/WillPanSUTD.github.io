@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Peng Cao | 潘威</title><link>https://willpan.xyz/zh/author/peng-cao/</link><atom:link href="https://willpan.xyz/zh/author/peng-cao/index.xml" rel="self" type="application/rss+xml"/><description>Peng Cao</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Few-Shot 6D Object Pose Estimation via Decoupled Rotation and Translation with Viewpoint Encoding</title><link>https://willpan.xyz/zh/publications/lu-2026-few-shot-6d-object-pose-estimation/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2026-few-shot-6d-object-pose-estimation/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>6D 位姿估计要求出物体相对相机的三维旋转和三维平移，是机器人抓取、自动驾驶和增强现实中的关键环节。深度传感器易受噪声、遮挡和成本的影响，在反光或透明物体上也存在局限，因此仅依赖单张 RGB 图像的方法受到关注。基于关键点、模板或直接回归的单目方法不断进步，但都严重依赖大规模真实标注数据，真实位姿标注的稀缺限制了其进一步提升。&lt;/p>
+&lt;p>本文将旋转与平移解耦：旋转只用合成图像学习，因此只有平移部分需要用真实图像训练，而且平移网络无须从这些图像中学习旋转信息，从而减少了所需的真实样本数量。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>首先由目标检测器从图像中裁剪出物体，随后旋转和平移由两个相互独立的分支分别估计。旋转分支把完整旋转 R 分解为平面外部分 R&lt;sup>γ&lt;/sup>（物体的视角）和平面内部分 R&lt;sup>θ&lt;/sup>（绕相机光轴的旋转），即 R = R&lt;sup>θ&lt;/sup>R&lt;sup>γ&lt;/sup>，两部分都由仅用合成图像训练的模块处理。平移分支以 GDR-Net 为基础，是唯一用真实图像训练的部分。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2026-few-shot-6d-object-pose-estimation/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>检测与裁剪。&lt;/strong> 目标检测器从 RGB 图像中提取物体周围 128×128 的感兴趣区域（ROI），两个分支都以该区域为输入。&lt;/li>
+&lt;li>&lt;strong>检索候选视角。&lt;/strong> 视角编码器在由 ShapeNet 渲染的图像上训练，把 ROI 映射为 64 维向量；该向量对视角变化敏感，而对平面内旋转保持不变。对目标物体，在其网格模型周围的球面上均匀采样 4,000 个视角并渲染，构建视角码本；与码本计算余弦相似度，得到前 K 个候选视角。&lt;/li>
+&lt;li>&lt;strong>回归平面内旋转。&lt;/strong> 对每个候选视角，回归头比较 ROI 与该视角下的渲染图，预测平面内旋转，得到一个完整的三维旋转假设。&lt;/li>
+&lt;li>&lt;strong>姿态验证。&lt;/strong> 验证头为每个假设计算与 ROI 的一致性分数，得分最高的假设作为旋转估计结果。&lt;/li>
+&lt;li>&lt;strong>回归平移。&lt;/strong> 沿用 GDR-Net 的设计，ResNet-34 从 ROI 预测三幅 64×64 的特征图（稠密 2D–3D 对应图、表面区域注意力图和可见物体掩膜），再由轻量网络根据对应图和表面区域注意力图回归尺度不变的平移参数。该分支每个物体用 600 张真实图像训练。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-method.webp" alt="流程图：RGB 图像经目标检测器得到 ROI；旋转分支包括视角编码器、码本、平面内旋转回归和姿态验证，输出 R；平移分支包括几何特征回归得到的特征图和平移回归，输出 T；二者合成的 6 自由度位姿绘制在图像上。" loading="lazy">
+&lt;/a>&lt;figcaption>网络总览：(A) 目标检测；(B) 通过视角检索、平面内旋转回归和姿态验证估计旋转；(C) 基于稠密几何特征估计平移。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-viewpoints.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-viewpoints.webp" alt="小黄鸭模型周围由灰色视角点组成的半球；两个高亮视角 a 和 b 各自显示鸭子在三种平面内旋转下的渲染图。" loading="lazy">
+&lt;/a>&lt;figcaption>在物体周围球面上均匀采样的视角。对视角 a 和 b，分别渲染三种平面内旋转下的物体图像，说明旋转如何分解为视角 R&lt;sup>γ&lt;/sup> 和平面内旋转 R&lt;sup>θ&lt;/sup>。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>LM-O 上 ADD(-S) 为 65.3%&lt;/strong>，GDR-Net 为 62.2%（表 2）。&lt;br>&lt;strong>YCB-V 上 ADD(-S) 为 65.9%，AUC of ADD-S 为 92.4%&lt;/strong>，GDR-Net 分别为 60.1% 和 91.6%（表 4）。&lt;br>&lt;strong>LINEMOD 上 ADD(-S) 为 97.6%&lt;/strong>（使用真值 ROI），使用 Fast R-CNN 检测结果时为 94.8%（表 1）。&lt;br>用同样 600 张真实图像重新训练后，ZebraPose 和 CheckerPose 在 LM-O 上为 &lt;strong>38.2% 和 40.5%&lt;/strong>（表 3）。&lt;/aside>
+&lt;p>实验使用 LINEMOD（杂乱场景中的 13 个物体）、LM-O（8 个部分遮挡的物体，1,214 张测试图像）和 YCB-V（21 个物体，遮挡严重，且包含多个对称物体）。当 ADD(-S) 误差小于物体直径的 10% 时，位姿判为正确；在 YCB-V 上还报告了阈值上限为 10 cm 的 ADD(-S) 曲线下面积（AUC）。旋转网络只用合成图像训练，平移网络每个物体使用 600 张真实图像；在 YCB-V 上，训练还额外使用了基于物理渲染（PBR）的图像。&lt;/p>
+&lt;p>在 LM-O 上，该方法在大多数物体上领先于对比方法，相对 GDR-Net 提升最大的是 Holepuncher（74.5% 对 60.1%）、Duck 和 Ape；在 Can 和 Eggbox 上，GDR-Net 仍略高。在 YCB-V 上，该方法的 AUC of ADD(-S) 也领先，为 86.9%，GDR-Net 为 84.4%。小样本对比的差距最为明显：用同样 600 张真实图像重新训练 ZebraPose 和 CheckerPose 后，它们在 YCB-V 上的 ADD(-S) 降至 35.7% 和 37.8%，而本方法为 65.9%（表 5）。论文还在 LINEMOD 上单独评估了旋转各模块：在真实图像、预测 ROI 条件下，视角检索误差在 10° 以内的比例超过 70%；平面内旋转误差在 10° 以内的比例，在使用预测视角和预测 ROI 时为 74%，使用真值视角时超过 90%（图 5、图 6），可见平面内旋转精度在很大程度上取决于视角检索的质量。作者指出，该方法的精度部分依赖目标检测器的可靠性，对未见物体类别的泛化能力仍然有限。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-lmo.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-lmo.webp" alt="LM-O 中六个杂乱桌面场景，每个场景中一个物体的估计位姿以绿色三维包围盒标出。" loading="lazy">
+&lt;/a>&lt;figcaption>LM-O 上的定性结果，估计位姿以绿色三维包围盒表示。引自论文图 7(a)。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-ycbv.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-ycbv.webp" alt="YCB-Video 中六个场景，糖盒、碗、芥末瓶、水壶等日常物体各被一个绿色三维包围盒框出。" loading="lazy">
+&lt;/a>&lt;figcaption>YCB-Video 上的定性结果。引自论文图 7(b)。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

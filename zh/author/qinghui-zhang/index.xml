@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Qinghui Zhang | 潘威</title><link>https://willpan.xyz/zh/author/qinghui-zhang/</link><atom:link href="https://willpan.xyz/zh/author/qinghui-zhang/index.xml" rel="self" type="application/rss+xml"/><description>Qinghui Zhang</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 28 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Fusing Phase Map Servoing and MPC for High-Precision Robotic Tracking of Dynamic Objects</title><link>https://willpan.xyz/zh/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/</link><pubDate>Wed, 28 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>工业机器人常采用“停—拍—动”的作业方式：先移动到固定位姿、采集图像，再执行任务。要处理在传送带上持续运动的工件，机器人必须依靠连续的视觉反馈闭环控制，即视觉伺服。点、边缘、轮廓等常规视觉特征在工业中常见的弱纹理或高反光表面上难以可靠提取。条纹投影得到的相位图提供了另一种选择：投影仪投射正弦条纹，解调得到的相位无需三维重建，就能给出稠密的亚像素级几何信息。然而，以往基于相位图的伺服研究只针对静止或缓慢变化的场景。&lt;/p>
+&lt;p>运动目标带来两方面困难。其一，感知和图像处理延迟使测得的相位图滞后于物体的实际状态，且目标速度越快，滞后越严重。其二，模型预测控制（MPC）能在约束下对未来状态进行规划，天然适合动态跟踪；但若直接作用于相位图中成千上万个像素，求解代价过高，难以高频运行。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-problem.webp" alt="示意图：机械臂末端的投影仪和相机向物体投射条纹图案，标有“相位分离”的箭头指向物体的相位图，彩色图中物体呈块状凸显。" loading="lazy">
+&lt;/a>&lt;figcaption>感知链路。机械臂上的投影仪–相机向物体投射条纹，相位解调将条纹图像转换为稠密相位图，直接用作视觉特征。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该框架保留稠密相位图作为反馈信号，但压缩由其构建的控制问题，使 MPC 能以相机帧率运行；同时引入扩展卡尔曼滤波（EKF），越过感知延迟进行前瞻预测。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>以相位图为特征。&lt;/strong> 相机和投影仪安装在机械臂末端。观测相位图与期望相位图之差，经解析推导的相位交互矩阵 L（每个相位像素对应一行）映射为末端的六自由度速度。&lt;/li>
+&lt;li>&lt;strong>梯度引导稀疏化。&lt;/strong> 相位梯度低于阈值 ε 的像素几乎不含运动信息，其在 L 中对应的行被剔除。所有实验中，ε 取最大梯度幅值的 0.15 倍。&lt;/li>
+&lt;li>&lt;strong>PCA 嵌入。&lt;/strong> 将剩余的相位特征投影到 d = 8 个主成分上，MPC 因而只需处理 8 × 6 的交互矩阵，而非 m × 6。在相位梯度充足的场景中，降维后的矩阵仍保持秩 6，六个运动方向均可控。&lt;/li>
+&lt;li>&lt;strong>自适应预测时域。&lt;/strong> MPC 的预测时域随相位变化率调整：相位变化缓慢时保持 N&lt;sub>min&lt;/sub> = 3，目标加速时经 tanh 函数平滑增大，趋近 N&lt;sub>max&lt;/sub> = 10。&lt;/li>
+&lt;li>&lt;strong>以 EKF 预测作为 MPC 参考。&lt;/strong> EKF 估计目标的位置和速度，在预测时域内递推，并将每个预测位置转换为预测相位图。MPC 以这一序列为参考轨迹进行跟踪，从而补偿延迟，每次只执行优化解中的第一个控制量。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-method.webp" alt="框图：期望相位图与观测相位图得到误差相位图，送入控制器模块；模块内含扩展卡尔曼滤波预测、视觉伺服控制律和优化的 MPC 控制器，后者驱动机械臂，机械臂处的观测相位图构成反馈闭环。" loading="lazy">
+&lt;/a>&lt;figcaption>控制框架。误差相位图送入视觉伺服控制律，所得速度 V&lt;sub>c&lt;/sub> 与 EKF 的预测相位图一起输入优化的 MPC 控制器；机器人处观测到的相位图构成反馈闭环。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>MPC/QP 求解时间 6.8 → 1.9 ms&lt;/strong>（中位数，表 4），&lt;strong>闭环延迟 12.9 → 8.3 ms&lt;/strong>（中位数；95 分位数为 19.2 → 10.4 ms），对比基线与所提 M6 配置（表 4）。&lt;br>&lt;strong>目标以 0.1 m/s 运动时，跟踪成功率 100%，基线仅 33%&lt;/strong>，12 次试验的最终误差为 0.05 ± 0.02 mm（表 5）。&lt;br>&lt;strong>0.05 m/s 时，最终误差 0.04 ± 0.01 mm，基线为 0.07 ± 0.02 mm；收敛时间 290 ± 40 ms，基线为 420 ± 55 ms&lt;/strong>（表 5）。&lt;/aside>
+&lt;p>仿真在 MATLAB 中进行，比较了八种控制器：两种基线（A 使用完整相位图并在每一步重新计算交互矩阵；B 在 A 的基础上加入热启动），以及使用一种、两种或全部三种降维策略的六种变体（M1–M6）。同时结合 PCA、稀疏交互矩阵和自适应时域的 M6 在约 20 次迭代内收敛，RMS 误差最低，求解时间分布也最低、最集中。对降维参数的扫描表明 ε = 0.15、d = 8 是较好的折中：求解时间 1.9 ms，RMS 误差 0.048 mm（表 2）；较宽松的设置（ε = 0.05，d = 12）为 3.5 ms 和 0.042 mm，较激进的设置（ε = 0.30，d = 6）为 1.3 ms 和 0.081 mm（表 2）。相机曝光、相位计算和 EKF 更新的耗时与是否降维无关，节省的时间来自 MPC/QP 求解环节。实验使用 640 × 480、120 Hz 的相机，在 Intel Core i7-12700 上单线程运行，求解器为 qpOASES。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-results.webp" alt="四幅图。(a) 八种方法的综合误差随迭代次数的变化：七条灰色虚线下降缓慢，蓝色 M6 曲线下降快得多，在第 20 次迭代时已接近零。(b) M6 的四个误差通道均在第 20 次迭代前衰减至零。(c) RMS 误差柱状图，M6 的柱高不到其余七种方法的一半。(d) MPC 求解时间箱线图，从 A 到 M5 逐渐降低，M6 最低且最集中。" loading="lazy">
+&lt;/a>&lt;figcaption>八种控制器的仿真对比：(a) 综合收敛曲线，(b) M6 下四个误差通道的收敛，(c) RMS 误差，(d) MPC 求解时间分布。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;p>实物实验中，投影仪–相机安装在机械臂上，物体在传送带上运动。物体静止时，所提控制器的精度与原始相位图伺服控制律相当，误差约 0.3 mm，但收敛所需迭代次数由约 30 次减少到 20 次。目标高速运动时 EKF 的作用最为明显：不加 EKF 时相位误差峰值接近 0.2 rad，加入 EKF 后典型峰值低于 0.1 rad。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-ekf.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-ekf.webp" alt="相位误差（rad）随时间变化的曲线，时长 2 秒：红色曲线（无 EKF）在约 ±0.2 rad 范围内大幅波动，蓝色曲线（有 EKF）在 0.5 s 高速运动开始后明显更接近零。" loading="lazy">
+&lt;/a>&lt;figcaption>高速运动时有 EKF（蓝）与无 EKF（红）的相位误差对比。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;p>作者指出，可达到的跟踪速度受限于感知吞吐量。在 120 Hz 相机、约 8.3 ms 控制周期下，系统可稳定跟踪约 0.12 m/s 以内的目标；速度更高时，相位图生成跟不上，相位噪声显著增大，因此论文未报告更高速度下的结果。目前的实现针对相对受控视觉条件下的单目标跟踪；加快相位图生成和多目标跟踪留待后续工作。&lt;/p></description></item><item><title>Deep diffusion model-based dual structured light for large-format complex surface imaging</title><link>https://willpan.xyz/zh/publications/lu-2026-deep-diffusion-model-based-dual-structured/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2026-deep-diffusion-model-based-dual-structured/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移结构光通过投射正弦条纹、从相机图像中解算相位来测量三维形貌，精度很高。但单个投影仪–相机单元只能从一个角度观察物体。面对大幅面或形状复杂的表面，凸起部分会遮挡投射光或相机视线，留下缺少相位信息的阴影区和盲区，测量范围也因此受限。从多个视角分别测量，或把物体放在转台上旋转，虽能补齐缺失部分，但耗时较长，而且无法用于不便移动的物体。&lt;/p>
+&lt;p>再增加一个投影仪–相机测头，就能覆盖第一个测头看不到的区域，但前提是两个测头能在视场重叠的情况下同时测量。两台投影仪同时工作时，每台相机在重叠区内拍到的是两幅条纹图案的叠加，即混叠条纹，会导致重建错误。已有的混叠条纹分离方法依赖彩色滤光片和专门设计的光路、额外硬件、投影方向或颜色复用，或严格的条纹投射顺序，还有一些方法干脆放弃了同步测量。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-setup.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-setup.webp" alt="侧视示意图：相机 1、投影仪 1、投影仪 2 和相机 2 位于折线形表面上方，虚线为投射光线。左侧蓝色阴影三角标注为 Shade-Left，右侧绿色阴影三角标注为 Shade-Right。" loading="lazy">
+&lt;/a>&lt;figcaption>双测头布局。左侧阴影区只能被左测头观测到，右侧阴影区只能被右测头观测到。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-problem.webp" alt="伞齿轮下方的两台相机和两台投影仪。相机 1 的拍摄区域 A 与相机 2 的拍摄区域 B 在中间重叠。条纹图插图中，(a) 和 (c) 为完整条纹图，(b) 和 (d) 为重叠区的放大图，条纹模糊且相互混杂。" loading="lazy">
+&lt;/a>&lt;figcaption>相机 1 拍摄的区域 A 与相机 2 拍摄的区域 B 在中间重叠。插图分别为相机 1（左）和相机 2（右）拍到的条纹图及其重叠区的放大，两台相机在重叠区内都看到了混叠条纹。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该系统由两个同步的投影仪–相机测头组成，二者视场局部重叠，并同时工作。它不靠硬件来避免混叠，而是用软件消除混叠：条件扩散模型学习从每幅混叠图像中恢复出单台投影仪的干净条纹图。此后，每个测头都按常规结构光单元工作，再利用重叠区融合两者的结果。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2026-deep-diffusion-model-based-dual-structured/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>两个同步测头。&lt;/strong> 两台投影仪和两台相机通过同步控制线连接，两个测头同时投射、同时采集。每个测头测量表面的一部分，二者视场局部重叠。&lt;/li>
+&lt;li>&lt;strong>混叠即叠加。&lt;/strong> 在重叠区内，相机像素对两台投影仪的光进行积分，其强度等于两幅投射图案贡献之和：I(u) = I(u; l&lt;sub>1&lt;/sub>) + I(u; l&lt;sub>2&lt;/sub>)（假设背景光不影响相位估计）。因此单个测头的图案为 I(u; l&lt;sub>n&lt;/sub>) = I(u) − I(u; l&lt;sub>3−n&lt;/sub>)，作者将其视为一个去噪问题，另一测头的图案即为噪声。&lt;/li>
+&lt;li>&lt;strong>条件扩散恢复干净条纹。&lt;/strong> 在条件去噪扩散框架下训练一个带自注意力的 U-Net。训练样本对直接由系统采集：只开一个测头得到干净图案 x&lt;sub>0&lt;/sub>，两个测头同时开启得到混叠图案 y，后者作为条件输入。推理时，模型从高斯噪声出发，在 y 的引导下逐步去噪，最终得到去混叠后的条纹图。&lt;/li>
+&lt;li>&lt;strong>逐测头求相位与三维坐标。&lt;/strong> 得到干净条纹后，用四步相移算法求包裹相位，用多频外差法展开得到绝对相位，再结合各测头标定好的投影仪和相机参数，经三角测量得到局部三维点云。&lt;/li>
+&lt;li>&lt;strong>ICP 融合。&lt;/strong> 重叠区提供了对应点，迭代最近点（ICP）算法据此估计旋转和平移，把两片局部点云合并为完整表面。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-method.webp" alt="四个阶段的流程图。Step 1 系统搭建：两台相机和两台投影仪以绿、红两路光照射半身像，产生混叠。Step 2 扩散模型去混叠：混叠条纹图堆栈输入扩散模型，输出干净条纹图堆栈。Step 3 相位估计：包裹相位图与相位剖面。Step 4 点云融合：半身像的两片彩色局部点云相加得到完整点云。" loading="lazy">
+&lt;/a>&lt;figcaption>四个阶段：双投影仪双相机同步采集、基于扩散模型的去混叠、相位估计，以及两片局部点云的融合。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-diffusion.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-diffusion.webp" alt="扩散模型训练与采样示意图。训练（绿色虚线）：干净条纹 x0 与噪声 z 混合得到 xt，与混叠图像 y 一起输入由 Conv2D、残差块和自注意力块构成的 U-Net，其噪声估计 z* 与 z 通过 L1 损失比较。采样（紫色实线）：从噪声 xT 和条件 y 出发，反复调用训练好的网络，t = t − 1，直到 t = 0。" loading="lazy">
+&lt;/a>&lt;figcaption>条件扩散模型的训练（虚线）与采样（实线）。训练时网络以 L1 损失学习预测所加噪声；采样时以混叠图像 y 为条件迭代 T 步。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>条纹恢复：PSNR 45.80 dB，MSE 1.85，SSIM 0.98&lt;/strong>，以无混叠条纹图为参照（第 3.2 节，图 7）。&lt;br>&lt;strong>相位：沿测试行与无混叠条纹相位的差值最大为 0.05 rad&lt;/strong>（图 8）。&lt;br>&lt;strong>三维：去混叠后的重建相对于分别无混叠测量所得参考结果的均方根误差为 0.057 mm&lt;/strong>（图 9）。&lt;br>&lt;strong>在一个带明显凸起的棱柱上，沿采样深度剖面的重建误差在 8 µm 以内&lt;/strong>（图 12）。&lt;/aside>
+&lt;p>样机采用两台 TJ20U2 投影仪和两台分辨率为 3072 × 2048 的 CMOS 相机。条纹周期取 100、110、120 和 130，每个周期四步相移、步长 0.5π，并改变初始相位，共得到 4043 个训练样本和 1583 个测试样本，尺寸均为 512 × 512 像素；模型的扩散步数 T = 4000，训练 800 轮。不做去混叠时，条纹混叠给两个测头的点云及融合结果都带来了显著误差；使用扩散模型后，物体被成功重建。作为对比，此前一种基于导数的混叠恢复方法会使条纹明显变密并出现局部强度放大，其重建点云噪声大，分层伪影明显。在一个为突出遮挡效应而选用的棱柱上，点云融合扩大了重建范围，并填补了单个测头留下的稀疏区域。&lt;/p>
+&lt;p>作者把实验范围限定为视场局部重叠的真正同步双测头测量。其他消除混叠的方法依赖特定的硬件或投射方案，如颜色或方向复用、光路分离或严格控制的投射时序，不改动系统配置就无法在该系统上运行。因此，实验以单投影仪无混叠测量结果为参考，以直接对混叠条纹做常规相移解算的结果为基线。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-recovery.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-recovery.webp" alt="三幅方形图：(a) 一幅物体的灰度条纹图，右侧部分条纹相互混杂；(b) 恢复后的条纹图，外观几乎相同但条纹规则；(c) 整体呈蓝色的差值图，色标范围 0 到 1。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 一个测头采集的混叠条纹图，(b) 模型恢复出的条纹图，(c) (b) 与无混叠条纹图之差。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-results.webp" alt="伞齿轮彩色点云的三栏对比，每栏上方为左（L）、右（R）两片局部点云，下方为融合点云。(a) Ground truth：两片点云干净，融合后齿轮完整。(b) Aliased：两片点云中部都有大量散乱错误点，融合点云中间有缺口和离群点。(c) Ours：两片点云干净，融合后齿轮完整，与 (a) 一致。" loading="lazy">
+&lt;/a>&lt;figcaption>伞齿轮重建：(a) 两个测头分别测量后融合，作为真值；(b) 两个测头同时工作、未去混叠；(c) 两个测头同时工作、经扩散模型去混叠。引自论文图 9。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Robust Object 6D Pose Estimation Under High Dynamic Ambient Light</title><link>https://willpan.xyz/zh/publications/lu-2026-robust-object-6d-pose-estimation-under/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2026-robust-object-6d-pose-estimation-under/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>物体 6D 位姿估计是指求出物体相对于相机的三维旋转和平移，本文的输入是单张 RGB 图像。Gen6D 是一种无需物体模型的位姿估计器：测试时不需要高质量的物体模型、深度图或物体掩码，而是借助物体的参考图像完成估计。它分三个阶段：检测器定位物体并估计其尺寸，选择器挑出最相似的参考图像得到粗略旋转，精化器再对估计结果进行修正。&lt;/p>
+&lt;p>在高动态环境光下，高光与阴影之间反差强烈，这一流程便难以奏效。物体表面的反射随光照变化，阴影改变表面的亮度和纹理，颜色也会失真。作者用投射光源人为制造高动态光照场景，使物体表面反光不均，结果 Gen6D 的位姿估计效果很差。精化器往往难以单独弥补，因为它高度依赖前两个阶段给出的粗略估计，而这些估计已经受到光照的影响。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-problem.webp" alt="一排四张灰度照片：强光照射下深色桌面上的白色物体，每张图中 Gen6D 给出的红色三维包围框都与物体贴合不佳。" loading="lazy">
+&lt;/a>&lt;figcaption>高动态环境光下的 Gen6D：在强光源照射下的四张测试图像 (a)–(d)，红色三维框为估计的位姿。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法保留 Gen6D 的&amp;quot;检测器—选择器—精化器&amp;quot;流程，改动的是三个阶段共用的特征提取网络：在 VGG 骨干网络中嵌入高效通道注意力（ECA）模块。由此得到的 VGG-ECA 网络会增强信息丰富的特征通道、削弱噪声通道，使特征受高光和阴影的干扰更小。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2026-robust-object-6d-pose-estimation-under/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>高光让原模型失效。&lt;/strong> 对于带金属部件的物体（如刀、剪刀），Gen6D 往往只识别出反光较弱的塑料手柄，而漏掉强反光的金属部分。&lt;/li>
+&lt;li>&lt;strong>在骨干网络中加入通道注意力。&lt;/strong> 在 VGG 中 64、128、256 个滤波器的卷积层之后加入 ECA 模块。每个模块先把各通道平均为一个数值，再沿相邻通道做一维卷积（卷积核大小由通道数自适应确定），经 Sigmoid 映射为 0–1 之间的权重，最后与各通道相乘。与其所基于的 SE 模块不同，ECA 不需要先降低通道维度。&lt;/li>
+&lt;li>&lt;strong>检测器。&lt;/strong> 以参考图像的 VGG-ECA 特征为卷积核，在若干预设尺度上与查询图像的特征做卷积。所得热图的峰值即物体中心的二维投影，尺度图在该处的取值给出包围框尺寸，由此得到深度和初始平移。&lt;/li>
+&lt;li>&lt;strong>选择器。&lt;/strong> 将物体区域与各参考图像比较，最相似的一张给出初始旋转。&lt;/li>
+&lt;li>&lt;strong>精化器。&lt;/strong> 3D CNN 回归当前位姿与真实位姿之间的残差，并据此更新估计。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-method.webp" alt="流程图：检测器、选择器、精化器三个面板均由 VGG-ECA 特征提取器提供输入，另一面板展示 ECA 模块接在 VGG 网络各层之后。" loading="lazy">
+&lt;/a>&lt;figcaption>方法总览：检测器（位置与尺度）、选择器（由最相似的参考图像得到旋转）和精化器（由 3D CNN 回归位姿残差）均使用 VGG-ECA 骨干网络。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-eca.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-eca.webp" alt="ECA 模块示意图：特征块经全局平均池化得到 1×1×C 的向量，经 K = 5 的一维卷积连接到第二列，Sigmoid 生成通道权重，再与原特征逐通道相乘。" loading="lazy">
+&lt;/a>&lt;figcaption>ECA 模块：全局平均池化、跨通道的一维卷积（图中卷积核大小 K = 5）、Sigmoid，以及与输入特征的逐通道相乘。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>ADD-0.1d 为 51.48，Gen6D 为 49.48&lt;/strong>，为 GenMOP 中七个物体的平均值（表 1）。&lt;br>&lt;strong>Prj-5 为 91.94，Gen6D 为 89.64&lt;/strong>，提升最大的是刀：&lt;strong>77.21 对 69.73&lt;/strong>（表 1）。&lt;br>&lt;strong>推理时间 0.5322 s，原 VGG 模型为 0.4965 s&lt;/strong>，增加 35.7 ms（7.19%）（表 2）。&lt;/aside>
+&lt;p>模型在 Gen6D 的官方数据集 GenMOP（共 10 个物体）上训练，测试时作者专门挑选了表面反光强的物体。ADD-0.1d 统计模型点与真值之间的平均距离小于物体直径 10% 的位姿所占比例；Prj-5 统计二维投影误差小于 5 像素的位姿所占比例。表 1 中的七个物体上，改进模型在两项指标上均高于 Gen6D。&lt;/p>
+&lt;p>在高动态环境光下另行采集的 RGB 图像直观地展示了效果。Gen6D 只框住了刀和剪刀的塑料手柄，改进模型则能捕捉物体的整体位姿；对于透明的玻璃杯，Gen6D 检测失败，改进模型则成功检测出其位姿。在由暗到亮的五个光照等级（L1–L5）下，Gen6D 对刀和剪刀的估计在低光（L1、L2）和强光（L4、L5）下都明显变差，而改进模型更为准确，玻璃杯上的提升尤为明显。作者也报告了失败情况：强光使部分刀身在图像中呈黑色，改进模型无法检测这些刀身部分的位姿；金属剪刀在 L1、L2 下仍有错位。作者提出，未来工作包括扩展到更多物体和数据集、尝试其他注意力机制，以及在实际工业应用中进行测试。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-results.webp" alt="四个面板（刀、剪刀、杯子、Miffy），每个面板有两行、每行五张光照等级 L1 到 L5 的照片，并画出红色三维位姿框；(a) 行为 Gen6D，(b) 行为本文方法。" loading="lazy">
+&lt;/a>&lt;figcaption>刀、剪刀、玻璃杯和 Miffy 在由暗（L1）到亮（L5）五个光照等级下的位姿估计：(a) 原始 Gen6D，(b) 本文方法。引自论文图 10。&lt;/figcaption>
+&lt;/figure></description></item><item><title>SFRF6D: Selective Fewer-Reference Fusion for 6D Pose Estimation</title><link>https://willpan.xyz/zh/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>6D 位姿估计是指求出物体的三维旋转和三维平移，这正是机器人进行精密抓取和装配所需的信息。现有方法大多依赖物体的 CAD 模型，或者依赖大量参考图像。基于模型的方法将图像特征与 CAD 模型进行匹配，而在实际场景中往往没有现成的模型，应用因此受限。Gen6D、OnePose、FoundationPose 等无需物体模型的方法改为从大量参考图像或视频中构建多视角表示，但在严重遮挡或视角变化较大时，跨视角对齐难以保持稳定。只需少量参考图像的方法，在参考视角之间几乎没有重叠时，特征匹配能力会大幅下降。&lt;/p>
+&lt;p>SFRF6D 的目标是：不使用 CAD 模型，只借助少量已知位姿的 RGB-D 参考图像完成位姿估计，同时在物体被严重遮挡时依然保持鲁棒。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-problem.webp" alt="四张倾斜排列的杂乱桌面 RGB-D 参考照片和一张查询照片；标有 Rendering 的箭头指向红色物体的裁剪视图，查询照片中的物体上画有绿色位姿框。" loading="lazy">
+&lt;/a>&lt;figcaption>问题设定：输入少量 RGB-D 参考图像和一张查询图像，渲染出物体的不同视角，并在查询图像中估计其 6D 位姿。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>SFRF6D 先由参考图像重建物体的粗略三维形状，并与查询图像进行粗对齐；然后在该粗略位姿下渲染参考视角，借助由三维几何引导的注意力与查询图像匹配，使可见区域发挥作用、被遮挡区域不参与匹配；最后对位姿进行精化，并通过渲染比较在多个位姿假设中做出选择。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>少量参考图像与一张查询图像。&lt;/strong> 输入是一小组带真值位姿的 RGB-D 参考图像（主实验中为四张）和一张 RGB-D 查询图像，查询掩码将物体分割出来。&lt;/li>
+&lt;li>&lt;strong>粗略三维形状。&lt;/strong> 选取视角与查询图像最接近的参考图像作为锚点，用 ResNet18 提取其特征，并由其深度图生成初始的物体点云。其余参考图像借助相机内参和已知位姿变换到同一世界坐标系中，补全物体形状，再将其归一化到 [−1, 1] 范围内。&lt;/li>
+&lt;li>&lt;strong>粗对齐。&lt;/strong> 用有向包围盒求出物体的中心（点云的均值）和旋转（对点云协方差做主成分分析得到的主轴）。由于此时的对齐仍较粗糙，再以最大化 IoU 为目标调整旋转和尺度，得到粗对齐结果。&lt;/li>
+&lt;li>&lt;strong>几何引导的稀疏注意力。&lt;/strong> 在查询图像的粗略位姿下渲染参考点云。参考点与查询点之间的归一化方向向量为交叉注意力构建 Top-K 掩码，并采用 Gumbel-Softmax 进行软性 Top-K 采样；匹配失败的点对被屏蔽，使注意力集中于可见且相关的区域。多尺度融合模块则自适应地权衡全局特征与局部特征。&lt;/li>
+&lt;li>&lt;strong>精化与选择。&lt;/strong> 联合优化物体尺度和位姿：位姿通过渲染物体形状、最小化其与锚点图像之间的投影误差来优化；尺度则在给定范围内采样，依据与重建形状之间的 IoU 选取。随后求出相对于查询图像的位姿。每个位姿假设被渲染后与查询图像比较，得到一个特征向量；自注意力模块综合所有假设给出评分，再经 Top-K 筛选得到最终位姿。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-method.webp" alt="流程图：参考 RGB-D 图像输入灰色的三维重建模型，再渲染出多个视角；精化/选择位姿模块经物体更新回连到重建模型，查询 RGB-D 经精化/选择位姿得到带绿色位姿框的 6D 位姿。" loading="lazy">
+&lt;/a>&lt;figcaption>整体流程。参考图像被重建为三维形状；查询图像生成粗略位姿；渲染视角经过位姿精化与选择（同时更新物体），最终估计出 6D 位姿。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-attention.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-attention.webp" alt="注意力模块示意图：参考图像、查询图像和查询掩码；归一化方向向量生成成对的 Query/Ref 行，进入 Top-K 选择；位置编码、Query/Key/Value、投影、注意力分数、Gumbel、注意力加权聚合、自注意力和混合注意力，最终得到增强的查询特征。" loading="lazy">
+&lt;/a>&lt;figcaption>几何引导的稀疏注意力。归一化方向向量与基于特征相似度的 Top-K 选择共同约束每个查询特征所关注的参考特征。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>使用四张参考图像，在 LM、LMO 和 YCBV 上的平均 ADD(-S) 精度为 83.2%，单个物体耗时 0.9 s&lt;/strong>；FS6D + ICP 和 LatentFusion（均使用 16 张参考图像）分别为 75.8% 和 70.1%，Any6D 为 76.5%（表 1）。&lt;br>&lt;strong>在严重遮挡的 LMO 上达到 67.3%&lt;/strong>，上述三种方法分别为 58.6%、53.5% 和 57.9%（表 1）。&lt;br>在 LMO 上，将几何引导的稀疏注意力替换为普通的全连接注意力后，精度降至 &lt;strong>64.5%&lt;/strong>（表 2）。&lt;/aside>
+&lt;p>对比实验使用 BOP 的三个基准：LINEMOD（LM）、物体可见比例有时不足 40% 的 Occlusion LINEMOD（LMO），以及 YCB-Video（YCBV）。精度指标为阈值取物体直径 0.1 倍时的 ADD(-S)。在不使用 CAD 模型的方法中，SFRF6D 在三个数据集上的精度均最高（92.1%、67.3% 和 90.2%），速度也最快。使用 CAD 模型的 FoundationPose 精度仍然更高，平均为 89.7%，耗时 1.0 s；作者指出，SFRF6D 的精度略低，但换来了无需 CAD 模型和更小的计算量。&lt;/p>
+&lt;p>LMO 上的消融实验（表 2）分别考察了各个部分。去掉视角选择器、改用全部渲染视角时，精度变化不大（66.2%），但耗时从 0.94 s 增加到 1.32 s。参考图像较少时，数量的影响最大：一张为 57.3%，两张为 63.4%，四张为 67.3%，八张为 68.1%（耗时 1.03 s），因此作者选用四张，以兼顾精度与开销。只有一张参考图像时，重建的形状严重依赖这一个视角，遮挡或视角差异较大时特征无法稳健对齐。作者将引入预训练基础模型、动态场景中的多物体交互，以及面向移动端和边缘计算平台的模型轻量化列为未来工作。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-table.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-table.webp" alt="对比表：FS6D &amp;#43; ICP、LatentFusion、FoundationPose、Any6D 和 Ours 在是否使用 CAD 模型、模态、参考图像数量、LM/LMO/YCBV 精度、平均值和耗时上的比较。" loading="lazy">
+&lt;/a>&lt;figcaption>在 0.1 d 阈值下与少参考方法的对比。SFRF6D（Ours）不使用 CAD 模型，参考图像为四张。引自论文表 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-results.webp" alt="四幅相同的桌面场景，含电钻、香蕉、瓶子和盒子；Ours、FoundationPose、LatentFusion 和 Any6D 的结果中，盒子和瓶子上覆盖着绿色的投影模型点。" loading="lazy">
+&lt;/a>&lt;figcaption>定性对比：从物体 CAD 模型中采样 1,000 个点，按各方法预测的位姿变换后投影到查询图像上，显示为绿色点。引自论文图 4。&lt;/figcaption>
+&lt;/figure></description></item><item><title>3D reconstruction of the moving object with double-shooting based on phase shifting profilometry</title><link>https://willpan.xyz/zh/publications/zhang-2023-3d-reconstruction-of-the-moving-object/</link><pubDate>Sun, 01 Jan 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2023-3d-reconstruction-of-the-moving-object/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）是当前最常用的三维测量技术之一，具有精度高、鲁棒性强和全场测量等优点。投影仪向物体表面投射至少三幅带相移的正弦条纹图，相机从另一个角度拍摄。条纹因物体高度而发生扭曲，条纹中的相位信息反映这种形变，再结合系统参数即可完成三维重构。由于要使用多幅条纹图，传统 PSP 要求物体在重构过程中保持静止；一旦物体在条纹投射和采集过程中移动，就会产生测量误差。&lt;/p>
+&lt;p>帧率是另一个限制。投影仪投射 8 位条纹图的帧率一般可达 120 Hz，而相机帧率较容易达到 1000 Hz 以上，因此重构点云的帧率受限于投影仪。借助散焦技术，投影仪投射二进制条纹得到正弦条纹的帧率可达 1000 Hz 以上，但散焦程度难以控制和量化；高速相机和投影仪虽能实现高帧率，成本却显著增加。本文关注的问题是：如何用低成本设备实现运动物体的高帧率三维重构。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-problem.webp" alt="两幅深色背景上的面具形物体彩色高度图，各带一条 0 至 15 mm 的色标。两幅图的眼部和嘴部轮廓处都有深色条痕和缺口。" loading="lazy">
+&lt;/a>&lt;figcaption>用传统 PSP 重构运动中的面具，结果存在较大误差。论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>在相机和投影仪之间增加触发控制设备，使相机对每幅投射条纹拍摄两次，获取更多运动物体的条纹信息。随后分析连续三张条纹图中物体运动引起的相位变化，建立包含物体运动的条纹模型，在混合相移下提取相位，并复用采集到的图像以获得更多重构帧。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2023-3d-reconstruction-of-the-moving-object/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>双采样。&lt;/strong> 投影仪按正常速率投射 N 幅相移条纹图，在每个投影周期内触发相机两次。因此每幅投射条纹都对应运动物体的两张图像。&lt;/li>
+&lt;li>&lt;strong>混合相移。&lt;/strong> 同一幅投射条纹下拍摄的两张图像之间，只存在物体运动引起的相移；不同投射条纹下拍摄的图像，既有运动引起的相移，又有 PSP 的传统相移。对于三张图像 I&lt;sub>1&lt;/sub>、I&lt;sub>2&lt;/sub>、I&lt;sub>3&lt;/sub>，相移量为 δ&lt;sub>1&lt;/sub> = δ&lt;sub>2&lt;/sub> = 0，δ&lt;sub>3&lt;/sub> = 2π/N。&lt;/li>
+&lt;li>&lt;strong>包含运动的条纹模型。&lt;/strong> 物体运动跟踪算法计算描述物体运动的旋转平移矩阵，由此得到图像之间的坐标变换关系 (f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>)。每张图像表示为 I&lt;sub>n&lt;/sub> = a + B cos h&lt;sub>n&lt;/sub> + C sin h&lt;sub>n&lt;/sub>，其中 h&lt;sub>n&lt;/sub> = ϕ(f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>) + δ&lt;sub>n&lt;/sub>，ϕ 为参考平面的相位。&lt;/li>
+&lt;li>&lt;strong>最小二乘求相位。&lt;/strong> 对每个像素，以模型与实拍条纹图之差的平方和最小为准则，求出 a、B、C。由于 B = cos φ、C = −sin φ，物体形状引起的相位变化为 φ = arctan(−C / B)。&lt;/li>
+&lt;li>&lt;strong>图像复用。&lt;/strong> 对采集到的图像进行复用：每三张相邻图像得到一帧物体相位，而传统 PSP 的每一帧都由各自独立的一组图像得到。由此在投影速度受限的情况下提高运动物体的重构帧率。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-method.webp" alt="时序图，沿时间轴共四行：投影仪触发脉冲；投影仪照明块，标注 I p 1、I p 2、I p 3；相机采集脉冲，标注 I c 1 至 I c 6，每个照明块内两个；相机触发脉冲，每次投影两个。" loading="lazy">
+&lt;/a>&lt;figcaption>相机与投影仪的触发时序：在每幅投射条纹 I&lt;sup>p&lt;/sup> 期间，相机被触发两次，采集两张图像 I&lt;sup>c&lt;/sup>。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-reuse.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-reuse.webp" alt="两行各六张灰色条纹图，标注 I c 1 至 I c 6。(a) 行中，图像 1 至 3 合成 Frame 1，图像 4 至 6 合成 Frame 2。(b) 行中，彩色连线把图像 1 至 3 合成 Frame 1，2 至 4 合成 Frame 2，3 至 5 合成 Frame 3，4 至 6 合成 Frame 4。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 传统 PSP 与 (b) 本文方法的重构帧率，本文方法对采集图像进行复用。论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>运动物体的均值误差：传统 PSP 为 0.1575 mm，本文方法为 0.0344 mm&lt;/strong>（表 1）。&lt;/aside>
+&lt;p>实验系统由工业相机（OPT-CC1-048A-RM-G，分辨率 1800 × 1600 像素）、投影仪（TJ-S50，分辨率 1280 × 720 像素）和电动位移台组成，被测物体为面具。相机帧率为 20 帧/s，位移台速率为 20 mm/s，视场为 70 mm × 80 mm。先用传统 PSP 重构静止的面具，以此作为误差评估的真值。面具随位移台运动时，同一幅投射条纹下的两张图像中只有物体运动，不同投射条纹下的图像中则既有物体运动又有条纹相移。旋转平移矩阵由物体运动跟踪算法计算得到，每三张相邻图像得到一幅相位图。本文方法成功重构了运动中的面具，而用传统 PSP 重构同一运动物体则存在较大误差。&lt;/p>
+&lt;p>作者指出，影响最大的局限是物体跟踪算法的精度：它直接决定重构精度，而现有跟踪算法难以描述大幅度运动。该方法只能重构做二维平移运动的物体，受运动跟踪算法所限，无法处理二维旋转运动和三维运动。方法不要求物体匀速运动，但相机需拍摄到清晰的运动物体条纹图。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-fringes.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-fringes.webp" alt="四张竖直条纹下面具形物体的灰色条纹图，标注 (a) 至 (d)，排成两行两列。" loading="lazy">
+&lt;/a>&lt;figcaption>运动面具的条纹图：(a)、(b) 在投影仪投射第一幅条纹时拍摄，(c)、(d) 在投射第二幅条纹时拍摄。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-results.webp" alt="上排：三幅蓝黄条纹的包裹相位图，面具位置各略有不同。下排：两幅面具的彩色高度图，各带一条 0 至 15 mm 的色标，眼部和嘴部轮廓清晰。" loading="lazy">
+&lt;/a>&lt;figcaption>本文方法重构运动面具：(a) 条纹图复用得到的不同位置的相位图；(b) 重构结果。论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-static.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-static.webp" alt="左：静止面具在竖直条纹下的灰色条纹图。右：对应的彩色高度图，色标为 0 至 15 mm。" loading="lazy">
+&lt;/a>&lt;figcaption>用传统 PSP 重构静止的面具：(a) 拍摄到的条纹图；(b) 重构结果，作为真值。论文图 4。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

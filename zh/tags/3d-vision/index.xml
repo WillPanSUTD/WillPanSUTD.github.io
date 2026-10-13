@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>3D Vision | 潘威</title><link>https://willpan.xyz/zh/tags/3d-vision/</link><atom:link href="https://willpan.xyz/zh/tags/3d-vision/index.xml" rel="self" type="application/rss+xml"/><description>3D Vision</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Few-Shot 6D Object Pose Estimation via Decoupled Rotation and Translation with Viewpoint Encoding</title><link>https://willpan.xyz/zh/publications/lu-2026-few-shot-6d-object-pose-estimation/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2026-few-shot-6d-object-pose-estimation/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>6D 位姿估计要求出物体相对相机的三维旋转和三维平移，是机器人抓取、自动驾驶和增强现实中的关键环节。深度传感器易受噪声、遮挡和成本的影响，在反光或透明物体上也存在局限，因此仅依赖单张 RGB 图像的方法受到关注。基于关键点、模板或直接回归的单目方法不断进步，但都严重依赖大规模真实标注数据，真实位姿标注的稀缺限制了其进一步提升。&lt;/p>
+&lt;p>本文将旋转与平移解耦：旋转只用合成图像学习，因此只有平移部分需要用真实图像训练，而且平移网络无须从这些图像中学习旋转信息，从而减少了所需的真实样本数量。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>首先由目标检测器从图像中裁剪出物体，随后旋转和平移由两个相互独立的分支分别估计。旋转分支把完整旋转 R 分解为平面外部分 R&lt;sup>γ&lt;/sup>（物体的视角）和平面内部分 R&lt;sup>θ&lt;/sup>（绕相机光轴的旋转），即 R = R&lt;sup>θ&lt;/sup>R&lt;sup>γ&lt;/sup>，两部分都由仅用合成图像训练的模块处理。平移分支以 GDR-Net 为基础，是唯一用真实图像训练的部分。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2026-few-shot-6d-object-pose-estimation/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>检测与裁剪。&lt;/strong> 目标检测器从 RGB 图像中提取物体周围 128×128 的感兴趣区域（ROI），两个分支都以该区域为输入。&lt;/li>
+&lt;li>&lt;strong>检索候选视角。&lt;/strong> 视角编码器在由 ShapeNet 渲染的图像上训练，把 ROI 映射为 64 维向量；该向量对视角变化敏感，而对平面内旋转保持不变。对目标物体，在其网格模型周围的球面上均匀采样 4,000 个视角并渲染，构建视角码本；与码本计算余弦相似度，得到前 K 个候选视角。&lt;/li>
+&lt;li>&lt;strong>回归平面内旋转。&lt;/strong> 对每个候选视角，回归头比较 ROI 与该视角下的渲染图，预测平面内旋转，得到一个完整的三维旋转假设。&lt;/li>
+&lt;li>&lt;strong>姿态验证。&lt;/strong> 验证头为每个假设计算与 ROI 的一致性分数，得分最高的假设作为旋转估计结果。&lt;/li>
+&lt;li>&lt;strong>回归平移。&lt;/strong> 沿用 GDR-Net 的设计，ResNet-34 从 ROI 预测三幅 64×64 的特征图（稠密 2D–3D 对应图、表面区域注意力图和可见物体掩膜），再由轻量网络根据对应图和表面区域注意力图回归尺度不变的平移参数。该分支每个物体用 600 张真实图像训练。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-method.webp" alt="流程图：RGB 图像经目标检测器得到 ROI；旋转分支包括视角编码器、码本、平面内旋转回归和姿态验证，输出 R；平移分支包括几何特征回归得到的特征图和平移回归，输出 T；二者合成的 6 自由度位姿绘制在图像上。" loading="lazy">
+&lt;/a>&lt;figcaption>网络总览：(A) 目标检测；(B) 通过视角检索、平面内旋转回归和姿态验证估计旋转；(C) 基于稠密几何特征估计平移。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-viewpoints.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-viewpoints.webp" alt="小黄鸭模型周围由灰色视角点组成的半球；两个高亮视角 a 和 b 各自显示鸭子在三种平面内旋转下的渲染图。" loading="lazy">
+&lt;/a>&lt;figcaption>在物体周围球面上均匀采样的视角。对视角 a 和 b，分别渲染三种平面内旋转下的物体图像，说明旋转如何分解为视角 R&lt;sup>γ&lt;/sup> 和平面内旋转 R&lt;sup>θ&lt;/sup>。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>LM-O 上 ADD(-S) 为 65.3%&lt;/strong>，GDR-Net 为 62.2%（表 2）。&lt;br>&lt;strong>YCB-V 上 ADD(-S) 为 65.9%，AUC of ADD-S 为 92.4%&lt;/strong>，GDR-Net 分别为 60.1% 和 91.6%（表 4）。&lt;br>&lt;strong>LINEMOD 上 ADD(-S) 为 97.6%&lt;/strong>（使用真值 ROI），使用 Fast R-CNN 检测结果时为 94.8%（表 1）。&lt;br>用同样 600 张真实图像重新训练后，ZebraPose 和 CheckerPose 在 LM-O 上为 &lt;strong>38.2% 和 40.5%&lt;/strong>（表 3）。&lt;/aside>
+&lt;p>实验使用 LINEMOD（杂乱场景中的 13 个物体）、LM-O（8 个部分遮挡的物体，1,214 张测试图像）和 YCB-V（21 个物体，遮挡严重，且包含多个对称物体）。当 ADD(-S) 误差小于物体直径的 10% 时，位姿判为正确；在 YCB-V 上还报告了阈值上限为 10 cm 的 ADD(-S) 曲线下面积（AUC）。旋转网络只用合成图像训练，平移网络每个物体使用 600 张真实图像；在 YCB-V 上，训练还额外使用了基于物理渲染（PBR）的图像。&lt;/p>
+&lt;p>在 LM-O 上，该方法在大多数物体上领先于对比方法，相对 GDR-Net 提升最大的是 Holepuncher（74.5% 对 60.1%）、Duck 和 Ape；在 Can 和 Eggbox 上，GDR-Net 仍略高。在 YCB-V 上，该方法的 AUC of ADD(-S) 也领先，为 86.9%，GDR-Net 为 84.4%。小样本对比的差距最为明显：用同样 600 张真实图像重新训练 ZebraPose 和 CheckerPose 后，它们在 YCB-V 上的 ADD(-S) 降至 35.7% 和 37.8%，而本方法为 65.9%（表 5）。论文还在 LINEMOD 上单独评估了旋转各模块：在真实图像、预测 ROI 条件下，视角检索误差在 10° 以内的比例超过 70%；平面内旋转误差在 10° 以内的比例，在使用预测视角和预测 ROI 时为 74%，使用真值视角时超过 90%（图 5、图 6），可见平面内旋转精度在很大程度上取决于视角检索的质量。作者指出，该方法的精度部分依赖目标检测器的可靠性，对未见物体类别的泛化能力仍然有限。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-lmo.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-lmo.webp" alt="LM-O 中六个杂乱桌面场景，每个场景中一个物体的估计位姿以绿色三维包围盒标出。" loading="lazy">
+&lt;/a>&lt;figcaption>LM-O 上的定性结果，估计位姿以绿色三维包围盒表示。引自论文图 7(a)。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-ycbv.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-ycbv.webp" alt="YCB-Video 中六个场景，糖盒、碗、芥末瓶、水壶等日常物体各被一个绿色三维包围盒框出。" loading="lazy">
+&lt;/a>&lt;figcaption>YCB-Video 上的定性结果。引自论文图 7(b)。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Calibration Method of Fringe Projection Based on High-Order Polynomial</title><link>https://willpan.xyz/zh/publications/zhang-2025-fringe-projection-calibration/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2025-fringe-projection-calibration/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）向物体投射正弦条纹，从相机拍到的变形条纹中提取相位，再把像素坐标和相位转换为三维坐标，从而获得物体的三维形貌。这一转换关系由系统标定确定，而传统标定方法较为繁琐。基于相位–高度映射的方法需要面积大、精度高的标定靶，并要用精密平移台带动标靶移动，模型参数受标定靶精度和平移精度的影响；基于立体视觉的方法在获得标靶坐标及其在相机和投影仪中的图像坐标后，用非线性优化求解标定参数，计算耗时，且精度同时受相机和投影仪图像坐标精度的影响。&lt;/p>
+&lt;p>多项式标定模型无需投影仪模型，也不需要平移台：它直接把三维世界坐标拟合为像素坐标 (u, v) 和绝对相位 ϕ 的多项式。阶数越高，对这一关系的描述越准确，但系数数量随之迅速增加；当阶数大于 3 时，最小二乘法拟合的速度变慢、稳定性变差。已有工作用主成分分析剔除冗余项来简化模型，计算速度有所提高，但重建精度随之下降。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-problem.webp" alt="实验装置照片：前方平板上是相机和小型投影仪，后方是带白色圆点的黑色标定板，左侧有白色台阶块，右侧是笔记本电脑。" loading="lazy">
+&lt;/a>&lt;figcaption>实验系统，由 CCD 相机、DLP 投影仪、圆形标定板和计算机组成。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>本文保留高阶多项式标定模型（无需投影仪模型和平移台），并用稀疏贪婪随机 Kaczmarz（SGRK）算法代替最小二乘法拟合模型系数。SGRK 兼具随机稀疏 Kaczmarz 算法的高效迭代特性和贪婪算法的精选策略：每一步只处理一个经过挑选的方程，而不是一次求解整个方程组。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2025-fringe-projection-calibration/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>采集标定点。&lt;/strong> 将条纹投射到圆形标定板上，并采集标定板的多个姿态。以圆心作为特征点：每个特征点给出像素坐标 (u, v)、由三频四步相移得到的绝对相位 ϕ，以及由张氏标定法得到的世界坐标。&lt;/li>
+&lt;li>&lt;strong>建立多项式模型。&lt;/strong> 世界坐标 X、Y、Z 均表示为 u、v、ϕ 的 n 阶多项式，标定由此转化为线性方程组 W = Ax。3 阶、4 阶、5 阶模型分别有 60、105、168 个系数；综合考虑重构精度与计算效率，本文以 4 阶模型作为标准模型。&lt;/li>
+&lt;li>&lt;strong>贪婪选取方程。&lt;/strong> 每次迭代中，SGRK 计算各方程的残差，保留残差超过阈值的行，再按与残差平方成正比的概率从中抽取一行。误差大的方程因此优先得到更新，收敛更快。&lt;/li>
+&lt;li>&lt;strong>更新并稀疏化。&lt;/strong> 用选中的行对系数做加权 Kaczmarz 投影更新，再通过软阈值操作将较小的系数置零，使解保持稀疏。&lt;/li>
+&lt;li>&lt;strong>迭代收敛后重建。&lt;/strong> 迭代持续到系数的相对标准误差低于 10⁻⁶ 为止。测量物体时，将各点的像素坐标和绝对相位代入拟合好的多项式，即可求得其三维坐标。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-method.webp" alt="三幅黑色标定板的灰度图像，板上为七乘七排列的白色圆点：原始标定板、圆点上覆盖竖直条纹、每个圆心标有十字。" loading="lazy">
+&lt;/a>&lt;figcaption>标定板图像：（a）圆形标定板；（b）投射条纹后的标定板；（c）选作特征点的圆心。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>标准陶瓷球（直径 25.0001 mm），4 阶模型：SGRK 的直径偏差为 0.0232 mm，耗时 1.63 s&lt;/strong>；最小二乘法为 0.0727 mm、3.96 s（表 2）。&lt;br>&lt;strong>标准台阶，4 阶模型：SGRK 在两处台阶高度上的平均误差为 0.004 mm 和 −0.003 mm，耗时 1.78 s&lt;/strong>；最小二乘法为 0.009 mm 和 0.006 mm、4.32 s（表 1）。&lt;br>&lt;strong>陶瓷玩偶：SGRK 的均方根误差为 0.0729 mm，最小二乘法为 0.9250 mm&lt;/strong>，以 Mech-Eye Pro S Enhanced 扫描结果为真值（第 3 节，图 9）。&lt;/aside>
+&lt;p>实验系统采用 DLP LightCrafter 4500 投影仪（912 × 1140 像素）、CCD 相机（1280 × 1024 像素）和 300 mm × 300 mm 的圆形标定板（圆心间距 30 mm）。两种方法分别用于完整的 4 阶模型和经主成分分析简化的 4 阶模型。两种情况下 SGRK 都更快、更准：对标准球，简化模型下 SGRK 的直径偏差为 0.0449 mm、耗时 1.17 s，最小二乘法为 0.0932 mm、3.17 s；且无论用哪种方法求解，简化模型的精度都低于完整模型（表 2）。每次标定完成后，对台阶重复测量 3 次，以检验重复精度（表 1）。&lt;/p>
+&lt;p>在其他阶数下，SGRK 同样占优（表 3）。3 阶模型下，SGRK 的标准球直径偏差为 0.0549 mm、耗时 1.02 s，最小二乘法为 0.1470 mm、3.04 s；5 阶模型下分别为 0.0177 mm、2.31 s 和 0.0400 mm、6.15 s。5 阶模型的精度高于 4 阶，但 168 个系数使计算时间明显增加；4 阶和 5 阶模型的精度都高于 3 阶模型。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-results.webp" alt="三幅图：陶瓷天使玩偶的灰度照片，以及两幅按深度着色的重建结果，头部均有虚线框和放大图，右侧放大图更平滑。" loading="lazy">
+&lt;/a>&lt;figcaption>陶瓷玩偶：（a）被测物体；（b）最小二乘法标定的重建结果；（c）SGRK 标定的重建结果。小图为头部放大。引自论文图 9。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Sequencing in Transformation of Rasterized 3D Models</title><link>https://willpan.xyz/zh/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/</link><pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>栅格化三维结构由离散、等大的构件组成，就像图片由像素组成：在计算机中是体素，在现实中可以是立方块、砖块，甚至罐头。这类构件便于作为数据处理，易于复用，也适合批量生产。本论文关注的问题是：如何把一个这样的结构变成另一个。论文将其表述为从源结构到目标结构的变换，目标是找到一条机器可以执行的高效操作序列，效率由与应用相关的代价函数衡量。用原料堆搭建结构是其中的特例，此时源结构就是原料堆。&lt;/p>
+&lt;p>难点在于问题是离散的。仅仅决定哪个构件放到哪里就是一个组合问题：n 个构件共有 n! 种指派方式。而且代价最低的指派未必能执行：吸盘夹爪只能抓取顶面上的构件；乐高积木被其他积木压住或包围时无法取出；放置时也不能让积木悬空。因此，排序需要在总工作量与物理可行性之间权衡，对积木而言还要兼顾源结构构件的复用程度。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-problem.webp" alt="从左到右四个阶段：螺旋楼梯与山体的网格模型；由灰色体素构成的两个模型；两个体素模型叠合对齐，其中一部分为绿色；以及两个带红色标记的中间状态和最终的山体形状。" loading="lazy">
+&lt;/a>&lt;figcaption>体素结构的变换任务：(a) 源结构（螺旋楼梯）与目标结构（山体）的输入网格，(b) 栅格化后的模型，(c) 对齐，(d) 把源结构变为目标结构的动作序列。引自论文图 3.1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>论文研究了三个案例，用论文自己的话说，它们代表了栅格化结构变换与成形中的大多数排序问题：同质体素的抓放（第 3 章）、异质乐高积木的抓放（第 4 章），以及体素链的折叠（第 5 章）。下面的演示逐步重现论文中的体素算例，最后并列给出另外两个案例。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>对齐与分类。&lt;/strong> 两个网格模型先被栅格化为体素。假设二者在竖直方向已经对齐、且只允许平移，在水平面内穷举搜索即可找到重叠最大的对齐位置。只属于源结构的体素为待移体素（M），只属于目标结构的为空位（V），重叠的体素原地保留。若 M 与 V 数量不等，多出的体素放入一个线形料堆，或从中取用。&lt;/li>
+&lt;li>&lt;strong>为每次移动定价。&lt;/strong> 代价函数模拟一台三轴直角坐标机器，它只在安全平面 z&lt;sub>max&lt;/sub> 上做水平移动：c&lt;sub>ij&lt;/sub> = |x&lt;sub>j&lt;/sub> − x&lt;sub>i&lt;/sub>| + |y&lt;sub>j&lt;/sub> − y&lt;sub>i&lt;/sub>| + 2z&lt;sub>max&lt;/sub> − z&lt;sub>i&lt;/sub> − z&lt;sub>j&lt;/sub>。以最小总代价把每个 M 配给一个 V 是一个指派问题，匈牙利算法可在 O(n&lt;sup>3&lt;/sup>) 时间内求解，而无需比较 n! 种方案。&lt;/li>
+&lt;li>&lt;strong>满足顶部抓取约束。&lt;/strong> 使用真空吸盘夹爪时，只有顶面上的体素才能被抓取或放置。一次性对全部 M 和 V 求最优配对（全局优化策略 GOS）能给出代价下界，但这些配对可能陷入死锁。局部优化策略（LOS）只用当前可达的 M 和 V 构造代价矩阵，用匈牙利算法求配对并执行这些移动。&lt;/li>
+&lt;li>&lt;strong>更新并重复。&lt;/strong> 每一轮之后顶面发生变化，于是重新构造代价矩阵，重复上述过程，直到所有 M 都放入空位。在该算例中，LOS 的总代价为 27，与 GOS 下界相同。论文还比较了两种更简单的基线：每步只移动当前代价最小的一对可达体素的贪心策略（GSS），以及随机策略（RSS）。&lt;/li>
+&lt;li>&lt;strong>推广到积木与链。&lt;/strong> 对乐高积木，体素被逐层合并为积木。刚性方法（RT）在变换前就生成源、目标两套积木布局；柔性方法（FT）在变换过程中实时生成目标布局，优先采用源结构上可取出的积木类型。每种方法再与三种经由缓存区和库存调度积木的策略组合（见下图），共得到六种算法，并用三个指标评价：代价（抓放次数）、复用率（源结构积木最终用于目标结构的比例），以及随复用率升高、随代价增加而降低的综合性能。对链式结构，先在形状的体素中寻找一条哈密顿路径，把形状转化为一维的链；为使哈密顿路径存在，可以删补体素，也可以把每个体素细分为 4 个（二维）或 8 个（三维）子体素。随后根据初始与目标关节角之差规划折叠过程。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-method.webp" alt="左右两幅网格图。(a) 中，标为 1, 5′ 和 8, 6′ 的两个粉色格位于灰色格之上，右侧地面上有两个标为 4 和 5 的绿色格，红色横条标出顶面。(b) 中绿色格已移走，标为 4, 7′ 和 5, 8′ 的两个粉色格位于整列顶部。" loading="lazy">
+&lt;/a>&lt;figcaption>算例中 LOS 的两个阶段：(a) 待移体素 1 和 8 放入空位 5′ 和 6′；(b) 待移体素 4 和 5 放入空位 7′ 和 8′。红色横条标出顶面。引自论文图 3.6。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-bricks.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-bricks.webp" alt="三行示意图，每行左侧是一个乐高源模型，右侧是另一个乐高目标模型。第 1 行积木经青色的缓存区进入目标，灰色的库存也向目标供料；第 2 行在缓存区上方多了一条从源到目标的直达箭头；第 3 行只有直达箭头和库存。" loading="lazy">
+&lt;/a>&lt;figcaption>三种积木调度策略。策略 1 先把源结构完全拆入缓存区，再用缓存区和库存中的积木搭建目标；策略 2 直接把积木从源结构移到目标结构，只有找不到合适积木时才把源结构拆入缓存区；策略 3 只用源结构和库存搭建目标，不设缓存区。引自论文图 4.6。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-folding.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-folding.webp" alt="字母 A 和 O 各被栅格化为 28 个方形像素的网格，再各由一条红色路径不重复地经过所有像素；一条标有 Folding 的弧形箭头从 A 的路径指向 O 的路径。" loading="lazy">
+&lt;/a>&lt;figcaption>折叠：字母 A 和 O 各被栅格化为 28 个像素，通过求解哈密顿路径（HP）把每个形状转化为一条链，再把 A 链折叠成 O 链。引自论文图 5.1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>LOS 代价接近 GOS 下界，计算只需数秒而非一个多小时。&lt;/strong> 在 wall → pyramid 变换（1,643 对 M-V）中，LOS 代价为 60,199，GOS 下界为 60,021；计算时间为 9.5 s，GOS 为 4,440 s（表 3.1）。&lt;br>&lt;strong>乐高：复用率与代价的权衡。&lt;/strong> 在含颜色信息的 Growlithe → Charmander 变换中，FT3 以 3,203 次抓放复用了 56.1% 的源积木，FT1 则以 6,015 次抓放复用了 69.3%（测试 3，图 4.13）。&lt;br>&lt;strong>FT3 的综合性能最高。&lt;/strong> 这是七种模型规模下、每种规模 56 组变换的平均结果；在刚性算法中 RT2 最好（图 4.9）。&lt;/aside>
+&lt;p>体素策略在八个模型上测试（wall、pyramid、starfish、cube、igloo、castle、stairs 和 Eiger 山体），每个模型栅格化为 2,250 至 2,550 个体素，并两两相互变换。GOS 的代价始终最低，但本身并不给出可行的序列，而且耗时最长，因为它要在一个很大的代价矩阵上运行一次匈牙利算法。LOS 的代价次之，GSS 略差，RSS 明显更差但速度最快。工作量取决于 M-V 对的数量，而不是模型大小：wall → pyramid 需要 1,643 对，而形状更相近的 pyramid → igloo 只需 325 对。在不同栅格化分辨率下，总代价大致随 M-V 对数线性增长，LOS 的耗时也是如此，尽管匈牙利算法本身的复杂度为 O(n&lt;sup>3&lt;/sup>)。LOS 因在代价与计算时间之间取得良好平衡而脱颖而出。论文指出的局限是顶部抓取约束，它使悬挑结构无法搭建；而像乐高这样能相互扣合的积木可以形成悬挑，这正是乐高一章的出发点。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-results.webp" alt="左图为分组柱状图，显示 GOS、LOS、GSS、RSS 在 139、246、364、793、1624、2016 对 M-V 时的总代价（千），代价随对数迅速上升，RSS 最高。右图为计算时间（秒）随 M-V 对数的变化：GOS 曲线在 500 对之前就冲出图表上沿，LOS、GSS、RSS 在 2,000 对以内均低于约 22 s。" loading="lazy">
+&lt;/a>&lt;figcaption>starfish → castle 变换在不同栅格化分辨率下四种策略的总代价 (a) 与计算时间 (b)；M-V 对越多，分辨率越高。引自论文图 3.9。&lt;/figcaption>
+&lt;/figure>
+&lt;p>在乐高实验中，八个三角网格模型被转换为积木模型。对所有两两变换取平均，代价随模型规模线性增长，策略 1、2、3 的代价依次降低。策略 1 和策略 2 的复用率非常接近，因此论文认为一开始就把源结构完全拆散并不值得。FT 比 RT 复用更多积木，但所用积木往往小于最合适的尺寸，导致结构内部存在滑移面、强度较弱，目标结构的积木数也更多。FT3 的复用率可与最好的 RT 算法相当；在由一个模型变换到其余七个模型的测试中，它以低得多的代价达到了与 FT1、FT2 相近的复用率。加入颜色信息后（共 114 种颜色，外表面积木的颜色和形状都必须匹配），复用率有所下降，但并未降到零，因为内部积木可以是任意颜色。论文指出，综合性能只是一个经验指标；在对代价有不同定义的场景中，各算法的相对排序可能改变。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-lego-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-lego-results.webp" alt="三幅并排的折线图，横轴均为模型规模（约 500 至 4,500 个体素），曲线分别为 FT1、FT2、FT3、RT1、RT2、RT3：(a) 抓放次数代价线性上升；(b) 复用率（%），RT3 约在 35% 至 48% 之间，远低于其他算法；(c) 综合性能，FT3 明显最高。" loading="lazy">
+&lt;/a>&lt;figcaption>六种积木算法在八个模型相互变换中的平均表现，共七种模型规模：(a) 代价，(b) 复用率，(c) 综合性能。论文中三幅子图上下排列，此处并排放置。引自论文图 4.9。&lt;/figcaption>
+&lt;/figure>
+&lt;p>论文留下两个未来方向：引入有限元分析等受力分析，使最终结构和各中间结构都保持稳定；以及在模块层面（把一组构件作为整体移动）而非单个构件层面进行变换，论文预期这能同时改善复用率和代价。&lt;/p></description></item></channel></rss>

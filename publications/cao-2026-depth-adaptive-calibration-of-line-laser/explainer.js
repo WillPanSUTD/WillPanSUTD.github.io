@@ -52,49 +52,31 @@ export default function mount(el, { kit, lang }) {
     },
   }, lang);
 
-  const ink = kit.token("--c-ink") || "#0a0a0a";
-  const body = kit.token("--c-body") || "#525252";
-  const accent = kit.token("--c-accent") || "#1e3a8a";
-  const mute = kit.token("--c-mute") || "#a3a3a3";
-  const bg = kit.token("--c-bg") || "#ffffff";
-  const rule = kit.token("--c-rule") || "#e5e5e5";
+  const { ink, body, accent, mute, rule, bg } = kit.palette();
   // Literal semantic colour: the laser light (fan, stripe on the target, stripe points).
   const LASER = "#d64545";
 
   const clamp01 = (t) => Math.max(0, Math.min(1, t));
-  const ease = (t) => 1 - Math.pow(1 - clamp01(t), 3);
   const seg01 = (t, a, b) => clamp01((t - a) / (b - a));
 
   // Text made of parts: plain strings, or { sub: "…" } for a real subscript.
   const text = (parent, x, y, parts, o = {}) => {
     const size = o.size || 20;
-    const n = kit.svg("text", {
-      x, y, "font-size": size, fill: o.fill || ink, "text-anchor": o.anchor || "middle",
-      "font-weight": o.weight || 400, "font-family": "var(--f-sans)", "paint-order": "stroke",
-      stroke: bg, "stroke-width": 4, "stroke-linejoin": "round", opacity: o.opacity ?? 1,
-    }, parent);
+    const n = kit.text(parent, x, y, "", {
+      size, fill: o.fill ?? ink, anchor: o.anchor, weight: o.weight, opacity: o.opacity, halo: true,
+    });
     for (const p of Array.isArray(parts) ? parts : [parts]) {
       if (typeof p === "string") {
         const s = kit.svg("tspan", {}, n);
         s.textContent = p;
       } else {
-        const s = kit.svg("tspan", { "baseline-shift": "sub", "font-size": size * 0.72 }, n);
+        const s = kit.svg("tspan", { "baseline-shift": "sub", "font-size": Math.max(14, size * 0.72) }, n);
         s.textContent = p.sub;
       }
     }
     return n;
   };
-  const line = (parent, a, b, o = {}) => kit.svg("line", {
-    x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: o.stroke || body, "stroke-width": o.w || 1.5,
-    "stroke-dasharray": o.dash || "none", opacity: o.opacity ?? 1, "stroke-linecap": "round",
-  }, parent);
-  const arrow = (parent, a, b, o = {}) => {
-    line(parent, a, b, o);
-    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), s = 10;
-    const p1 = [b[0] - s * Math.cos(ang - 0.45), b[1] - s * Math.sin(ang - 0.45)];
-    const p2 = [b[0] - s * Math.cos(ang + 0.45), b[1] - s * Math.sin(ang + 0.45)];
-    kit.svg("polygon", { points: [b, p1, p2].map((q) => q.join(",")).join(" "), fill: o.stroke || body, opacity: o.opacity ?? 1 }, parent);
-  };
+  const { line, arrow } = kit.pen({ stroke: body, head: 10 });
   const dim = (parent, a, b, o = {}) => { arrow(parent, a, b, o); arrow(parent, b, a, o); };
   const path = (pts) => "M" + pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join("L");
 
@@ -150,7 +132,7 @@ export default function mount(el, { kit, lang }) {
           line(g, [RAIL - 7, y], [RAIL + 7, y], { stroke: body, w: 1.5 });
           text(g, RAIL - 12, y + 6, ["Z", { sub: String(k + 1) }], { size: 18, anchor: "end", fill: k === HELD ? mute : body });
         });
-        const p = ease(t) * (N_DEP - 1);
+        const p = kit.easeOut(t) * (N_DEP - 1);
         const ys = DEP[0] + (p / (N_DEP - 1)) * (DEP[N_DEP - 1] - DEP[0]);
         // sensor head (camera + laser) on an arm from the rail
         line(g, [RAIL, ys], [150, ys], { stroke: body, w: 3 });
@@ -174,7 +156,7 @@ export default function mount(el, { kit, lang }) {
           }, g);
         }
         text(g, box.x + box.w / 2, 310, L.depths, { size: 18, fill: body });
-        text(g, box.x + box.w / 2, 338, [L.held, { sub: "3" }, L.heldTail], { size: 18, fill: mute, opacity: ease(seg01(t, 0.6, 1)) });
+        text(g, box.x + box.w / 2, 338, [L.held, { sub: "3" }, L.heldTail], { size: 18, fill: mute, opacity: kit.easeOut(seg01(t, 0.6, 1)) });
       }
 
       if (i === 1) {
@@ -186,7 +168,7 @@ export default function mount(el, { kit, lang }) {
         line(g, [WB.x, WB.y + WB.h], [WB.x, WB.y - 6], { stroke: body, w: 1.4 });
         text(g, PB.x + PB.w / 2, 36, L.pix, { size: 19, fill: body, weight: 600 });
         text(g, WB.x + WB.w / 2, 36, L.world, { size: 19, fill: body, weight: 600 });
-        const m = ease(seg01(t, 0.15, 1));
+        const m = kit.easeOut(seg01(t, 0.15, 1));
         for (let k = 0; k < N_DEP; k++) {
           const a = stripeImg(k, PB), b = stripeWorld(k, WB);
           const dash = k === HELD ? "8 6" : "none";
@@ -199,7 +181,7 @@ export default function mount(el, { kit, lang }) {
         text(g, 295, 138, L.rpc, { size: 22, fill: accent, weight: 700 });
         text(g, 295, 180, L.coef, { size: 18, fill: body });
         text(g, 320, 300, L.model, { size: 18, fill: body });
-        text(g, 320, 336, L.gain, { size: 18, fill: accent, weight: 600, opacity: ease(seg01(t, 0.7, 1)) });
+        text(g, 320, 336, L.gain, { size: 18, fill: accent, weight: 600, opacity: kit.easeOut(seg01(t, 0.7, 1)) });
       }
 
       if (i === 2) {
@@ -211,7 +193,7 @@ export default function mount(el, { kit, lang }) {
         arrow(g, [40, B.y + B.size], [40, B.y], { stroke: body, w: 2 });
         text(g, 16, B.y + B.size + 28, [L.motion + " (Y)"], { size: 18, anchor: "start", fill: body });
         // laser line sweeping the board, rotated by gamma; the ideal (perpendicular) line dashed
-        const sweep = 0.15 + 0.6 * ease(t);
+        const sweep = 0.15 + 0.6 * kit.easeOut(t);
         const cy = B.y + B.size - sweep * B.size;
         const cx = B.x + B.size / 2;
         const hl = B.size / 2 + 18;
@@ -224,21 +206,21 @@ export default function mount(el, { kit, lang }) {
 
         const S = { x: 400, y: 70, size: 160 };
         text(g, S.x + S.size / 2 + 14, 40, L.stitched, { size: 19, fill: body, weight: 600 });
-        const shift = Math.tan(GAMMA) * S.size * ease(seg01(t, 0.2, 1));
+        const shift = Math.tan(GAMMA) * S.size * kit.easeOut(seg01(t, 0.2, 1));
         // the square it should have been
         kit.svg("rect", { x: S.x, y: S.y, width: S.size, height: S.size, fill: "none", stroke: mute, "stroke-width": 1.5, "stroke-dasharray": "6 5" }, g);
         const f = board(g, S.x, S.y, S.size, 4, shift, { stroke: body });
         // a corner that is no longer a right angle
         const c0 = f(S.x, S.y + S.size);
-        kit.svg("path", { d: path([f(S.x + 22, S.y + S.size), f(S.x + 22, S.y + S.size - 22), f(S.x, S.y + S.size - 22)]), fill: "none", stroke: accent, "stroke-width": 2, opacity: ease(seg01(t, 0.6, 1)) }, g);
-        kit.svg("circle", { cx: c0[0], cy: c0[1], r: 4, fill: accent, opacity: ease(seg01(t, 0.6, 1)) }, g);
+        kit.svg("path", { d: path([f(S.x + 22, S.y + S.size), f(S.x + 22, S.y + S.size - 22), f(S.x, S.y + S.size - 22)]), fill: "none", stroke: accent, "stroke-width": 2, opacity: kit.easeOut(seg01(t, 0.6, 1)) }, g);
+        kit.svg("circle", { cx: c0[0], cy: c0[1], r: 4, fill: accent, opacity: kit.easeOut(seg01(t, 0.6, 1)) }, g);
         text(g, S.x + S.size / 2 + 14, S.y + S.size + 32, L.shear, { size: 19, fill: body });
-        text(g, 320, 340, [L.tilt, { sub: L.tiltSub }, L.tiltTail], { size: 18, fill: accent, weight: 600, opacity: ease(seg01(t, 0.6, 1)) });
+        text(g, 320, 340, [L.tilt, { sub: L.tiltSub }, L.tiltTail], { size: 18, fill: accent, weight: 600, opacity: kit.easeOut(seg01(t, 0.6, 1)) });
       }
 
       if (i === 3) {
         // left: roll from the height block; right: yaw from one checkerboard cell
-        const vA = ease(seg01(t, 0, 0.55)), vG = ease(seg01(t, 0.35, 0.9)), vE = ease(seg01(t, 0.75, 1));
+        const vA = kit.easeOut(seg01(t, 0, 0.55)), vG = kit.easeOut(seg01(t, 0.35, 0.9)), vE = kit.easeOut(seg01(t, 0.75, 1));
         text(g, 160, 34, L.block, { size: 19, fill: body, weight: 600 });
         const BASE = 230, BX0 = 100, BX1 = 220, H = 70, HP = 84;
         line(g, [30, BASE], [290, BASE], { stroke: accent, w: 2, dash: "8 5" });
@@ -272,7 +254,7 @@ export default function mount(el, { kit, lang }) {
 
       if (i === 4) {
         // the same inverse rotation squares the grid at three of the six depths at once
-        const m = ease(seg01(t, 0.1, 0.85));
+        const m = kit.easeOut(seg01(t, 0.1, 0.85));
         const shift0 = Math.tan(GAMMA) * 110;
         [[0, 60], [2, 260], [5, 460]].forEach(([k, x0]) => {
           text(g, x0 + 60, 38, ["Z", { sub: String(k + 1) }], { size: 20, fill: body, weight: 600 });
@@ -280,7 +262,7 @@ export default function mount(el, { kit, lang }) {
           board(g, x0, 56, 110, 3, shift0 * (1 - m), { stroke: m > 0.98 ? accent : body, w: m > 0.98 ? 1.6 : 1 });
         });
         text(g, 320, 222, [L.rot, { sub: "x" }, "(α) R", { sub: "z" }, "(γ)" + L.rotTail], { size: 19, fill: body, weight: 600 });
-        const v = ease(seg01(t, 0.6, 1));
+        const v = kit.easeOut(seg01(t, 0.6, 1));
         text(g, 320, 284, [L.s1, { sub: L.s1sub }, L.s1tail], { size: 19, fill: accent, weight: 600, opacity: v });
         text(g, 320, 322, [L.s2, { sub: L.s2sub }, L.s2tail], { size: 19, fill: accent, weight: 600, opacity: v });
       }

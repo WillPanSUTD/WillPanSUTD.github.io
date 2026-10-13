@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Phase Shifting | 潘威</title><link>https://willpan.xyz/zh/tags/phase-shifting/</link><atom:link href="https://willpan.xyz/zh/tags/phase-shifting/index.xml" rel="self" type="application/rss+xml"/><description>Phase Shifting</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Sun, 01 Jan 2023 00:00:00 +0000</lastBuildDate><item><title>3D reconstruction of the moving object with double-shooting based on phase shifting profilometry</title><link>https://willpan.xyz/zh/publications/zhang-2023-3d-reconstruction-of-the-moving-object/</link><pubDate>Sun, 01 Jan 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2023-3d-reconstruction-of-the-moving-object/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）是当前最常用的三维测量技术之一，具有精度高、鲁棒性强和全场测量等优点。投影仪向物体表面投射至少三幅带相移的正弦条纹图，相机从另一个角度拍摄。条纹因物体高度而发生扭曲，条纹中的相位信息反映这种形变，再结合系统参数即可完成三维重构。由于要使用多幅条纹图，传统 PSP 要求物体在重构过程中保持静止；一旦物体在条纹投射和采集过程中移动，就会产生测量误差。&lt;/p>
+&lt;p>帧率是另一个限制。投影仪投射 8 位条纹图的帧率一般可达 120 Hz，而相机帧率较容易达到 1000 Hz 以上，因此重构点云的帧率受限于投影仪。借助散焦技术，投影仪投射二进制条纹得到正弦条纹的帧率可达 1000 Hz 以上，但散焦程度难以控制和量化；高速相机和投影仪虽能实现高帧率，成本却显著增加。本文关注的问题是：如何用低成本设备实现运动物体的高帧率三维重构。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-problem.webp" alt="两幅深色背景上的面具形物体彩色高度图，各带一条 0 至 15 mm 的色标。两幅图的眼部和嘴部轮廓处都有深色条痕和缺口。" loading="lazy">
+&lt;/a>&lt;figcaption>用传统 PSP 重构运动中的面具，结果存在较大误差。论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>在相机和投影仪之间增加触发控制设备，使相机对每幅投射条纹拍摄两次，获取更多运动物体的条纹信息。随后分析连续三张条纹图中物体运动引起的相位变化，建立包含物体运动的条纹模型，在混合相移下提取相位，并复用采集到的图像以获得更多重构帧。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2023-3d-reconstruction-of-the-moving-object/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>双采样。&lt;/strong> 投影仪按正常速率投射 N 幅相移条纹图，在每个投影周期内触发相机两次。因此每幅投射条纹都对应运动物体的两张图像。&lt;/li>
+&lt;li>&lt;strong>混合相移。&lt;/strong> 同一幅投射条纹下拍摄的两张图像之间，只存在物体运动引起的相移；不同投射条纹下拍摄的图像，既有运动引起的相移，又有 PSP 的传统相移。对于三张图像 I&lt;sub>1&lt;/sub>、I&lt;sub>2&lt;/sub>、I&lt;sub>3&lt;/sub>，相移量为 δ&lt;sub>1&lt;/sub> = δ&lt;sub>2&lt;/sub> = 0，δ&lt;sub>3&lt;/sub> = 2π/N。&lt;/li>
+&lt;li>&lt;strong>包含运动的条纹模型。&lt;/strong> 物体运动跟踪算法计算描述物体运动的旋转平移矩阵，由此得到图像之间的坐标变换关系 (f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>)。每张图像表示为 I&lt;sub>n&lt;/sub> = a + B cos h&lt;sub>n&lt;/sub> + C sin h&lt;sub>n&lt;/sub>，其中 h&lt;sub>n&lt;/sub> = ϕ(f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>) + δ&lt;sub>n&lt;/sub>，ϕ 为参考平面的相位。&lt;/li>
+&lt;li>&lt;strong>最小二乘求相位。&lt;/strong> 对每个像素，以模型与实拍条纹图之差的平方和最小为准则，求出 a、B、C。由于 B = cos φ、C = −sin φ，物体形状引起的相位变化为 φ = arctan(−C / B)。&lt;/li>
+&lt;li>&lt;strong>图像复用。&lt;/strong> 对采集到的图像进行复用：每三张相邻图像得到一帧物体相位，而传统 PSP 的每一帧都由各自独立的一组图像得到。由此在投影速度受限的情况下提高运动物体的重构帧率。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-method.webp" alt="时序图，沿时间轴共四行：投影仪触发脉冲；投影仪照明块，标注 I p 1、I p 2、I p 3；相机采集脉冲，标注 I c 1 至 I c 6，每个照明块内两个；相机触发脉冲，每次投影两个。" loading="lazy">
+&lt;/a>&lt;figcaption>相机与投影仪的触发时序：在每幅投射条纹 I&lt;sup>p&lt;/sup> 期间，相机被触发两次，采集两张图像 I&lt;sup>c&lt;/sup>。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-reuse.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-reuse.webp" alt="两行各六张灰色条纹图，标注 I c 1 至 I c 6。(a) 行中，图像 1 至 3 合成 Frame 1，图像 4 至 6 合成 Frame 2。(b) 行中，彩色连线把图像 1 至 3 合成 Frame 1，2 至 4 合成 Frame 2，3 至 5 合成 Frame 3，4 至 6 合成 Frame 4。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 传统 PSP 与 (b) 本文方法的重构帧率，本文方法对采集图像进行复用。论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>运动物体的均值误差：传统 PSP 为 0.1575 mm，本文方法为 0.0344 mm&lt;/strong>（表 1）。&lt;/aside>
+&lt;p>实验系统由工业相机（OPT-CC1-048A-RM-G，分辨率 1800 × 1600 像素）、投影仪（TJ-S50，分辨率 1280 × 720 像素）和电动位移台组成，被测物体为面具。相机帧率为 20 帧/s，位移台速率为 20 mm/s，视场为 70 mm × 80 mm。先用传统 PSP 重构静止的面具，以此作为误差评估的真值。面具随位移台运动时，同一幅投射条纹下的两张图像中只有物体运动，不同投射条纹下的图像中则既有物体运动又有条纹相移。旋转平移矩阵由物体运动跟踪算法计算得到，每三张相邻图像得到一幅相位图。本文方法成功重构了运动中的面具，而用传统 PSP 重构同一运动物体则存在较大误差。&lt;/p>
+&lt;p>作者指出，影响最大的局限是物体跟踪算法的精度：它直接决定重构精度，而现有跟踪算法难以描述大幅度运动。该方法只能重构做二维平移运动的物体，受运动跟踪算法所限，无法处理二维旋转运动和三维运动。方法不要求物体匀速运动，但相机需拍摄到清晰的运动物体条纹图。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-fringes.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-fringes.webp" alt="四张竖直条纹下面具形物体的灰色条纹图，标注 (a) 至 (d)，排成两行两列。" loading="lazy">
+&lt;/a>&lt;figcaption>运动面具的条纹图：(a)、(b) 在投影仪投射第一幅条纹时拍摄，(c)、(d) 在投射第二幅条纹时拍摄。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-results.webp" alt="上排：三幅蓝黄条纹的包裹相位图，面具位置各略有不同。下排：两幅面具的彩色高度图，各带一条 0 至 15 mm 的色标，眼部和嘴部轮廓清晰。" loading="lazy">
+&lt;/a>&lt;figcaption>本文方法重构运动面具：(a) 条纹图复用得到的不同位置的相位图；(b) 重构结果。论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-static.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-static.webp" alt="左：静止面具在竖直条纹下的灰色条纹图。右：对应的彩色高度图，色标为 0 至 15 mm。" loading="lazy">
+&lt;/a>&lt;figcaption>用传统 PSP 重构静止的面具：(a) 拍摄到的条纹图；(b) 重构结果，作为真值。论文图 4。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

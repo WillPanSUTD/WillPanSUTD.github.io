@@ -28,22 +28,12 @@ export default function mount(el, { kit, lang }) {
     },
   }, lang);
 
-  const ink = kit.token("--c-ink") || "#0a0a0a";
-  const body = kit.token("--c-body") || "#525252";
-  const accent = kit.token("--c-accent") || "#1e3a8a";
-  const mute = kit.token("--c-mute") || "#a3a3a3";
-  const bg = kit.token("--c-bg") || "#ffffff";
+  const { ink, body, accent, mute, bg } = kit.palette();
   // Literal semantic class colours (schematic stand-ins for 2D semantic features).
   const CLS = ["#6b8cba", "#d9822b", "#b0457a"]; // wall, table, chair
 
   // --- Deterministic scene (side view, local units) ---------------------------
-  let seed = 7;
-  const rnd = () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let r = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
+  const rnd = kit.rng(7);
   const pts = [];
   const seg = (x0, y0, x1, y1, c, step = 8) => {
     const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0) / step));
@@ -75,7 +65,6 @@ export default function mount(el, { kit, lang }) {
     cx: A.cx + (B.cx - A.cx) * u, cy: A.cy + (B.cy - A.cy) * u,
     ox: A.ox + (B.ox - A.ox) * u, oy: A.oy + (B.oy - A.oy) * u, a: A.a + (B.a - A.a) * u,
   });
-  const ease = (t) => 1 - Math.pow(1 - t, 3);
   const near = (arr, x, y) => arr.reduce((b, p) => (Math.hypot(p.x - x, p.y - y) < Math.hypot(b.x - x, b.y - y) ? p : b));
 
   const qPt = near(S, -44, 17);                    // query: chair seat
@@ -86,19 +75,7 @@ export default function mount(el, { kit, lang }) {
   const pairs = overlap.filter((_, k) => k % 6 === 2);
   const attn = T.filter((p) => p.c === 2).filter((_, k) => k % 3 === 0);
 
-  const text = (parent, x, y, str, o = {}) => {
-    const n = kit.svg("text", {
-      x, y, "font-size": o.size || 22, fill: o.fill || ink, "text-anchor": o.anchor || "middle",
-      "font-weight": o.weight || 400, "font-family": "var(--f-sans)", "paint-order": "stroke",
-      stroke: bg, "stroke-width": 4, "stroke-linejoin": "round", opacity: o.opacity ?? 1,
-    }, parent);
-    n.textContent = str;
-    return n;
-  };
-  const line = (parent, a, b, o = {}) => kit.svg("line", {
-    x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: o.stroke || accent, "stroke-width": o.w || 1.6,
-    "stroke-dasharray": o.dash || "none", opacity: o.opacity ?? 1, "stroke-linecap": "round",
-  }, parent);
+  const { text, line } = kit.pen({ textSize: 22, stroke: accent, width: 1.6 });
   const partial = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
 
   // Draw one scan. mode: "grey" | "colour"; alpha(p) optional per-point opacity.
@@ -132,7 +109,7 @@ export default function mount(el, { kit, lang }) {
     lang,
     render(stage, i, t) {
       stage.replaceChildren();
-      const e = ease(t);
+      const e = kit.easeOut(t);
       const s = kit.svg("svg", { viewBox: "0 0 640 360", role: "img", "aria-label": L.steps[i] }, stage);
       const g = kit.svg("g", {}, s);
 

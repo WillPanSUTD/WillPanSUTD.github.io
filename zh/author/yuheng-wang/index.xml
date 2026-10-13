@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Yuheng Wang | 潘威</title><link>https://willpan.xyz/zh/author/yuheng-wang/</link><atom:link href="https://willpan.xyz/zh/author/yuheng-wang/index.xml" rel="self" type="application/rss+xml"/><description>Yuheng Wang</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Underwater structured-light 3D imaging method based on FP-DiffNet</title><link>https://willpan.xyz/zh/publications/lu-2026-underwater-structured-light-3d-imaging-method/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2026-underwater-structured-light-3d-imaging-method/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>条纹投影轮廓术把正弦条纹投射到物体上，通过解算相机所拍条纹的相位来测量形貌，其方法与精度验证基本都建立在以空气为介质的条件下。在水下，多种效应同时作用：吸收和散射使信号随传播距离衰减；悬浮颗粒的小角度前向散射使条纹模糊，大角度后向散射引入背景光和噪声；水—空气界面的折射则使光路发生偏移。条纹因此对比度下降、变得模糊，相位求解中误差不断累积，点云可能出现局部缺失或几何畸变。&lt;/p>
+&lt;p>偏振成像、立体成像等复原方法依赖对水体光学参数的先验建模，直方图均衡、颜色校正等增强方法则可能引入色偏和额外噪声。端到端训练的深度网络虽然不需要这些先验，却是缺乏显式物理约束的黑箱映射，可能使复原出的条纹失真，给高精度相位求解带来系统误差。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-problem.webp" alt="同一柱状物体的五幅灰度条纹图。标注 (a) 的第一幅为黑底上清晰明亮的竖条纹；标注 (b) 的四幅为水下拍摄，从左到右逐渐变暗、发雾，对比度越来越低。" loading="lazy">
+&lt;/a>&lt;figcaption>同一物体的条纹图：(a) 在空气中拍摄，(b) 在 T1–T4 四个浊度等级下拍摄。随着水体变浑，条纹对比度下降、逐渐模糊。论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>FP-DiffNet 是一个位于采集与相位求解之间的条纹复原前端。它把条纹复原视为条件去噪扩散过程（DDPM）：U-Net 在退化水下图像的引导下学习把噪声逐步还原为清晰条纹，同时用一个简化的物理退化模型保证结果符合水下光传输规律。复原后的条纹再进入常规的相移流程。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2026-underwater-structured-light-3d-imaging-method/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>退化建模。&lt;/strong> 依据 Jaffe–McGlamery 模型，到达相机的光分为三部分：随距离衰减的直接透射、使图像产生高斯模糊的前向散射，以及形成背景光和噪声的后向散射。水—空气界面的折射还会使光线产生与深度相关的偏移。&lt;/li>
+&lt;li>&lt;strong>训练条件扩散模型。&lt;/strong> 以在空气中采集的高信噪比条纹图为目标，以同一场景在浑浊水中采集的条纹图为条件。清晰图像在 T = 1000 步内逐步加噪至高斯噪声，带自注意力的 U-Net 根据含噪图像、时间步和水下图像预测所加入的噪声。损失函数由 SSIM、噪声预测误差、权重的 L1 稀疏项和物理一致性项组成。&lt;/li>
+&lt;li>&lt;strong>反向扩散复原。&lt;/strong> 采样从纯高斯噪声开始，每一步都把水下观测输入网络，逐步去噪，直至得到清晰的条纹图。&lt;/li>
+&lt;li>&lt;strong>物理修正。&lt;/strong> 简化退化算子（表示前向散射的高斯模糊加表示后向散射的噪声项）把估计与观测联系起来。反向扩散每隔 k = 50 步，以强度 α = 0.01 做一次梯度修正，减小观测与估计的模拟退化之间的残差。折射不包含在该算子中，而由 U-Net 从数据中学习。&lt;/li>
+&lt;li>&lt;strong>相位求解与三维重建。&lt;/strong> 复原图像具有标准 N 步相移条纹的形式，相位求解流程无需改动：由反正切公式得到包裹相位，经相位展开得到绝对相位，再与参考平面相位作差，并借助已标定的投影仪—相机几何关系转换为三维坐标。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-method.webp" alt="两部分流程图。Training：噪声 ε 与清晰的鲸鱼条纹图 X0 分别乘以根号 alpha-bar-t 和根号 1 减 alpha-bar-t 后相加得到 Xt，与昏暗的水下图像 y 一起输入 U-Net；输出 ε* 与 ε 在损失 L 中比较并更新网络。Sampling：噪声 XT 和 y 输入训练好的 U-Net，输出 Xt-1；菱形判断 t mod k 是否为 0，是则执行修正 X 减 α 乘 L phy 的梯度；第二个菱形循环直至 t 等于 0，输出清晰条纹图 F*。" loading="lazy">
+&lt;/a>&lt;figcaption>训练（上）与采样（下）流程。采样时，每当 t mod k = 0 就施加一次基于物理残差的修正。论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>最高浊度 T4 下的条纹复原：PSNR 42.42 dB，SSIM 0.9750，MS-SSIM 0.9974&lt;/strong>（表 2）。&lt;br>&lt;strong>T4 下包裹相位 MAE 0.0354 rad&lt;/strong>，T1 下为 0.0260 rad（表 3）。&lt;br>&lt;strong>T4 下三维重建 RMSE 0.0890 mm&lt;/strong>，T1 下为 0.0317 mm（表 4）。&lt;/aside>
+&lt;p>实验系统由一台工业相机（1800 × 1600 像素）和一台数字投影仪（1280 × 1024 像素）组成，安装在亚克力水箱上方约 0.6 m 处，采用三频四步相移方案。在 13 L 清水中依次加入 4、5、6、7 mL 牛奶，得到 T1–T4 四个浊度等级。数据集包含五个随机摆放的物体，按 4:1 划分为 7200 张训练图像和 1800 张测试图像，所有结果均在测试集上得到。误差均相对于真值条纹图、真值相位和参考重建计算。从 T1 到 T4，PSNR 仅从 43.02 dB 降至 42.42 dB，包裹相位余弦相似度保持在 0.9951–0.9962 之间；剩余的相位误差主要集中在物体边界、阴影区域和相位不连续处。在 NVIDIA GeForce RTX 4090 上复原一张 512 × 512 条纹图约需 430 ms。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-results.webp" alt="两行鲸鱼形物体的灰度条纹图，每行四幅。标注 (a) 的上行昏暗，从左到右越来越模糊；标注 (b) 的下行四幅条纹都清晰、对比度高。" loading="lazy">
+&lt;/a>&lt;figcaption>T1–T4 浊度等级下（从左到右）的条纹图：(a) FP-DiffNet 复原前，(b) 复原后。论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-reconstruction.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-reconstruction.webp" alt="八幅按高度着色的古典柱三维点云，分为 T1 到 T4 四列。标注 Captured 的上行越接近 T4 越稀疏、噪声越多；标注 Estimated 的下行四列都是完整、平滑的柱体。" loading="lazy">
+&lt;/a>&lt;figcaption>T1–T4 下柱体的三维重建：上行由拍摄的条纹得到，下行由模型复原后的条纹得到。论文图 11。&lt;/figcaption>
+&lt;/figure>
+&lt;p>作者也说明了适用范围。T4 是实验中最浑浊的等级；浊度继续升高时，直接透射分量会低于噪声基底，条纹信息随之丢失，作者预计复原将会失效。该框架适用于正弦相移条纹，用于其他结构光配置或水下条件时，可能需要用对应配置的数据进行微调。&lt;/p></description></item></channel></rss>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>M Zhang | 潘威</title><link>https://willpan.xyz/zh/author/m-zhang/</link><atom:link href="https://willpan.xyz/zh/author/m-zhang/index.xml" rel="self" type="application/rss+xml"/><description>M Zhang</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Sun, 01 Jan 2023 00:00:00 +0000</lastBuildDate><item><title>3D reconstruction of moving object by double sampling based on phase shifting profilometry</title><link>https://willpan.xyz/zh/publications/zhang-2023-double-sampling/</link><pubDate>Sun, 01 Jan 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2023-double-sampling/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）是最常用的三维测量技术之一，具有精度高、鲁棒性强和全场测量等优点。投影仪向物体投射至少三幅带相移的正弦条纹图，相机从另一角度拍摄。物体高度使条纹发生变形，再根据变形条纹的相位和系统参数计算三维形貌。由于需要多幅图像，传统 PSP 要求物体在重建过程中保持静止；一旦物体在条纹投射和采集期间发生运动，就会引入误差。&lt;/p>
+&lt;p>已有工作或跟踪物体运动并补偿由此产生的误差，或估计相邻帧三维数据之间的运动，或借助高速成像系统与移位格雷码。有一种方法根据物体起始和终止状态估计运动，但仅适用于匀速运动；基于深度学习、从单幅条纹图恢复相位的方法，网络训练耗时，难以实时处理。因此，作者希望找到一种适用于实时相移测量的运动误差补偿方法。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-problem.webp" alt="两幅 MATLAB 图。左图 (a)：450×450 像素网格上的俯视高度图，大部分为深蓝色，散布着浅蓝色竖条，在 x = 255 附近有一条亮黄色竖线。右图 (b)：三维曲面图，纵轴量级为 10 的 17 次方，呈现一面高而薄的墙和若干破碎的板块，而不是一个平顶方块。" loading="lazy">
+&lt;/a>&lt;figcaption>用传统 PSP 重建运动物体的仿真图像：(a) 重建结果，(b) 从另一角度观察的同一结果。结果存在很大误差。论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法同时改变了图像的采集方式和相位的计算方式。相机在每幅投射条纹期间被触发两次，因此同一条纹下拍到的两幅图像之间只有物体运动带来的差异。在通过跟踪获知运动后，用最小二乘模型从连续三幅图像中恢复物体相位；相互重叠的三幅图像组各自给出一幅相位图。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2023-double-sampling/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>每幅条纹拍摄两次。&lt;/strong> 在相机和投影仪上加入触发控制装置。投影仪以一定速率投射 N 幅条纹图，并在每个投射周期内触发相机两次：投射条纹 I&lt;sub>1&lt;/sub> 时采集 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>，投射 I&lt;sub>2&lt;/sub> 时采集 I&lt;sub>21&lt;/sub> 和 I&lt;sub>22&lt;/sub>，依此类推。&lt;/li>
+&lt;li>&lt;strong>区分运动与相移。&lt;/strong> 同一幅投射条纹下拍到的两幅图像（如 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>）之间只有物体运动引起的相移（δ&lt;sub>1&lt;/sub> = 0）；不同条纹下拍到的图像之间还包含 PSP 相移 δ&lt;sub>2&lt;/sub> = 2π/N。相位由 I&lt;sub>11&lt;/sub>、I&lt;sub>12&lt;/sub> 和 I&lt;sub>21&lt;/sub> 联合分析。&lt;/li>
+&lt;li>&lt;strong>跟踪运动。&lt;/strong> 通过跟踪物体得到描述其运动的旋转矩阵和平移向量，进而得到描述各点运动前后位置关系的坐标变换 (f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>)。&lt;/li>
+&lt;li>&lt;strong>最小二乘求解相位。&lt;/strong> 三幅图像都写成 A + B cos(ϕ + δ&lt;sub>k&lt;/sub>) + C sin(ϕ + δ&lt;sub>k&lt;/sub>) 的形式，其中 ϕ 为参考平面相位在变换后坐标处的取值。对三幅图像（N = 3）的平方误差求最小，得到线性方程组 D X = E，其中 X = [A B C]&lt;sup>T&lt;/sup>，物体引起的相位变化为 φ = tan&lt;sup>−1&lt;/sup>(−C/B)。再根据相位和系统参数重建物体。&lt;/li>
+&lt;li>&lt;strong>图像复用。&lt;/strong> 每连续三幅图像即可得到一幅物体相位图，各组相互重叠，每多拍一幅图像就开始新的一帧。传统 PSP 每一帧都需要三幅投射条纹。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-method.webp" alt="沿时间轴排列的四行时序图。Projector trigger：每次投射开始时有一个短脉冲。Projector illumination：较长的高电平段，标注 I1、I2（均填充红色）和 I3。Camera capture：每个照明段内有两个短脉冲，标注 I11 和 I12（黄色）、I21（黄色）和 I22、I31 和 I32。Camera trigger：每次投射有两个脉冲，用虚线与采集脉冲对齐。" loading="lazy">
+&lt;/a>&lt;figcaption>相机与投影仪之间的触发时序。相机在每幅投射条纹期间采集两幅图像；黄色标出的 I&lt;sub>11&lt;/sub>、I&lt;sub>12&lt;/sub> 和 I&lt;sub>21&lt;/sub> 是联合分析的三幅图像。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-multiplex.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-multiplex.webp" alt="两幅条纹图像示意图。上图 (a)：六幅条纹图，标注 I1、I2、I3、I1、I2、I3；括线把前三幅连成 Frame1，后三幅连成 Frame2。下图 (b)：八幅条纹图，I1、I2、I3、I1 下各两幅；错落的括线把相互重叠的图像组分别连成 Frame1 至 Frame6。" loading="lazy">
+&lt;/a>&lt;figcaption>条纹投射策略：(a) 传统 PSP 重建的帧；(b) 本文方法重建的帧，相互重叠的图像组各自给出一帧。论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>每幅投射条纹采集两幅图像&lt;/strong>，由相机和投影仪上的触发控制装置实现（第 3 节，图 1）。&lt;br>&lt;strong>每连续三幅图像得到一幅物体相位图&lt;/strong>，通过复用条纹图像实现（图 2、图 5a）。&lt;br>&lt;strong>拍摄帧率翻倍&lt;/strong>，相对于投影仪的最高帧率（第 5 节）。&lt;br>&lt;strong>仿真中物体在相邻两幅条纹图之间移动 10 个像素&lt;/strong>：所提方法重建出方块，而传统 PSP 对同一组图像的重建误差很大（图 5、图 6）。&lt;/aside>
+&lt;p>该方法通过仿真验证。分别仿真静止物体和运动物体的条纹图，运动物体从左向右移动，相邻两幅条纹图之间移动 10 个像素。为便于比较，先用传统 PSP 重建静止状态的条纹图（论文图 3）。在运动状态下，同一投射条纹下采集的图像只包含物体运动，不同投射条纹下的图像则同时包含条纹相移和物体运动（论文图 4）。通过跟踪物体计算运动的旋转矩阵和平移向量，再用所提模型计算相位，并通过复用由每三幅图像得到一幅物体相位图。由不同帧的相位图完成运动方块的高帧率三维重建（图 5）。对同一组图像使用传统 PSP 重建，结果存在很大误差（图 6）。&lt;/p>
+&lt;p>作者在结论中指出，该方法只需推导新的公式，并在三步相移的基础上投射前两步的条纹图，即可重建运动物体；它能以较低成本使拍摄帧率翻倍，同时不损失 PSP 的优点。与传统 PSP 的对比以图 5 和图 6 直观呈现。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-results.webp" alt="上排 (a)：四幅由黄、蓝、绿色构成的彩色相位图，带竖直条纹和内部方形区域，每帧一幅。左下 (b)：450×450 像素网格上的俯视高度图，深蓝色边框内为黄色方块。右下 (c)：平顶方块的三维曲面图，顶面为黄色。" loading="lazy">
+&lt;/a>&lt;figcaption>用所提方法重建运动物体：(a) 不同帧的相位图，(b) 重建结果，(c) 从另一角度观察的重建结果。论文图 5。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Automated reconstruction of multiple objects with individual movement based on PSP</title><link>https://willpan.xyz/zh/publications/lu-2020-automated-multiple/</link><pubDate>Tue, 01 Sep 2020 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2020-automated-multiple/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）向物体投射多幅带相移的正弦条纹图（通常至少三幅），并根据相机拍到的相位恢复物体形貌。由于需要采集多幅图像，采集期间物体必须保持静止。一旦物体运动，各幅条纹图之间不再对应，预先设计的相移量也被破坏，重建结果随之产生误差。&lt;/p>
+&lt;p>作者此前的工作用旋转矩阵和平移向量描述物体运动，并将这一信息引入重建模型，以此处理运动问题。该方法也能重建多个相互分离的物体，但要求它们的运动完全相同。而实际中更常见的是各物体运动各不相同；在重建多个各自运动的物体时，已有方法会引入误差。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-problem.webp" alt="暗背景上两个玩具车模的四幅俯视图：(a) 中车模呈蓝色、无条纹；(b) 至 (d) 中车模覆盖红蓝相间的水平条纹，且在各图之间发生平移和转动。" loading="lazy">
+&lt;/a>&lt;figcaption>实验所用的两个车模：(a) 无条纹图像；(b)–(d) 两车各自运动时采集到的 3 步 PSP 条纹图。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>本方法为每个物体单独描述其运动：先找出各个物体，再在条纹图序列中逐一跟踪，分别计算其旋转和平移，最后结合各物体自身的运动信息求解相位。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2020-automated-multiple/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>分离条纹与物体图像。&lt;/strong> 以红色投射条纹图，用彩色相机采集。红色分量包含条纹信息，用于求解相位；蓝色分量滤除了条纹，得到纯物体图像，用于跟踪和特征提取。&lt;/li>
+&lt;li>&lt;strong>识别物体。&lt;/strong> 在蓝色分量图像中，用 OTSU 方法将物体与背景分开。阈值分割可能把一个物体分成几块，因此再用膨胀运算将其重新合并，并由每个物体的轮廓得到包围框。&lt;/li>
+&lt;li>&lt;strong>用 KCF 跟踪各物体。&lt;/strong> 以每个包围框内的物体为模板，核相关滤波（KCF）跟踪算法在下一幅条纹图中找到其新的包围框，新包围框再作为后续图像的模板。&lt;/li>
+&lt;li>&lt;strong>估计各物体的运动。&lt;/strong> SIFT 提取物体运动前后的特征点及其对应关系；利用这些点，通过奇异值分解（SVD）为每个物体求出旋转矩阵和平移向量。&lt;/li>
+&lt;li>&lt;strong>逐个物体重建。&lt;/strong> 结合各自的运动信息，从红色分量中以最小二乘法求解含运动信息的重建模型，得到每个物体的相位并完成重建，直到最后一个物体。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-method.webp" alt="四格示意图：标为 Object1 至 Object3 的三个轮廓图形（两个星形和一个三角形）、套有虚线包围框的同样图形，以及从各包围框指向图形运动后新位置的箭头。" loading="lazy">
+&lt;/a>&lt;figcaption>多物体跟踪：(a) 三个待测物体；(b) 每个物体的包围框；(c)–(d) 用 KCF 在运动前后的图像之间跟踪各物体。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-components.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-components.webp" alt="同一幅双车模图像的三种形式：带条纹的彩色原图、只含红色条纹的暗图像，以及无条纹的蓝色车模图像。" loading="lazy">
+&lt;/a>&lt;figcaption>一幅采集图像 (a) 分解为只含条纹信息的红色分量 (b) 和作为纯物体图像的蓝色分量 (c)。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">对两个各自运动的车模，本文方法的 &lt;strong>RMS 误差为 0.0773 mm&lt;/strong>，传统 PSP 为 &lt;strong>8.981 mm&lt;/strong>（第 4 节，图 10）。&lt;/aside>
+&lt;p>实验系统采用彩色相机（Allied Vision Manta 504C，分辨率 2452 × 2056）和投影仪（Wintech DLP PRO 4500，分辨率 912 × 1140）。两个车模在参考平面上各自做旋转和平移运动，采用红色条纹的 3 步 PSP 进行测量，并以静止物体的 6 步 PSP 重建结果为参考。传统 PSP 的结果存在明显的运动误差，在物体边缘等高度突变处尤为严重；本文方法则消除了这些误差。此外，只需在识别物体后选定感兴趣的对象，该方法也可以只重建指定物体而忽略其他物体。&lt;/p>
+&lt;p>作者也说明了方法的适用条件：只考虑刚体的二维运动；物体与背景之间的灰度差异足够大时，物体识别效果更好，且由于膨胀会扩大物体区域，各物体之间需保持一定距离；条纹颜色应与物体颜色有较大差异，环境光较弱时应在投射图案中加入蓝色背景光；对运动速度没有限制，但采集速度需足够快，以获得清晰图像。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-results.webp" alt="两个车模的四幅彩色高度图：上排表面平滑，下排出现水平条状伪影和参差不齐的边缘。" loading="lazy">
+&lt;/a>&lt;figcaption>本文算法的重建结果 (a) 正视图和 (b) 网格显示，以及传统 PSP 的 (c) 正视图和 (d) 网格显示。引自论文图 10。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-error.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-error.webp" alt="两个车模的残差图：左图为约 0.1 mm 及以下的均匀噪声，右图为约 −12 至 8 mm 的条状误差。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 本文算法与 (b) 传统 PSP 的残差，注意两者色标范围不同。引自论文图 11。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

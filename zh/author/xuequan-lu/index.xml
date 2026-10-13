@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Xuequan Lu | 潘威</title><link>https://willpan.xyz/zh/author/xuequan-lu/</link><atom:link href="https://willpan.xyz/zh/author/xuequan-lu/index.xml" rel="self" type="application/rss+xml"/><description>Xuequan Lu</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>SuP: Sub-cloud Driven Point Cloud Registration</title><link>https://willpan.xyz/zh/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Xuequan Lu | 潘威</title><link>https://willpan.xyz/zh/author/xuequan-lu/</link><atom:link href="https://willpan.xyz/zh/author/xuequan-lu/index.xml" rel="self" type="application/rss+xml"/><description>Xuequan Lu</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>SuP: Sub-cloud Driven Point Cloud Registration</title><link>https://willpan.xyz/zh/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
 &lt;p>点云配准的任务是求出一组旋转和平移，把同一场景的两帧三维扫描对齐。当两帧扫描共享大量几何结构时，现有方法已能实现高精度对齐。但在大规模建图、自主导航等应用中，两个视角往往只有一小部分场景重叠。一旦共享表面低于约 30%，无论是经典的 ICP 还是基于学习的方法，都难以建立可靠的对应关系，配准会出现收敛缓慢、错位甚至完全失败。&lt;/p>
 &lt;p>论文将这类失败归因于两帧之间“不重叠”的区域：这些区域在几何或语义上仍可能彼此相似，直接对两帧完整点云做匹配，就会产生大量错误对应，把少数正确对应淹没。早期工作尝试显式预测哪些点位于重叠区，但这种预测依赖一致的特征表示，在低重叠样本上效果明显下降。后续方法借助注意力机制，并引入几何编码、语义或颜色信息来增强特征，但随着重叠率降低，性能依然下滑。&lt;/p>
 &lt;figure class="rfig">
@@ -6,7 +6,7 @@
 &lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" alt="上图：ColorPCR/GeoTransformer 对两帧扫描做匹配，相似结构之间出现大量红色错误匹配，配准失败。下图：SuP 的流程（划分、OPS、MPN、合并匹配），绿色为正确匹配，配准成功。" loading="lazy">
 &lt;/a>&lt;figcaption>上：重叠区之外的相似结构（红框）吸引了大量错误匹配（红线），掩盖了正确对应；直接匹配的基线方法（图中标注为 ColorPCR / GeoTr.）在这对扫描上配准失败（旋转误差 41.3°，平移误差 101.7 cm）。下：SuP 找出重叠率高、特征一致性强的子点云对，合并其中的匹配后完成配准（1.3°，1.8 cm）。论文图 1。&lt;/figcaption>
 &lt;/figure>
-&lt;h2 id="方法">方法&lt;/h2>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
 &lt;p>SuP 换了一个角度看问题。两帧扫描整体上可能只有少量重叠，但若把每帧切成更小的块并两两配对，其中有一部分子点云对具有很高的重叠率。SuP 把这些高重叠的子点云对称为“锚点对”：先分两个阶段把它们找出来，再只在锚点对内部建立匹配。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/fung-2026-sup-sub-cloud-driven-point-cloud/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
@@ -22,7 +22,7 @@
 &lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="网络结构图：特征提取、特征聚合、双阶段子点云锚点挖掘模块（划分、OPS、初步子点云匹配、MPN）以及合并匹配，并附各部分的细节面板。" loading="lazy">
 &lt;/a>&lt;figcaption>方法总览。多尺度特征（3.2 节）经注意力聚合（3.3 节）；双阶段子点云锚点挖掘模块（3.4 节）划分两帧点云，用 OPS 选出候选，初步对齐（PSM）后由 MPN 打分；合并匹配模块（3.5 节）把各锚点对的匹配合并，估计最终变换。论文图 2。&lt;/figcaption>
 &lt;/figure>
-&lt;h2 id="结果">结果&lt;/h2>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
 &lt;aside class="keypoint">使用无需 RANSAC 的 LGR 估计器时，&lt;strong>在 Color3DMatch 和 Color3DLoMatch 上的配准召回率分别为 97.8% 和 90.2%&lt;/strong>，在采用 LGR 的对比方法中最高（表 2）。&lt;br>使用 RANSAC 时为 &lt;strong>98.1% 和 90.4%&lt;/strong>，且在 5000 到 250 个采样对应点的各档设置下配准召回率均为最高（表 1）。&lt;br>&lt;strong>位姿误差最低&lt;/strong>：Color3DMatch 上为 1.374° / 0.046 m，Color3DLoMatch 上为 2.493° / 0.074 m（表 3）。&lt;/aside>
 &lt;p>实验采用室内基准 3DMatch 的颜色增强版本：Color3DMatch 中点云对的重叠率高于 30%，Color3DLoMatch 是重叠率为 10%–30% 的更难子集。配准召回率指估计变换的 RMSE 小于 0.2 m 的点云对所占比例。SuP 默认采用 ColorPCR 的颜色增强骨干网络；与最强的基线 ColorPCR 本身相比，在 LGR 设置下，SuP 将 Color3DMatch 上的召回率从 96.5% 提升到 97.8%，将 Color3DLoMatch 上的召回率从 88.3% 提升到 90.2%。正确匹配的比例也随之提高：在 Color3DLoMatch 上采样 250 个对应点时，SuP 的内点率为 76.0%，ColorPCR 为 68.0%。&lt;/p>
 &lt;p>子点云策略也可以作为插件用于其他方法。接入 GeoTransformer 后，Color3DLoMatch 上的召回率从 74.0% 提升到 76.7%；接入 PEAL 后，从 81.2% 提升到 83.4%（表 4）。消融实验中，依次加入四个组件（OPS、特征一致性权重、MPN 和对齐感知加权损失），每一步都使两个基准上的召回率进一步提高（表 5）。子点云的大小同样重要：子点云过小可能因重叠不足而降低召回率，过大则会丢失局部细节，默认半径参数 τ = 0.35 取得了最佳平衡（表 6）。论文在局限性部分指出，若两帧扫描来自差异很大的传感器，特征可能出现细微不一致，从而影响 OPS 和 MPN；引入特征归一化或域自适应是后续可行的方向。&lt;/p>
@@ -30,4 +30,117 @@
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-3.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-3.webp" alt="三组低重叠扫描对（黄色与蓝色）：输入、真值、ColorPCR 与 SuP 的配准结果（标注 RMSE），以及两者的对应关系（绿色为正确、红色为错误，标注内点率）。" loading="lazy">
 &lt;/a>&lt;figcaption>三组重叠率为 14.5%–23.8% 的 3DLoMatch 扫描对：(a) 输入，(b) 真值，(c、d) ColorPCR 与 SuP 的配准结果，(e、f) 两者的对应关系（绿色正确，红色错误）。第一行中，ColorPCR 的匹配只有 18.8% 正确，配准 RMSE 为 2.939 m；SuP 的匹配有 51.0% 正确，RMSE 为 0.066 m。论文图 3。&lt;/figcaption>
+&lt;/figure></description></item><item><title>DeSC: Learning Deep Semantic Descriptor for NeRF Registration</title><link>https://willpan.xyz/zh/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>神经辐射场（NeRF）把场景存储在神经网络之中。大场景常被拆分成多个 NeRF 分别训练；而在缺少可靠全局相机位姿的条件下采集的图像，训练出的各个 NeRF 也各自处于不同的坐标系中。要把它们合并起来，就需要估计两个独立训练的 NeRF 之间的刚体旋转和平移，即 NeRF 配准。&lt;/p>
+&lt;p>现有方法要么依赖几何信息，要么依赖渲染颜色。DReg-NeRF 从每个 NeRF 中采样点云并直接回归对应关系，但由于体密度估计不准确，尤其在 NeRF 训练不充分时，这些点云噪声大、伪影多。VF-NeRF 借助光度损失进行优化，因而在无纹理和高度对称的情形下容易失效。两者都没有利用 NeRF 内部为每个三维点计算的、与视角无关的嵌入特征，而这种嵌入同时包含几何与外观信息。不过，直接使用它也并不容易：两个 NeRF 分别训练，嵌入空间并不一致。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-problem.webp" alt="一个红色消防栓的 RGB 渲染图、按原始 NeRF 嵌入和学习到的描述子着色的点云，以及两组由绿线和红线连接的消防栓点云对。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 物体的两个视角；(b) 原始 NeRF 嵌入，与颜色相关性强，但在两个 NeRF 之间不一致；(c) DeSC 的深度语义描述子，两者保持一致；(d, e) DeSC 与 GeoTransformer 得到的对应关系，绿线为正确匹配，红线为错误匹配。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>DeSC 不仅把 NeRF 视为几何来源，也把它当作点特征的来源。它从每个 NeRF 中采样点云，用 KPConv 骨干网络提取几何特征，并通过深度语义聚合模块（DSAM）把 NeRF 自身的嵌入转化为在两个 NeRF 之间一致的描述子。随后由 Transformer 和粗到精匹配建立对应关系，最终用 SVD 求解位姿。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>对每个 NeRF 采样。&lt;/strong> DeSC 取 NeRF 占据栅格中非空体素的中心点，保留密度大于阈值 σt 的点。KP-FCNN 对该点云做分层下采样，同时提取多层级几何特征。&lt;/li>
+&lt;li>&lt;strong>在稀疏点周围查询嵌入。&lt;/strong> 对每个稀疏点，取半径 τ 内的 k 个最近稠密点组成局部块。块内每个点向 NeRF 查询与视角无关的嵌入，并通过正弦编码融入该点的颜色和密度，使特征带上两个 NeRF 共有的光度信息。&lt;/li>
+&lt;li>&lt;strong>用纹理感知图卷积聚合。&lt;/strong> 在每个局部块上运行图卷积，其边权突出距离近而特征差异大的点对，从而捕捉局部高频纹理。输出再与几何特征融合，得到深度语义描述子。&lt;/li>
+&lt;li>&lt;strong>引入上下文并匹配。&lt;/strong> 几何自注意力和交叉注意力让每个点云从自身和另一个点云中获取上下文信息。基于得到的特征选出粗对应关系，再在稠密点上用最优传输层细化。&lt;/li>
+&lt;li>&lt;strong>求解位姿。&lt;/strong> 剔除外点后，用 SVD 求出对齐两个 NeRF 的旋转和平移。训练时，密度感知光度一致性损失还要求匹配的局部块具有相近的密度加权颜色。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-method.webp" alt="网络结构图：两个 NeRF 点云 X 和 Y 进入深度语义聚合模块，再依次经过含几何自注意力和交叉注意力的 Transformer、点匹配模块以及外点剔除与 SVD；下方面板展示 KP-FCNN、NeRF 查询和局部图网络的细节。" loading="lazy">
+&lt;/a>&lt;figcaption>方法总览。每个深度语义聚合模块将 KP-FCNN 几何特征与经局部图网络聚合的 NeRF 嵌入相结合；Transformer、点匹配、外点剔除和 SVD 给出最终的对齐结果。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在 Objaverse 上的配准召回率为 97.7%&lt;/strong>，VF-NeRF 为 92.1%，SIRA-PCR 为 94.5%；旋转误差为 2.57°（表 I）。&lt;br>&lt;strong>在 30% 重叠率下，DTU、LLFF 和 Mip-NeRF360 上的配准召回率分别为 90.6%、91.0% 和 88.1%&lt;/strong>，VF-NeRF 分别为 86.6%、88.5% 和 84.8%（表 III–V）。&lt;br>去掉全部所提模块后，Objaverse 上的召回率降至 &lt;strong>93.2%&lt;/strong>，旋转误差升至 &lt;strong>9.19°&lt;/strong>（表 VI）。&lt;/aside>
+&lt;p>物体级基准基于 Objaverse 构建：每个物体渲染 120 张图像并分成两组，每组施加一个随机变换，再分别训练独立的 NeRF；测试使用训练中未见过的 44 个物体。配准召回率统计估计变换的 RMSE 小于 0.2 m 的样本对所占比例。对比方法包括 NeRF 配准方法 DReg-NeRF 和 VF-NeRF，以及八种在 NeRF 采样点上运行的点云配准方法。加入幅度为场景尺寸 10% 的均匀噪声后，DeSC 的召回率仍为 95.74%（表 II）。&lt;/p>
+&lt;p>在真实场景数据集 DTU、LLFF 和 Mip-NeRF360 上，每个场景被划分为重叠率 30%、50% 和 80% 的图像子集。DeSC 在全部九种设置下的配准召回率均为最高，且在 30% 重叠率时优势最大；不过在部分设置下，VF-NeRF 的旋转误差略低。消融实验中，依次加入深度语义聚合、光度编码、纹理感知边权和光度一致性损失，Objaverse 上的召回率逐步提升：93.2%、93.9%、95.1%、96.9%、97.7%。&lt;/p>
+&lt;p>作者指出了两点局限。DeSC 依赖 NeRF 的隐式嵌入，因此不能直接用于 3D Gaussian Splatting、体素网格或基于哈希的方法等显式表示。对于形状和纹理都高度对称的物体（例如交通锥），提取的特征同样呈对称分布，可能导致错误匹配，即便渲染出的对齐结果看起来合理。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-objaverse.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-objaverse.webp" alt="三个物体（香蕉、椅子、电话）及红绿两色的相机视锥环，分别对应 DeSC、DReg-NeRF 和 GeoTransformer；DeSC 一列中两环重合，呈黄色。" loading="lazy">
+&lt;/a>&lt;figcaption>Objaverse 示例：源 NeRF 的相机位姿为红色，目标 NeRF 的为绿色，配准后两者重合处呈黄色。部分 NeRF 在空白区域存在高密度（第 2、3 行），干扰了 DReg-NeRF 和 GeoTransformer。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-results.webp" alt="DTU、LLFF 和 Mip-NeRF360 场景的渲染图网格，每幅图沿对角线分为源和目标两半，依次为输入、真值、DReg-NeRF、VF-NeRF 和 DeSC。" loading="lazy">
+&lt;/a>&lt;figcaption>来自 DTU、LLFF 和 Mip-NeRF360、重叠率为 30% 的真实场景。每幅图沿对角线分为源 NeRF 与目标 NeRF 的渲染结果。引自论文图 6。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Segmentation-Driven Feature-Preserving Mesh Denoising</title><link>https://willpan.xyz/zh/publications/wang-2024-mesh-denoising/</link><pubDate>Sun, 01 Sep 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/wang-2024-mesh-denoising/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>网格去噪的任务是从受噪声污染的三角网格中恢复出干净的网格，供三维建模、计算机动画和工业设计等任务使用。难点在于既要去除噪声，又要保留决定形状的特征：棱边、边界和角点。&lt;/p>
+&lt;p>许多基于面法向的去噪方法这样处理特征：对各向异性曲面（相邻面片朝向差异明显）分配较小的权重，对各向同性曲面（相邻面片朝向相近）分配较大的权重。然而，即使权重很小，各向异性曲面上的面片仍会影响去噪结果。另一些各向异性去噪方法在特征被强噪声淹没时难以恢复特征，而基于低秩矩阵的方法计算复杂度高、速度很慢。此前借助分割来引导去噪的方法也各有不足：有的难以保留区域之间的尖锐特征，有的需要针对输入形状手动调节聚类数目，有的在已滤波的网格上聚类，有的在高噪声下效果仍不理想。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法先把含噪网格沿特征划分为若干区域，再逐区域独立去噪，使每个面片都不会与其他区域的面片一起滤波。对于高噪声网格（σ&lt;sub>n&lt;/sub> ≥ 0.3 l&lt;sub>e&lt;/sub>，以平均边长为单位），面片朝向严重扭曲甚至翻转，直接分割变得不可靠；此时先通过一个凸优化问题对网格预滤波，在预滤波结果上分割，再把区域映射回原始含噪网格。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/wang-2024-mesh-denoising/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>仅靠权重不够。&lt;/strong> 在基于法向的滤波中，尖锐棱边另一侧的面片权重虽小，却仍参与更新，依然会影响棱边附近的去噪结果。&lt;/li>
+&lt;li>&lt;strong>逐边检验。&lt;/strong> 对两个面片共享的每条边，将两面片法向夹角的余弦与全局阈值 N&lt;sub>thr&lt;/sub>（网格所有边上余弦的平均值）比较，并将面积型边算子 D(e) 的 L2 范数与用户设定的阈值 D&lt;sub>thr&lt;/sub> 比较；D(e) 由两个三角形的四个顶点计算。两个三角形共面时 ‖D(e)‖&lt;sub>2&lt;/sub> 为 0，二面角越尖锐，其值越大。&lt;/li>
+&lt;li>&lt;strong>从种子出发生长区域。&lt;/strong> 若法向余弦大于 N&lt;sub>thr&lt;/sub>，或 ‖D(e)‖&lt;sub>2&lt;/sub> 小于 D&lt;sub>thr&lt;/sub>，种子面片就把标签传给通过该边相连的面片；新标记的面片继而成为种子。生长停止后，从未标记的面片中随机选取新种子，直到所有面片都归入某个区域。&lt;/li>
+&lt;li>&lt;strong>细化小簇。&lt;/strong> 噪声可能留下零散的小簇。面片数少于 50 的小簇会被拆散：其中每个面片在二环邻域内按标签累加法向余弦，改归余弦和最大的相邻标签。&lt;/li>
+&lt;li>&lt;strong>逐区域去噪。&lt;/strong> 由现有的滤波方法（本文为 BNF、UNF、GNF 和 L1）更新法向和顶点，且只使用同一区域内的面片，各方法自身的参数保持不变。唯一新增的参数是 D&lt;sub>thr&lt;/sub>。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-method.webp" alt="以带三个圆孔的 CAD 零件为例的流程图：含噪网格被分割为彩色区域后去噪；虚线框为高噪声分支，网格先预滤波、再分割，并把区域映射回原网格。" loading="lazy">
+&lt;/a>&lt;figcaption>方法流程。低噪声时直接对含噪网格分割；高噪声时（虚线框）先预滤波，再把区域映射回原始网格。随后由这些区域引导去噪。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-growing.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-growing.webp" alt="尖锐棱边处三角网格的六幅局部放大图：粉色区域 S1 从一个三角形出发沿下方曲面生长，随后黄色区域 S2 沿上方曲面生长。" loading="lazy">
+&lt;/a>&lt;figcaption>尖锐棱边处的区域生长。种子 S1 向外扩展，直到抵达棱边（1–3）；随后新种子 S2 填满棱边另一侧的曲面（4–6）。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在全部六个合成测试模型上，顶点误差 E&lt;sub>v&lt;/sub> 均为所有对比方法中最低&lt;/strong>，其中在 Casting 上与原始 L1 并列（表 2）。&lt;br>&lt;strong>Dodecahedron，σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub>：&lt;/strong> 在 BNF 中加入分割主干后，E&lt;sub>v&lt;/sub> 从 13.808 降至 3.878（×10⁻³）；在 GNF 中从 6.832 降至 2.695（表 2）。&lt;br>&lt;strong>Icosahedron，σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub>：&lt;/strong> 以 BNF 为例，MAE 降低 62.4%（9.859° → 3.712°），E&lt;sub>v&lt;/sub> 降低 72.0%（图 15）。&lt;/aside>
+&lt;p>定量实验在六个已知真值的模型（Cube、Casting、Double torus、Dodecahedron、Icosahedron 和 Cad）上添加零均值高斯噪声，噪声标准差与平均边长成比例。评价指标为面法向的平均角度误差（MAE，单位为度）和基于顶点的网格间误差 E&lt;sub>v&lt;/sub>。对比方法包括 L0、BNF、UNF、GNF、L1、HLO 和 TGV；其中四个开源方法 BNF、UNF、GNF 和 L1 还被嵌入分割主干运行，参数与各自原始版本相同。在这 24 组模型–方法组合中，加入分割主干后 MAE 在 23 组中下降，E&lt;sub>v&lt;/sub> 在 22 组中下降。MAE 方面的结果具有竞争力，但并非处处最优：Casting 上 MAE 最低的是 TGV，Double torus 上则是 L0。特征保持上的优势在类 CAD 模型 Cube、Dodecahedron 和 Icosahedron 上最为明显，L0、BNF 和 TGV 在这些模型的棱边处误差较大。&lt;/p>
+&lt;p>视觉上，分割主干有助于恢复 Octaflower 的尖端并保持其曲面区域，恢复 Nicolo 模型耳朵和眼睛的细节，并在强噪声（σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub>）下保留 Fandisk 的特征。在噪声并非高斯分布的原始扫描网格上，它保留了 Angel 的羽毛以及 Wilhelm 的头发和嘴唇细节，并帮助恢复 Iron 和 Rabbit 模型的细节。在用于引导同一去噪方法的几种分割方法（K-means、VSA、SDF 和本文方法）中，本文的分割得到的总体 E&lt;sub>v&lt;/sub> 最低（图 8）。分割主干还使 UNF 和 GNF 对自身参数更不敏感（图 25–28），而细化步骤减少了去噪结果中的凹坑和粗糙棱边（图 29）。作者也指出了一个局限：对于三角剖分极其稀疏且不规则的网格（如一个齿轮模型），分割结果虽然合理，去噪后的网格却不能完全恢复原有形状，棱边处尤为明显（图 30）。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-dodecahedron.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-dodecahedron.webp" alt="Dodecahedron 结果：含噪网格及其分割，以及 L0、BNF、UNF、GNF、L1、HLO、TGV 和本文方法的八个去噪结果，下方为顶点误差色图，本文方法整体呈深蓝色。" loading="lazy">
+&lt;/a>&lt;figcaption>噪声 σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub> 的 Dodecahedron；下排以颜色表示顶点误差 E&lt;sub>v&lt;/sub>（蓝色低、红色高）。“Ours”以 GNF 为去噪主干。引自论文图 12。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-gains.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-gains.webp" alt="含噪 Icosahedron 的两组结果：上排为 BNF、UNF、GNF、L1 的误差色图和数值，下排为加入分割主干后的结果及降低百分比。" loading="lazy">
+&lt;/a>&lt;figcaption>Icosahedron 上 BNF、UNF、GNF 和 L1 未加入（上排）与加入（下排）分割主干时的 MAE（左，单位为度）和 E&lt;sub>v&lt;/sub>（右，×10⁻³），括号内为降低的百分比。引自论文图 15。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-scan.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-scan.webp" alt="原始扫描的 Angel 网格：含噪输入、分割结果和八种方法的去噪结果，每幅上方为翅膀羽毛的局部放大图。" loading="lazy">
+&lt;/a>&lt;figcaption>原始扫描的 Angel 网格：含噪输入、分割结果及各方法的去噪结果，上方为羽毛的局部放大。“Ours”以 L1 为去噪主干。引自论文图 19。&lt;/figcaption>
+&lt;/figure></description></item><item><title>HLO: Half-kernel Laplacian Operator for surface smoothing</title><link>https://willpan.xyz/zh/publications/pan-2020-hlo/</link><pubDate>Wed, 01 Jan 2020 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2020-hlo/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>由扫描仪或其他传感设备采集的网格不可避免地含有噪声，在用于形状分析、动画或渲染之前必须先进行光顺。其主要难点在于：既要去除噪声，又要保持特征、抑制收缩。均匀拉普拉斯算子将每个顶点与其邻点的质心作比较，能有效光顺曲面，但由于其各向同性，会抹平特征并使曲面收缩。论文还分析了特征点的微分性质：在尖锐边上的特征点处，曲面不可微，拉普拉斯算子所近似的二阶导数并不存在，因此对这类顶点用其全部邻点计算均匀拉普拉斯是没有意义的。现有的特征保持方法大多依赖面法向或顶点法向，其中不少方法包含多个步骤和大量参数，难以调节，对复杂模型尤其如此。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-problem.webp" alt="两行各五个花瓶渲染图：带噪输入以及迭代 1、3、5、15 次后的结果。上行花瓶逐渐变细，上部和下部特征消失；下行花瓶保持了原有轮廓。" loading="lazy">
+&lt;/a>&lt;figcaption>带噪花瓶分别经均匀拉普拉斯算子（上行）和 HLO（下行）迭代 1、3、5、15 次后的结果。均匀拉普拉斯明显使花瓶收缩，而 HLO 保留了上部和下部特征。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>HLO 保留了均匀拉普拉斯算子的简洁性，但不再作用于整个邻域，而是作用于半窗口，即顶点邻点的子集。对每个顶点，HLO 生成全部半窗口，在每个半窗口上计算拉普拉斯，并保留能量最小的那一个；随后用这些半核拉普拉斯迭代地更新曲面。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2020-hlo/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2020-hlo/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>完整窗口在特征处失效。&lt;/strong> 均匀拉普拉斯算子将顶点 v₀ 与其全部邻点的质心 v′₀ 作比较。在尖锐边上的顶点处，曲面不可微，该算子并不适用；实际光顺时，它会抹平特征并使网格收缩（图 2）。&lt;/li>
+&lt;li>&lt;strong>将邻域划分为半窗口。&lt;/strong> 依次以每个邻点为起点，例如邻点 A，将其与到 v₀、A、v′₀ 所在平面距离最短的邻点 D 配对。直线 A–D 将邻点划分为左、右两个半窗口。&lt;/li>
+&lt;li>&lt;strong>半窗口拉普拉斯。&lt;/strong> 在每个半窗口上分别计算均匀拉普拉斯，得到 d₁、d₂ 等向量。&lt;/li>
+&lt;li>&lt;strong>投影到完整窗口方向。&lt;/strong> 半窗口拉普拉斯还会带来切向偏移，可能导致三角面片翻转或退化。因此将其投影到完整窗口拉普拉斯的方向 n 上：δ = (d·n)n。论文指出，这样可使特征顶点处的拉普拉斯幅值较小、非特征顶点处较大，从而光顺非特征区域并保持特征。&lt;/li>
+&lt;li>&lt;strong>选取能量最小者并迭代。&lt;/strong> 有 |NV| 个邻点的顶点共有 2|NV| 个候选半窗口。HLO 选取能量最小者，即拉普拉斯的长度与顶点到初始位置距离之和最小的一个，用它更新顶点。唯一的参数是迭代次数。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-method.webp" alt="三幅线框示意图：顶点 v0 及其邻点 vA 至 vG。左图中经过 vA 和 vD 的直线划分邻域；中图和右图以橙色标出一个半窗口，并在 v0 处画出其拉普拉斯 d 及投影后的向量 δ。" loading="lazy">
+&lt;/a>&lt;figcaption>顶点 v₀ 上的半核拉普拉斯算子。左：邻点 A 与 D 配对，D 是到 v₀、A 和质心 v′₀ 所在平面距离最短的邻点，直线 A–D 将邻域分为两个半窗口。中、右：两个半窗口的拉普拉斯 d₁、d₂ 及其在完整窗口拉普拉斯上的投影 δ₁、δ₂。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>仅有一个参数&lt;/strong>，即迭代次数；对比的法向滤波方法和 L0 方法有三至六个参数（表 1）。&lt;br>&lt;strong>在所有运行时间测试中最快&lt;/strong>，例如在 Armadillo（43,243 个顶点）上耗时 1.81 s，次快的 UNF 为 5.68 s，顶点迭代均为 10 次（表 3）。&lt;br>&lt;strong>在 9 组测试中有 4 组法向误差（MSAE）最低&lt;/strong>，例如在噪声 σn = 0.5 lₑ 的 Armadillo 上为 9.33 × 10⁻²，L0 最小化为 9.59 × 10⁻²（表 2）。&lt;/aside>
+&lt;p>论文将 HLO 与均匀拉普拉斯、余切拉普拉斯以及七种去噪方法进行了比较：双边网格滤波、单边、双边与引导法向滤波（UNF、BNF、GNF）、L0 最小化、级联法向回归（CNR）和非局部低秩法向滤波（NLLR）。合成测试在模型上添加零均值高斯噪声，其标准差 σn 与平均边长 lₑ 成正比；真实测试使用 Microsoft Kinect 扫描的模型以及扫描得到的 Angel 和 Rabbit 模型。与均匀拉普拉斯相比，HLO 显著减轻了收缩，在 Julius 模型上的平均顶点误差也低得多；余切拉普拉斯对几何更敏感，但容易在曲面上产生尖锐的“毛刺”。由于均匀拉普拉斯在光顺过程中能展开翻转的三角面片，HLO 对高噪声的敏感程度低于大多数对比方法。在法向误差 MSAE 上，L0 最小化和 HLO 通常是最好的两种方法。顶点误差 Ev 与视觉比较结果不一定一致，因为展开翻转三角面片可能使顶点远离其真实位置。在运行时间对比中 HLO 速度最快，而其代码尚未经过优化或并行加速。&lt;/p>
+&lt;p>作者也指出了局限：HLO 不是基于边的算子，因此难以在顶点数较少的类 CAD 模型上恢复光滑的尖锐边；对于顶点数较多的真实扫描类 CAD 模型，其结果与其他方法相当。与以往工作一样，HLO 固定输入网格的开放边界，有时会导致不理想的结果。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-results.webp" alt="布满红色翻转三角面片的带噪狮头花瓶，以及七个去噪结果，每个结果上方附有瓶口局部放大图；部分结果仍可见红色三角面片。" loading="lazy">
+&lt;/a>&lt;figcaption>重噪声（σn = 0.8 lₑ）下的 Vaselion 模型：带噪输入以及 UNF、BNF、L0、GNF、CNR、NLLR 和 HLO（Ours）的结果，上方为框选区域的局部放大。翻转的三角面片以红色显示。引自论文图 9。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-errors.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-errors.webp" alt="三个男性头像渲染图：绿色的带噪输入、布满红蓝误差斑块的结果，以及大部分为绿色的结果。" loading="lazy">
+&lt;/a>&lt;figcaption>Julius 模型（σn = 0.2 lₑ）经均匀拉普拉斯（ULO，中）和 HLO（右）各迭代 10 次后的逐顶点误差；暖色和冷色分别表示正向和负向位移。引自论文图 5。&lt;/figcaption>
 &lt;/figure></description></item></channel></rss>

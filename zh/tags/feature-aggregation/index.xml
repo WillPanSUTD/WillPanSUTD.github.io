@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Feature Aggregation | 潘威</title><link>https://willpan.xyz/zh/tags/feature-aggregation/</link><atom:link href="https://willpan.xyz/zh/tags/feature-aggregation/index.xml" rel="self" type="application/rss+xml"/><description>Feature Aggregation</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Sun, 01 Jan 2023 00:00:00 +0000</lastBuildDate><item><title>Random screening-based feature aggregation for point cloud denoising</title><link>https://willpan.xyz/zh/publications/wang-2023-random-screening/</link><pubDate>Sun, 01 Jan 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/wang-2023-random-screening/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>传感设备采集的点云会受到环境噪声和设备精度限制的影响，其描述的几何形状因此失真。传统的基于优化的去噪方法需要繁琐的参数调节，而且难以同时兼顾去噪与特征保持。基于学习的方法减轻了调参负担，但它们通常在点分布和密度均匀的数据上训练，一旦噪声严重或点密度不均，鲁棒性就会下降。&lt;/p>
+&lt;p>为了充分利用点的位置信息，一种常见做法是把较大局部块的特征融合到较小的子块中。但这种技术通常用于点分辨率均匀的训练数据，可能导致网络在采样密度变化的点上不够鲁棒。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2023-random-screening/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2023-random-screening/fig-problem.webp" alt="含噪二十面体的四幅渲染图，按到真实曲面的距离从蓝色（近）到黄色（远）着色：含噪输入，以及 Score、MoDNet 和本文方法的结果，P2M 分别为 3.0049、2.5784 和 1.9878。" loading="lazy">
+&lt;/a>&lt;figcaption>点分布不规则并受噪声污染的二十面体。颜色表示每个点到真实曲面的距离（蓝色近，黄色远）；数字为 P2M 误差（×10⁴）。引自论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>网络根据每个点的局部块对其去噪。编码器先提取点特征；随后两个基于随机筛选的特征聚合模块，各自随机丢弃一半的点，并把较稠密局部块的全局特征融合到剩下的较稀疏的点中。最后，逐点权重决定每个保留点对位移的贡献，该位移把含噪点移向干净曲面。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/wang-2023-random-screening/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/wang-2023-random-screening/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>构建局部块。&lt;/strong> 对每个含噪点，取半径 r（包围盒对角线长度的 5%）球邻域内的点构成局部块。局部块被平移到原点、缩放到单位球内，经 PCA 旋转到规范姿态，再通过补点或下采样统一为 N = 500 个点。&lt;/li>
+&lt;li>&lt;strong>编码与筛选。&lt;/strong> 由 Dense Block 构成的图编码器输出 N × C 的特征矩阵。网络从中提取全局特征，同时随机保留一半的点特征。&lt;/li>
+&lt;li>&lt;strong>将稠密信息融入稀疏点。&lt;/strong> 将全局特征复制 N/2 份，与筛选后子块的特征拼接，经 MLP 得到 N/2 × 2C 的矩阵。较稀疏的子块由此获得了来自稠密局部块的更丰富的几何信息。&lt;/li>
+&lt;li>&lt;strong>再重复一次。&lt;/strong> 再次进行同样的筛选与融合，最终保留 N/4 个点，每个点 4C 个通道。论文的消融实验表明，这种两级级联比单层特征聚合更有效。&lt;/li>
+&lt;li>&lt;strong>加权并移动。&lt;/strong> 网络为 N/4 个点各回归一个权重；权重损失使更靠近局部块中心点切平面的点获得更高权重。加权后的特征经最大池化后解码为位移向量，与含噪点相加。训练时将该权重损失与曲面贴近损失结合使用。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2023-random-screening/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2023-random-screening/fig-method.webp" alt="网络结构图：含噪点云及其输入局部块进入特征编码器；三行分别为 N、N/2、N/4 个点的局部块及 C、2C、4C 通道的特征矩阵，由随机筛选箭头和拼接相连；右侧的权重与输出位移向量得到去噪点云。" loading="lazy">
+&lt;/a>&lt;figcaption>整体流程。绿色虚线箭头为随机筛选步骤；每个全局特征 G 被复制后与筛选子块的特征拼接。右侧为逐点权重和两项损失。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在 PUNet 测试集上平均误差最低：CD 2.25，P2M 0.65&lt;/strong>（×10⁴），次优的 MoDNet 为 2.40 和 0.75（表 1）。&lt;br>&lt;strong>在 ABC 数据集的 1,792 个 CAD 形状上，CD 2.299，P2M 0.920&lt;/strong>，MoDNet 为 2.511 和 1.104，Score 为 2.719 和 1.302（表 2）。&lt;br>消融实验中，完整流程的 &lt;strong>P2M 为 0.961&lt;/strong>，去掉特征聚合时为 1.149，去掉权重损失时为 1.407（表 3）。&lt;/aside>
+&lt;p>网络在 PUNet 的 40 个训练形状上训练，训练时实时添加标准差为包围球半径 0.5%–2% 的高斯噪声。PUNet 测试集包含 20 个形状，分别以 10,000 和 50,000 个点采样，并各加 1%、2%、3% 三档噪声；在大多数设置下以及平均值上，该方法的倒角距离（CD）和点到网格距离（P2M）都是最低的。在 Kinect Fusion 数据集的真实深度相机扫描上，其噪声不同于高斯噪声，该方法在展示的三组扫描上 P2M 均最低（图 4）；在上文点分布不规则的二十面体上同样领先。Paris-rue-Madame 街景点云由移动激光扫描仪采集，没有真值，因此只做了视觉对比（图 6）。&lt;/p>
+&lt;p>另有两项实验支持这一设计。每次筛选保留一半特征时 P2M 最低，为 0.961；采样比例为 1/3、2/3 和 3/4 时分别为 1.270、1.254 和 1.251（表 4）。与以往工作采用的级联尺度特征聚合相比，该方法在较低噪声下表现相近，但在严重噪声下能更好地保持几何形状（图 7）。去噪后的点云还可以用泊松重建生成网格，论文展示了其在边缘和复杂区域上更准确的重建结果（图 8）。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2023-random-screening/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2023-random-screening/fig-results.webp" alt="Kitten 和 Horse 点云在 2% 与 3% 噪声下的对比网格，按到曲面的距离从蓝到黄着色，依次为含噪输入、Score、MoDNet 和本文方法，每个结果下方标有 P2M 数值。" loading="lazy">
+&lt;/a>&lt;figcaption>PUNet 测试集中的 Kitten 和 Horse（50k 点），噪声为 2% 和 3%。颜色表示到真实曲面的距离；每个结果下方的数字为 P2M 误差（×10⁴），四组中本文方法均最低。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2023-random-screening/fig-paris.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2023-random-screening/fig-paris.webp" alt="四幅橙色街景渲染图，包含建筑立面和停放的汽车，依次为含噪输入、Score、MoDNet 和本文方法，下方特写用箭头标出汽车 A 柱和车窗。" loading="lazy">
+&lt;/a>&lt;figcaption>Paris-rue-Madame 数据集中由移动激光扫描仪采集的真实街景。特写为一辆汽车的 A 柱和车窗，论文指出本文方法在这些区域比 Score 和 MoDNet 更有效地恢复了几何结构。引自论文图 6。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

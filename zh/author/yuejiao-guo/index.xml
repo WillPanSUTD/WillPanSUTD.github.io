@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Yuejiao Guo | 潘威</title><link>https://willpan.xyz/zh/author/yuejiao-guo/</link><atom:link href="https://willpan.xyz/zh/author/yuejiao-guo/index.xml" rel="self" type="application/rss+xml"/><description>Yuejiao Guo</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Deep diffusion model-based dual structured light for large-format complex surface imaging</title><link>https://willpan.xyz/zh/publications/lu-2026-deep-diffusion-model-based-dual-structured/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2026-deep-diffusion-model-based-dual-structured/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移结构光通过投射正弦条纹、从相机图像中解算相位来测量三维形貌，精度很高。但单个投影仪–相机单元只能从一个角度观察物体。面对大幅面或形状复杂的表面，凸起部分会遮挡投射光或相机视线，留下缺少相位信息的阴影区和盲区，测量范围也因此受限。从多个视角分别测量，或把物体放在转台上旋转，虽能补齐缺失部分，但耗时较长，而且无法用于不便移动的物体。&lt;/p>
+&lt;p>再增加一个投影仪–相机测头，就能覆盖第一个测头看不到的区域，但前提是两个测头能在视场重叠的情况下同时测量。两台投影仪同时工作时，每台相机在重叠区内拍到的是两幅条纹图案的叠加，即混叠条纹，会导致重建错误。已有的混叠条纹分离方法依赖彩色滤光片和专门设计的光路、额外硬件、投影方向或颜色复用，或严格的条纹投射顺序，还有一些方法干脆放弃了同步测量。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-setup.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-setup.webp" alt="侧视示意图：相机 1、投影仪 1、投影仪 2 和相机 2 位于折线形表面上方，虚线为投射光线。左侧蓝色阴影三角标注为 Shade-Left，右侧绿色阴影三角标注为 Shade-Right。" loading="lazy">
+&lt;/a>&lt;figcaption>双测头布局。左侧阴影区只能被左测头观测到，右侧阴影区只能被右测头观测到。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-problem.webp" alt="伞齿轮下方的两台相机和两台投影仪。相机 1 的拍摄区域 A 与相机 2 的拍摄区域 B 在中间重叠。条纹图插图中，(a) 和 (c) 为完整条纹图，(b) 和 (d) 为重叠区的放大图，条纹模糊且相互混杂。" loading="lazy">
+&lt;/a>&lt;figcaption>相机 1 拍摄的区域 A 与相机 2 拍摄的区域 B 在中间重叠。插图分别为相机 1（左）和相机 2（右）拍到的条纹图及其重叠区的放大，两台相机在重叠区内都看到了混叠条纹。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该系统由两个同步的投影仪–相机测头组成，二者视场局部重叠，并同时工作。它不靠硬件来避免混叠，而是用软件消除混叠：条件扩散模型学习从每幅混叠图像中恢复出单台投影仪的干净条纹图。此后，每个测头都按常规结构光单元工作，再利用重叠区融合两者的结果。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2026-deep-diffusion-model-based-dual-structured/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>两个同步测头。&lt;/strong> 两台投影仪和两台相机通过同步控制线连接，两个测头同时投射、同时采集。每个测头测量表面的一部分，二者视场局部重叠。&lt;/li>
+&lt;li>&lt;strong>混叠即叠加。&lt;/strong> 在重叠区内，相机像素对两台投影仪的光进行积分，其强度等于两幅投射图案贡献之和：I(u) = I(u; l&lt;sub>1&lt;/sub>) + I(u; l&lt;sub>2&lt;/sub>)（假设背景光不影响相位估计）。因此单个测头的图案为 I(u; l&lt;sub>n&lt;/sub>) = I(u) − I(u; l&lt;sub>3−n&lt;/sub>)，作者将其视为一个去噪问题，另一测头的图案即为噪声。&lt;/li>
+&lt;li>&lt;strong>条件扩散恢复干净条纹。&lt;/strong> 在条件去噪扩散框架下训练一个带自注意力的 U-Net。训练样本对直接由系统采集：只开一个测头得到干净图案 x&lt;sub>0&lt;/sub>，两个测头同时开启得到混叠图案 y，后者作为条件输入。推理时，模型从高斯噪声出发，在 y 的引导下逐步去噪，最终得到去混叠后的条纹图。&lt;/li>
+&lt;li>&lt;strong>逐测头求相位与三维坐标。&lt;/strong> 得到干净条纹后，用四步相移算法求包裹相位，用多频外差法展开得到绝对相位，再结合各测头标定好的投影仪和相机参数，经三角测量得到局部三维点云。&lt;/li>
+&lt;li>&lt;strong>ICP 融合。&lt;/strong> 重叠区提供了对应点，迭代最近点（ICP）算法据此估计旋转和平移，把两片局部点云合并为完整表面。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-method.webp" alt="四个阶段的流程图。Step 1 系统搭建：两台相机和两台投影仪以绿、红两路光照射半身像，产生混叠。Step 2 扩散模型去混叠：混叠条纹图堆栈输入扩散模型，输出干净条纹图堆栈。Step 3 相位估计：包裹相位图与相位剖面。Step 4 点云融合：半身像的两片彩色局部点云相加得到完整点云。" loading="lazy">
+&lt;/a>&lt;figcaption>四个阶段：双投影仪双相机同步采集、基于扩散模型的去混叠、相位估计，以及两片局部点云的融合。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-diffusion.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-diffusion.webp" alt="扩散模型训练与采样示意图。训练（绿色虚线）：干净条纹 x0 与噪声 z 混合得到 xt，与混叠图像 y 一起输入由 Conv2D、残差块和自注意力块构成的 U-Net，其噪声估计 z* 与 z 通过 L1 损失比较。采样（紫色实线）：从噪声 xT 和条件 y 出发，反复调用训练好的网络，t = t − 1，直到 t = 0。" loading="lazy">
+&lt;/a>&lt;figcaption>条件扩散模型的训练（虚线）与采样（实线）。训练时网络以 L1 损失学习预测所加噪声；采样时以混叠图像 y 为条件迭代 T 步。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>条纹恢复：PSNR 45.80 dB，MSE 1.85，SSIM 0.98&lt;/strong>，以无混叠条纹图为参照（第 3.2 节，图 7）。&lt;br>&lt;strong>相位：沿测试行与无混叠条纹相位的差值最大为 0.05 rad&lt;/strong>（图 8）。&lt;br>&lt;strong>三维：去混叠后的重建相对于分别无混叠测量所得参考结果的均方根误差为 0.057 mm&lt;/strong>（图 9）。&lt;br>&lt;strong>在一个带明显凸起的棱柱上，沿采样深度剖面的重建误差在 8 µm 以内&lt;/strong>（图 12）。&lt;/aside>
+&lt;p>样机采用两台 TJ20U2 投影仪和两台分辨率为 3072 × 2048 的 CMOS 相机。条纹周期取 100、110、120 和 130，每个周期四步相移、步长 0.5π，并改变初始相位，共得到 4043 个训练样本和 1583 个测试样本，尺寸均为 512 × 512 像素；模型的扩散步数 T = 4000，训练 800 轮。不做去混叠时，条纹混叠给两个测头的点云及融合结果都带来了显著误差；使用扩散模型后，物体被成功重建。作为对比，此前一种基于导数的混叠恢复方法会使条纹明显变密并出现局部强度放大，其重建点云噪声大，分层伪影明显。在一个为突出遮挡效应而选用的棱柱上，点云融合扩大了重建范围，并填补了单个测头留下的稀疏区域。&lt;/p>
+&lt;p>作者把实验范围限定为视场局部重叠的真正同步双测头测量。其他消除混叠的方法依赖特定的硬件或投射方案，如颜色或方向复用、光路分离或严格控制的投射时序，不改动系统配置就无法在该系统上运行。因此，实验以单投影仪无混叠测量结果为参考，以直接对混叠条纹做常规相移解算的结果为基线。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-recovery.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-recovery.webp" alt="三幅方形图：(a) 一幅物体的灰度条纹图，右侧部分条纹相互混杂；(b) 恢复后的条纹图，外观几乎相同但条纹规则；(c) 整体呈蓝色的差值图，色标范围 0 到 1。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 一个测头采集的混叠条纹图，(b) 模型恢复出的条纹图，(c) (b) 与无混叠条纹图之差。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-deep-diffusion-model-based-dual-structured/fig-results.webp" alt="伞齿轮彩色点云的三栏对比，每栏上方为左（L）、右（R）两片局部点云，下方为融合点云。(a) Ground truth：两片点云干净，融合后齿轮完整。(b) Aliased：两片点云中部都有大量散乱错误点，融合点云中间有缺口和离群点。(c) Ours：两片点云干净，融合后齿轮完整，与 (a) 一致。" loading="lazy">
+&lt;/a>&lt;figcaption>伞齿轮重建：(a) 两个测头分别测量后融合，作为真值；(b) 两个测头同时工作、未去混叠；(c) 两个测头同时工作、经扩散模型去混叠。引自论文图 9。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

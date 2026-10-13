@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Shihan Zhang | 潘威</title><link>https://willpan.xyz/zh/author/shihan-zhang/</link><atom:link href="https://willpan.xyz/zh/author/shihan-zhang/index.xml" rel="self" type="application/rss+xml"/><description>Shihan Zhang</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>GCMA6D: Graph Convolution and Cross-Modality Attention Fusion for 6D Pose Estimation</title><link>https://willpan.xyz/zh/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>6D 位姿估计的任务是求出物体相对于相机的三维旋转和平移，是机器人抓取操作和增强现实的关键环节。对于弱纹理物体或部分被遮挡的物体，这一任务仍然困难。仅用 RGB 图像的方法缺少深度信息，在复杂环境中鲁棒性有限。DenseFusion 等 RGB-D 方法在像素级融合颜色与点云特征，但几何特征由 PointNet 提取，可能丢失精细的局部细节。PVN3D 等方法加入了局部特征建模，却增加了计算开销；大规模基础模型的体量和推理延迟也妨碍了实时部署。&lt;/p>
+&lt;p>GCMA6D 以 DenseFusion 的像素级融合为基础（DenseFusion 也是其消融实验的基线），并对各个环节分别加强：用图卷积刻画局部几何，用大核注意力强化图像特征，再用跨模态注意力模块让颜色与几何在融合之前相互交互。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>网络输入单张 RGB-D 图像：先分割出目标物体，再分别从图像块中提取颜色特征、从物体点云中提取几何特征，用注意力机制将二者融合，最后由物体上的每个像素回归位姿。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/figure-overleaf-1-architecture.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>分割与裁剪。&lt;/strong> 采用 PoseCNN 的语义分割网络为每个物体生成掩码。利用掩码裁剪彩色图像，并从深度图中抠出物体区域，再借助相机内参将其转换为三维点云。这一步在计算特征之前就抑制了背景干扰。&lt;/li>
+&lt;li>&lt;strong>基于大核注意力的颜色特征。&lt;/strong> ResNet18 骨干网络与金字塔池化模块从图像块中提取多尺度特征。大核注意力由深度卷积、深度空洞卷积和 1×1 卷积组成，生成的注意力图与特征逐元素相乘，使网络既能捕捉局部纹理和边缘，也能建模更大范围的上下文。&lt;/li>
+&lt;li>&lt;strong>基于 3DGCN 与 PointNet 的几何特征。&lt;/strong> 三维图卷积网络（3DGCN）在每个点的邻域上施加可学习的三维图卷积核，再经图最大池化，刻画局部几何结构。PointNet 分支用全连接层处理各点，并通过最大池化得到全局形状特征。&lt;/li>
+&lt;li>&lt;strong>跨模态注意力。&lt;/strong> CMA-Net 模块的输入为颜色特征（F1）、3DGCN 特征（F2）和 PointNet 特征（F3）。第一次点积注意力以 F1、F2、F3 分别作为查询、键和值，增强颜色特征；第二次以 F2、F1、F3 作为查询、键和值，增强点云特征。两路输出与 F3 一起经 Squeeze-and-Excitation 模块进行通道重加权，再拼接在一起。&lt;/li>
+&lt;li>&lt;strong>稠密融合与位姿回归。&lt;/strong> 各像素的融合特征经共享 MLP 和平均池化得到全局特征，并拼接到每个像素的特征上。随后每个像素分别预测旋转、平移和置信度，保留置信度最高的预测，并沿用 DenseFusion 的做法，由一个小型网络预测残差位姿，对其进行迭代精化。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/figure-overleaf-1-architecture.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/figure-overleaf-1-architecture.webp" alt="网络结构图：RGB-D 图像经语义分割后，图像块依次通过 ResNet18 和 LKA-PSPNet，掩码点云分别通过 3DGCN 和 PointNet；CMA-Net 融合各路特征，之后是逐像素稠密融合、MLP 加平均池化得到的全局特征、位姿预测器以及按置信度取 Argmax。" loading="lazy">
+&lt;/a>&lt;figcaption>网络总览：语义分割、颜色分支（ResNet18 + LKA-PSPNet）、几何分支（3DGCN + PointNet）、CMA-Net、结合全局特征的逐像素稠密融合，以及逐像素位姿预测。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>LineMOD 平均准确率 97.7%&lt;/strong>（ADD(-S) 距离小于物体直径的 10% 记为正确），DenseFusion 为 94.3%（表 2）。&lt;br>单独加入任一模块均优于 94.3% 的基线：&lt;strong>3DGCN 96.9%、LKA 96.2%、CMA-Net 95.4%&lt;/strong>（表 1）。&lt;br>&lt;strong>YCB-Video 上 AUC 为 92.9%，误差小于 2 cm 的位姿占 95.7%&lt;/strong>，DenseFusion 分别为 91.2% 和 95.3%（第 4.4 节）。&lt;/aside>
+&lt;p>实验在两个公开数据集上进行。LineMOD 中的物体纹理较弱、背景复杂且光照多变；15% 的图像用于训练、85% 用于测试，位姿的 ADD 距离（对称物体用 ADD-S）小于物体直径的 10% 即视为正确。在表 2 中，GCMA6D 的平均准确率在参与比较的七种方法中最高，领先 TMFNet（96.8%）和 QaQ（95.3%），并在对称物体 eggbox 和 glue 上达到 100%。LineMOD 上的消融实验表明各模块相互补充：任意两个模块组合的准确率为 96.8%–97.4%，三者同时使用时达到 97.7%。&lt;/p>
+&lt;p>YCB-Video 包含 21 种物体，遮挡程度各不相同；测试使用 12 段视频中的 2,949 个关键帧。评价指标为阈值 0–10 cm 范围内 ADD(-S) 准确率曲线下的面积（AUC），以及误差小于 2 cm 的位姿所占比例。GCMA6D 的 AUC 为 92.9%，高于 SaMfNet（92.6%）、G2L-Net（92.4%）、MSCNet（91.5%）和 DenseFusion（91.2%）。作者指出，大号夹子和特大号夹子上的准确率较低：两者外观十分相似，PoseCNN 的语义分割难以为它们生成精确的掩码。作者还指出，高度对称或严重遮挡的物体仍是该方法的局限，后续将改进对背景掩码区域的处理。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/figure-overleaf-8-ycb-visual-comparison.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/figure-overleaf-8-ycb-visual-comparison.webp" alt="三行、每行四个 YCB-Video 场景，物体上叠加了彩色点云，分别对应 PoseCNN&amp;#43;ICP、DenseFusion（迭代精化）和 GCMA6D。" loading="lazy">
+&lt;/a>&lt;figcaption>YCB-Video 场景中的位姿估计结果：用各方法估计的位姿变换物体模型点云并投影回原图，自上而下依次为 PoseCNN+ICP、带迭代精化的 DenseFusion 和 GCMA6D。引自论文图 8。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Tracking | 潘威</title><link>https://willpan.xyz/zh/tags/tracking/</link><atom:link href="https://willpan.xyz/zh/tags/tracking/index.xml" rel="self" type="application/rss+xml"/><description>Tracking</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Nov 2023 00:00:00 +0000</lastBuildDate><item><title>Kinematic target surface sensing based on improved deep optical flow tracking</title><link>https://willpan.xyz/zh/publications/lu-2023-kinematic-tracking/</link><pubDate>Wed, 01 Nov 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2023-kinematic-tracking/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）用一台投影仪和一台相机测量三维形貌：投影仪向物体投射至少三幅相移正弦条纹，相机从另一角度记录条纹因物体高度而产生的变形，再由这组图像解算出的相位得到物体表面。由于联合使用多幅图像，环境光和表面反射率的影响得以消除，使 PSP 具有高精度和高鲁棒性。然而，PSP 要求物体在采集条纹图像期间保持静止：一旦物体在两次采集之间发生运动，各幅图像便不再对应，相位计算就会引入误差。&lt;/p>
+&lt;p>如果已知物体的运动（以旋转矩阵和平移向量表示），就可以把运动信息纳入相位计算，从而消除误差。难点在于如何从布满条纹的图像中测得这一运动。早期工作在物体表面预先粘贴标记点进行跟踪，后续工作改用 SIFT 特征。周期性条纹对 SIFT 而言相当于“噪声”，会导致误匹配，因此基于 SIFT 的方法将条纹投射在彩色相机的某一颜色通道中，并在提取特征前滤除该通道；这需要彩色设备，其成本高于单色相机，帧率也更低。另有方法直接在条纹图像上跟踪物体，但仅限于二维平移运动，无法跟踪发生旋转的物体。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-problem.webp" alt="同一胶囊形物体的两幅灰度图像左右并列，物体上布满竖直的明亮条纹，两图之间连有许多彩色线，其中若干条斜线连接的是并不对应的点。" loading="lazy">
+&lt;/a>&lt;figcaption>对运动物体的条纹图像应用 SIFT：许多匹配的特征点（彩色连线）是错误的。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>本方法直接在条纹图像上跟踪物体，只需一台价格低廉的单色相机，并能处理包括旋转在内的任意二维运动。改进的 RAFT 光流网络估计物体上每个像素的位移，筛选步骤只保留精确的估计，所得运动再代入相位计算。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2023-kinematic-tracking/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>运动破坏了 PSP 的前提。&lt;/strong> 条纹保持固定，而物体在两次采集之间旋转和平移，因此同一像素在各幅图像中对应的是表面的不同位置。论文在每幅条纹图像中，于运动后的坐标处计算参考相位，以此描述这一过程。&lt;/li>
+&lt;li>&lt;strong>以 NCC 代替点积计算相关。&lt;/strong> 特征编码器将两幅相邻的条纹图像映射为 1/8 分辨率的特征图，上下文编码器则只处理第一幅图像。原始 RAFT 以点积比较所有特征对；而在条纹照明下，特征点穿过条纹时其周围的光强分布会随之改变。改进网络采用归一化互相关（NCC），对局部光照变化进行归一化，以此构建四维相关体和四层相关金字塔。&lt;/li>
+&lt;li>&lt;strong>迭代更新光流。&lt;/strong> 从零光流出发，基于 GRU 的更新算子查询相关金字塔，经多次迭代逐步修正光流。1/8 分辨率的结果再上采样至全分辨率，得到每个像素的位移。&lt;/li>
+&lt;li>&lt;strong>只保留精确的点。&lt;/strong> RANSAC 先剔除明显的离群点；随后拟合旋转矩阵和平移向量，用它们变换各点，若变换后的位置与跟踪位置之差超过阈值（如 0.5 像素），则舍弃该点。反复进行拟合与检验，直至所有剩余点都满足阈值。&lt;/li>
+&lt;li>&lt;strong>结合运动信息重建。&lt;/strong> 最终的旋转矩阵和平移向量描述了物体运动，据此计算运动物体的正确相位（论文式 7–11），进而得到其表面。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-method.webp" alt="网络结构图：标注为 Frame2 和 Frame1 的两幅条纹图像分别进入特征编码器和上下文编码器；特征图在 NCC 节点处生成四维 NCC 相关体；一串带有查找算子 L C 的 GRU 更新模块从 0 开始迭代，输出彩色编码的光流图。" loading="lazy">
+&lt;/a>&lt;figcaption>改进的 RAFT 网络：特征编码器与上下文编码器、四维 NCC 相关体，以及输出光流的 GRU 迭代更新。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>五个运动物体的均方根误差为 0.082–0.098 mm&lt;/strong>，以各物体静止时的重建结果为真值（表 1）。&lt;br>&lt;strong>与基于 SIFT 的方法相当&lt;/strong>（0.078–0.089 mm），后者依赖彩色相机分离条纹（表 1）。&lt;br>&lt;strong>约 1.2 万个&lt;/strong>光流精度高的点被保留，用于计算运动（第 3 节）。&lt;/aside>
+&lt;p>实验系统采用分辨率为 1280 × 720 的投影仪和同分辨率的相机，使用四步相移。训练数据为 2000 对运动前后的条纹图像，按 8:1:1 划分为训练集、验证集和测试集。标签来自同一位置采集的无条纹图像：在这些图像上用 SIFT 求得旋转和平移，进而得到每个像素的运动信息。训练损失在 900 个 epoch 后收敛至 0.25 像素。若估计位移与基于 SIFT 的真值相差不足半个像素即计为正确点，则改进网络在条纹图像上得到的正确点多于原始 RAFT（图 10）。&lt;/p>
+&lt;p>同一训练好的网络还被用于另外四个物体（图 13），均在运动状态下完成了重建。对每个物体，本方法的均方根误差都略高于基于 SIFT 的方法，作者认为二者性能相当，而本方法不再需要彩色设备。该方法适用于平面内的二维运动；对复杂三维运动物体的表面重建留待后续工作。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-results.webp" alt="同一胶囊形物体的两幅灰度条纹图像，正确跟踪的点以蓝色标出：左图蓝点稀疏零散，右图蓝点密集地覆盖物体。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 原始 RAFT 网络与 (b) 引入 NCC 的改进网络估计出的正确点（蓝色）。引自论文图 10。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-surfaces.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-surfaces.webp" alt="四行图像。每行左侧为运动物体的一对条纹图像，以绿色连线标出对应点；右侧为重建物体的彩色三维表面图，高度及 X、Y 坐标轴以毫米为单位。" loading="lazy">
+&lt;/a>&lt;figcaption>另外四个运动物体：一对条纹图像之间的正确对应点（a、c、e、g）及重建表面（b、d、f、h）。引自论文图 13。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

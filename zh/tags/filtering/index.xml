@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Filtering | 潘威</title><link>https://willpan.xyz/zh/tags/filtering/</link><atom:link href="https://willpan.xyz/zh/tags/filtering/index.xml" rel="self" type="application/rss+xml"/><description>Filtering</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Sun, 01 Jan 2023 00:00:00 +0000</lastBuildDate><item><title>Towards uniform point distribution in feature-preserving point cloud filtering</title><link>https://willpan.xyz/zh/publications/chen-2023-uniform-point/</link><pubDate>Sun, 01 Jan 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/chen-2023-uniform-point/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>扫描得到的原始点云含有噪声，因此在上采样、曲面重建等后续处理之前通常需要先滤波。理想的滤波方法应当把含噪点移回真实曲面，保留尖锐的棱边和角点，并使点分布均匀。现有方法往往只能兼顾其中一部分。基于位置的方法（如 CLOP）平滑效果好，但由于不利用法向信息，容易抹平尖锐特征。基于法向的方法能更好地保留尖锐棱边，但滤波后的点往往分布不均；其中一些方法虽然加入了排斥项，仍会在棱边附近留下空洞。深度学习方法需要带真值的含噪点云作为训练数据，且基于局部块处理，即使加入排斥损失，结果仍分布不均，对稀疏或采样不均匀的输入也难以处理。&lt;/p>
+&lt;p>本文建立在此前一种低秩滤波方法的边缘感知点更新之上。单独使用这种更新时，点会向尖锐棱边移动并在那里聚集，在棱边旁留下空洞。这些空洞会影响上采样和曲面重建等后续处理。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/chen-2023-uniform-point/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/chen-2023-uniform-point/fig-problem.webp" alt="四幅小示意图：蓝色采样曲面的拐角附近有黄、绿两个相邻点，红色箭头为法向，α 为两点连线与法向的夹角。" loading="lazy">
+&lt;/a>&lt;figcaption>边缘感知更新在尖锐棱边附近移动点的方式。(a, b) 中黄点固定、绿点移动；(c, d) 中绿点固定、黄点移动。点向棱边移动并在那里聚集，从而在棱边周围留下空洞。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法分为两个阶段：先平滑点的法向，再利用这些法向更新点的位置。位置更新最小化两项之和：一是边缘感知的数据项，在逼近含噪曲面的同时保留几何特征；二是排斥项，用于控制点的分布。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/chen-2023-uniform-point/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/chen-2023-uniform-point/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>含噪输入。&lt;/strong> 输入是带法向的含噪点云；若只有点坐标，则用主成分分析（PCA）估计初始法向。&lt;/li>
+&lt;li>&lt;strong>法向滤波。&lt;/strong> 用双边滤波平滑法向。滤波后点的质量在很大程度上取决于这些法向的质量。&lt;/li>
+&lt;li>&lt;strong>数据项。&lt;/strong> 对每个点及其局部块中的每个邻域点，更新会调整两点连线与两点法向之间的夹角。这使点回到真实曲面并保留尖锐特征，但单独使用时会把点推向棱边，留下空洞。&lt;/li>
+&lt;li>&lt;strong>排斥项。&lt;/strong> 基于点坐标和法向的排斥项让邻域点沿垂直于邻点法向的方向相互推开，其权重随距离平滑衰减；参数 µ 控制排斥力的大小。&lt;/li>
+&lt;li>&lt;strong>迭代。&lt;/strong> 两项合并为对每个点的一次梯度下降更新（论文式 (6)），在 k 个最近邻点构成的局部块上计算，共迭代 t 次。大部分实验取 k = 30、µ = 0.3、t = 5（表 1）。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/chen-2023-uniform-point/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/chen-2023-uniform-point/fig-method.webp" alt="八面体上的流程：红色含噪点、蓝色滤波后法向、展示数据项和排斥项作用以及迭代 1、5、15 次结果的面板、滤波后的点云和灰色重建网格。" loading="lazy">
+&lt;/a>&lt;figcaption>方法总览：(a) 含噪输入；(b) 滤波后的法向；(c) 位置更新，数据项用于保持特征，排斥项用于均匀分布，需迭代多次；(d) 滤波后的点云；(e) 由 (d) 重建的网格。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">在五个添加合成噪声的模型上，&lt;strong>平均倒角距离为 5.80 × 10&lt;sup>−5&lt;/sup>&lt;/strong>，为七种方法中最低；次优的 RIMLS 平均为 7.12 × 10&lt;sup>−5&lt;/sup>（表 2）。&lt;br>&lt;strong>平均均方误差为 15.69 × 10&lt;sup>−3&lt;/sup>&lt;/strong>，同样为最低（表 3）。&lt;br>&lt;strong>每个模型耗时 0.91–28.16 s&lt;/strong>，在全部九个计时模型上都快于 CLOP、TD、PCN 和 PF（表 5）。&lt;/aside>
+&lt;p>对比方法包括基于位置的 CLOP、基于法向的 GPF 和 RIMLS，以及三种深度学习方法 TotalDenoising、PointCleanNet 和 Pointfilter（简称 TD、PCN 和 PF）。定量测试使用五个添加了 0.5% 或 1.0% 高斯噪声的模型（Bunnyhi、Rockerarm、Icosahedron、Dodecahedron 和 Kitten）。该方法在五个模型中的四个上倒角距离最低，在三个上均方误差最低。原始扫描点云（Nefertiti、BuddhaStele、Realscan 和 David）没有真值，只做视觉对比；论文指出，该方法在尖锐棱边、BuddhaStele 的台阶和人脸特征等细节上保持得比其他方法更好。作者将误差较低归因于点分布更均匀：例如 RIMLS 在部分情况下视觉效果相当，但由于点分布不均，其误差在多数情况下更大。去掉排斥项后，部分点会聚集在棱边上。&lt;/p>
+&lt;p>论文还测试了不同点密度、0.5% 至 3.0% 的噪声水平、不规则采样、带孔模型以及室内场景。作者指出两点局限：作为基于法向的方法，它依赖输入法向的质量；在噪声很高时效果可能变差（1.5% 的噪声已比 0.5% 和 1.0% 更具挑战性）。此外，严重破坏曲面的大孔洞难以填补，最佳邻域大小 k 也强烈依赖于点云密度。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/chen-2023-uniform-point/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/chen-2023-uniform-point/fig-results.webp" alt="绿红着色的兔子点云：含噪输入以及 CLOP、GPF、RIMLS、TD、PCN、PF 和本文方法的滤波结果，下方为局部放大和灰色重建网格。" loading="lazy">
+&lt;/a>&lt;figcaption>添加 0.5% 合成噪声的 Bunnyhi：CLOP、GPF、RIMLS、TD、PCN、PF 与本文方法 (h) 的滤波点云（上）和曲面重建结果（下）。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/chen-2023-uniform-point/fig-repulsion.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/chen-2023-uniform-point/fig-repulsion.webp" alt="两个滤波后的多面体点云及其一角的局部放大：左侧点聚集在棱边上，右侧点分布均匀。" loading="lazy">
+&lt;/a>&lt;figcaption>不使用 (a) 与使用 (b) 排斥项的滤波结果。不使用时部分点聚集在棱边上；使用后点分布更均匀。引自论文图 16。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Orthogonal Polynomial | 潘威</title><link>https://willpan.xyz/zh/tags/orthogonal-polynomial/</link><atom:link href="https://willpan.xyz/zh/tags/orthogonal-polynomial/index.xml" rel="self" type="application/rss+xml"/><description>Orthogonal Polynomial</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>Surface Smoothing based on Discrete Orthogonal Polynomial</title><link>https://willpan.xyz/zh/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>三角网格是表示三维物体的一种通用方式，在逆向设计、快速成型、3D 打印和虚拟仿真中都有广泛应用。然而，通过三维测量得到的网格会带有扫描和数字化过程中引入的噪声，必须在预处理阶段去除。难点在于，去噪的同时要尽可能保留尖锐边等几何特征。&lt;/p>
+&lt;p>早期的光顺方法是各向同性的，无法保持这类特征：例如简单快速的拉普拉斯光顺还会使曲面收缩。各向异性方法效果更好，其中许多方法先对面片法向做平滑，再更新顶点；在去噪过程中区分特征的方法往往只关注局部邻域，容易受噪声干扰；而 L0 最小化等稀疏方法虽能保持特征，却要面对非凸且缓慢的优化过程。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>本方法同样先平滑法向、再移动顶点，但做了两处改动。一是面片法向不再由单个面片或其直接邻域估计，而是由非局部相似结构估计，即在更大邻域内与其朝向一致的面片组。二是用正交多项式对这些法向进行拟合滤波，不同阶的正交多项式彼此互不干扰。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>局部结构的法向张量。&lt;/strong> 单个带噪面片的法向可能不够准确。对每个面片，其 r 邻域内的面片按距离和法向夹角加权，投票构成法向张量；最大特征值对应的特征向量即为该局部结构的代表方向。&lt;/li>
+&lt;li>&lt;strong>同向局部结构。&lt;/strong> 法向与该方向夹角超过阈值 θth 的面片被剔除，从而去掉结构中误差较大的面片。噪声越大的模型，阈值设得越大。&lt;/li>
+&lt;li>&lt;strong>非局部相似结构。&lt;/strong> 将搜索范围扩大到 R 邻域（R &amp;gt; r），其中与当前结构夹角不超过 θth（高噪声取 40°，低噪声取 20°）的同向结构，都被加入该面片的非局部相似结构集合。&lt;/li>
+&lt;li>&lt;strong>正交多项式滤波。&lt;/strong> 将这些结构的面片法向作为行堆叠成矩阵，并重排为近似方阵。在 [−1, 1] 上构造 X、Y 两个方向的离散 Legendre 多项式基，用它们拟合该矩阵。结构之间有重叠时，对每个面片的估计累加后再除以该面片被使用的次数，得到更新后的法向。&lt;/li>
+&lt;li>&lt;strong>顶点更新。&lt;/strong> 每个顶点根据周围面片更新后的法向移动，网格经多次迭代完成更新。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-method.webp" alt="流程图：输入带噪网格、相似结构、DOP 法向滤波、更新顶点；下方为一个机械零件从带噪输入到去噪结果各阶段的九幅渲染图，其中一些以红色标出局部区域，一些显示法向场，一些为彩色误差图。" loading="lazy">
+&lt;/a>&lt;figcaption>算法总览：输入带噪网格 → 相似结构 → 离散正交多项式（DOP）法向滤波 → 顶点更新，下方为机械零件在各中间阶段的渲染；彩色图采用右下角的 Ev 误差色标。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>Cube（噪声 0.2 lₑ）：MSAE 为 0.075 × 10⁻²&lt;/strong>，次优的 UNF 为 0.135 × 10⁻²；顶点误差 Ev 同样最低，为 1.224 × 10⁻³（表 2）。&lt;br>&lt;strong>Fandisk（噪声 0.4 lₑ）：顶点误差 Ev 最低，为 5.983 × 10⁻³&lt;/strong>，GNF 为 6.976 × 10⁻³（表 2）。&lt;br>&lt;strong>Cad（噪声 0.3 lₑ）：法向误差 MSAE 最低，为 0.640 × 10⁻²&lt;/strong>，SNF 为 2.529 × 10⁻²（表 2）。&lt;/aside>
+&lt;p>对比方法共七种：L0 最小化、双边法向滤波（BNF）、单边法向滤波（UNF）、引导法向滤波（GNF）、L1 中值滤波、半核拉普拉斯算子（HLO），以及分割驱动的特征保持滤波（SNF）。合成测试网格通过添加零均值高斯噪声得到，其标准差 σn 与平均边长 lₑ 成正比。与真值比较的误差有两项：基于顶点的位置误差 Ev，以及面片法向的均方角度误差 MSAE。本方法在 Cube 上两项指标均最低，在 Fandisk 和 Cad 上各有一项最低；Fandisk 的 MSAE 以 L0 最小化最低，Cad 的 Ev 以 SNF 最低。在 Octaflower 上，SNF 的误差最低（L1 的 Ev 与之并列），而论文中的局部放大图表明本方法能够保留局部特征。&lt;/p>
+&lt;p>在 Angel 模型的原始扫描数据上，本方法略逊于 SNF，但在去噪和特征保持上优于其余方法。在同一个扫描 Bunny 模型上加入三档噪声后，本方法在 0.1 和 0.3 时表现良好，在 0.5 时则存在一定局限。作者指出，与其他方法一样，本方法对过强噪声和不规则三角剖分的鲁棒性有限；作为后续工作，他们提出先对网格分区，再分别对特征部分（角点和边）与非特征部分拟合正交多项式。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-results.webp" alt="两行共十幅立方体渲染图：原始、带噪及八种去噪结果；下行按误差从蓝到绿、红着色。" loading="lazy">
+&lt;/a>&lt;figcaption>噪声 σn = 0.2 lₑ 的 Cube：真值、带噪输入，以及七种对比方法和本方法的结果，下行按顶点误差 Ev 着色。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-scan.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-scan.webp" alt="九幅扫描天使雕像渲染图：带噪输入与八种去噪结果，每幅上方为同一细节的放大图。" loading="lazy">
+&lt;/a>&lt;figcaption>原始扫描的 Angel 网格：带噪输入，以及七种对比方法和本方法的结果，上方为框选区域的放大图。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-noise.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-noise.webp" alt="七幅兔子模型渲染图：原始模型、噪声逐级增大的三个带噪版本，以及三个去噪结果。" loading="lazy">
+&lt;/a>&lt;figcaption>同一 Bunny 模型在噪声 σn = 0.1、0.3、0.5 下的输入及本方法对应的结果。引自论文图 9。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

@@ -1,20 +1,32 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>GPU | Wei Pan</title><link>https://willpan.xyz/tags/gpu/</link><atom:link href="https://willpan.xyz/tags/gpu/index.xml" rel="self" type="application/rss+xml"/><description>GPU</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>en-us</language><lastBuildDate>Tue, 01 Jan 2019 00:00:00 +0000</lastBuildDate><item><title>Parallel Curvature Filter for High Performance Image Processing</title><link>https://willpan.xyz/publications/pan-2019-parallel/</link><pubDate>Tue, 01 Jan 2019 00:00:00 +0000</pubDate><guid>https://willpan.xyz/publications/pan-2019-parallel/</guid><description>&lt;p>Recently, curvature filter (CF) has been developed to implicitly minimize curvature for image processing problems such as smoothing and denoising. In this paper, we propose a parallel curvature filter (PCF) that performs on GPU which is much faster than the original CF on CPU. Inspired by Convolution Neural Networks processed by GPU, the convolution operations in curvature filter computation can be similarly paralleled by GPU so that the PCF on a single GPU can process 33.2 Giga pixels per second.&lt;/p>
-&lt;!-- publication-auto-details:start -->
-&lt;h2 id="problem-setting">Problem setting&lt;/h2>
-&lt;p>Recently, curvature filter (CF) has been developed to implicitly minimize curvature for image processing problems such as smoothing and denoising. In this paper, we propose a parallel curvature filter (PCF) that performs on GPU which is much faster than the original CF on CPU. Inspired by Convolution Neural Networks processed by GPU, the convolution operations in curvature filter computation can be similarly paralleled by GPU so that the PCF on a single GPU can process 33.2 Giga pixels per second.&lt;/p>
-&lt;p>The figures below collect representative visual evidence from IWAIT 2019, vol. 11049 (SPIE), 282–287.&lt;/p>
-&lt;h2 id="method-and-visual-evidence">Method and visual evidence&lt;/h2>
-&lt;p>The visuals show the GPU-parallel curvature-filter stencil and speed/quality comparisons for image smoothing and denoising.&lt;/p>
-&lt;img src="figure-1.webp" alt="Parallel Curvature Filter for High Performance Image Processing - Method overview" loading="lazy">
-&lt;p>&lt;em>Method overview.&lt;/em>&lt;/p>
-&lt;img src="figure-2.webp" alt="Parallel Curvature Filter for High Performance Image Processing - Representation and setup" loading="lazy">
-&lt;p>&lt;em>Representation and setup.&lt;/em>&lt;/p>
-&lt;img src="figure-3.webp" alt="Parallel Curvature Filter for High Performance Image Processing - Experimental evidence" loading="lazy">
-&lt;p>&lt;em>Experimental evidence.&lt;/em>&lt;/p>
-&lt;img src="figure-4.webp" alt="Parallel Curvature Filter for High Performance Image Processing - Result comparison" loading="lazy">
-&lt;p>&lt;em>Result comparison.&lt;/em>&lt;/p>
-&lt;img src="figure-5.webp" alt="Parallel Curvature Filter for High Performance Image Processing - Additional visual result" loading="lazy">
-&lt;p>&lt;em>Additional visual result.&lt;/em>&lt;/p>
-&lt;h2 id="results-and-impact">Results and impact&lt;/h2>
-&lt;p>The evaluation reported in IWAIT 2019, vol. 11049 (SPIE), 282–287 is summarized through the figures above.&lt;/p>
-&lt;!-- publication-auto-details:end --></description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>GPU | Wei Pan</title><link>https://willpan.xyz/tags/gpu/</link><atom:link href="https://willpan.xyz/tags/gpu/index.xml" rel="self" type="application/rss+xml"/><description>GPU</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>en-us</language><lastBuildDate>Tue, 01 Jan 2019 00:00:00 +0000</lastBuildDate><item><title>Parallel Curvature Filter for High Performance Image Processing</title><link>https://willpan.xyz/publications/pan-2019-parallel/</link><pubDate>Tue, 01 Jan 2019 00:00:00 +0000</pubDate><guid>https://willpan.xyz/publications/pan-2019-parallel/</guid><description>&lt;h2 id="the-problem">The problem&lt;/h2>
+&lt;p>The curvature filter smooths and denoises an image by implicitly reducing a curvature energy, such as Gaussian curvature, mean curvature or total variation. It treats the image as a surface and repeatedly applies a cheap local operator to every pixel, each pass lowering the regularisation energy. The filter is fast, but many images that need enhancing are high-resolution or must be processed in real or near-real time, and on a CPU a large image such as 2048 × 2048 still takes minutes.&lt;/p>
+&lt;p>The most expensive part of the filter is a set of eight convolutions over the image. Inspired by the way GPUs run the convolutions of convolutional neural networks, the authors parallelise these convolutions on the GPU.&lt;/p>
+&lt;h2 id="how-it-works">How it works&lt;/h2>
+&lt;p>Each iteration of the curvature filter enumerates eight candidate moves for every pixel, picks the smallest one and applies it. PCF computes the eight candidates for all pixels at once with convolution kernels on the GPU.&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2019-parallel/explainer.js" data-lang="en" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2019-parallel/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>The image as a surface.&lt;/strong> The image intensity U is interpreted as a surface over the pixel grid. The curvature regularisers all work on the local 3 × 3 neighbourhood around each pixel.&lt;/li>
+&lt;li>&lt;strong>Eight tangent-plane projections.&lt;/strong> A surface can be locally approximated by its tangent plane. In the 3 × 3 neighbourhood, eight tangent planes through neighbouring pixels are enumerated, giving eight projection distances d&lt;sub>1&lt;/sub> … d&lt;sub>8&lt;/sub> for the centre pixel.&lt;/li>
+&lt;li>&lt;strong>Eight convolutions on the GPU.&lt;/strong> Each distance is computed for every pixel at once as a convolution of the image. These eight convolutions are the most computationally expensive part of the algorithm; PCF runs them in CUDA and uses the GPU&amp;rsquo;s shared memory to accelerate them.&lt;/li>
+&lt;li>&lt;strong>Pick the smallest distance and update.&lt;/strong> For every pixel, the distance d&lt;sub>m&lt;/sub> with the smallest magnitude is selected (ABSMIN) and added to the pixel: U&lt;sup>t+1&lt;/sup> = U&lt;sup>t&lt;/sup> + d&lt;sub>m&lt;/sub>. The smallest distance indicates the closest fit to the desired geometry and to the original image.&lt;/li>
+&lt;li>&lt;strong>Iterate.&lt;/strong> Repeating the update regularises the image surface step by step, which the paper shows by plotting the intensity along one line of the image after 10 and 30 iterations.&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-method.webp" alt="Flow diagram: eight 3 × 3 projection patterns, a red GPU box with convolution kernels turning a photo into a stack of maps d1 to d8, an ABSMIN step producing map dm, and a plus node feeding back to the image." loading="lazy">
+&lt;/a>&lt;figcaption>The parallel curvature filter flow: eight projection distances are enumerated in a 3 × 3 neighbourhood and computed for every pixel by convolution on the GPU; the smallest one (d&lt;sub>m&lt;/sub>) updates the image in each iteration. Fig. 1 of the paper.&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="results">Results&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>33.2 gigapixels per second&lt;/strong> on a single GPU (Abstract).&lt;br>&lt;strong>About 87 s on the CPU versus about 6 s on the GPU&lt;/strong> for 3,000 iterations on the same image (Fig. 3).&lt;/aside>
+&lt;p>The CUDA implementation was run with GPU block sizes from 16 to 32 on an NVIDIA GeForce GTX 1080 Ti (3,584 CUDA cores, 11,264 MB of global memory, 49,152 bytes of shared memory per block) and compared with the original curvature filter on an Intel Xeon E5-1620 v4 CPU at 3.50 GHz. In Fig. 3 the computation time grows with the number of iterations on both, but far more slowly on the GPU. The authors conclude that this speed makes the filter suitable for real-time applications such as video processing and biomedical image processing.&lt;/p>
+&lt;p>The paper also applies Gaussian-curvature and mean-curvature versions of PCF to a photograph and plots the intensity along one line after 10 and 30 iterations. In both, the profile becomes smoother as iterations accumulate; the authors find the mean-curvature PCF more efficient than the Gaussian-curvature PCF.&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-timing.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-timing.webp" alt="Line chart of computation time in seconds against iteration count from 0 to 3000: the dashed blue CPU line rises to about 87 s, the solid red GPU line stays below about 7 s." loading="lazy">
+&lt;/a>&lt;figcaption>Computation time for the same image on CPU and GPU as the number of iterations grows. Fig. 3 of the paper.&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-results.webp" alt="Three versions of a photo of a crowd in front of a large sculpture, with an orange dashed line across it, and below each the intensity profile along that line, becoming smoother from left to right." loading="lazy">
+&lt;/a>&lt;figcaption>Mean-curvature PCF on a photo: the original, then after 10 and 30 iterations. The plots show the intensity along the orange dashed line. Fig. 5 of the paper.&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

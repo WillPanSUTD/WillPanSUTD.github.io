@@ -40,47 +40,15 @@ export default function mount(el, { kit, lang }) {
     },
   }, lang);
 
-  const ink = kit.token("--c-ink") || "#0a0a0a";
-  const body = kit.token("--c-body") || "#525252";
-  const accent = kit.token("--c-accent") || "#1e3a8a";
-  const mute = kit.token("--c-mute") || "#a3a3a3";
-  const bg = kit.token("--c-bg") || "#ffffff";
+  const { ink, body, accent, mute, bg } = kit.palette();
   // Literal anatomical colours: alveolar bone, gum, and the high-curvature contact marks.
   const BONE = "#d9c49a";
   const GUM = "#e79a9a";
   const CURV = "#d64545";
 
-  const ease = (t) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
   const seg01 = (t, a, b) => Math.max(0, Math.min(1, (t - a) / (b - a)));
 
-  const text = (parent, x, y, str, o = {}) => {
-    const n = kit.svg("text", {
-      x, y, "font-size": o.size || 21, fill: o.fill || ink, "text-anchor": o.anchor || "middle",
-      "font-weight": o.weight || 400, "font-family": "var(--f-sans)", "paint-order": "stroke",
-      stroke: o.halo === false ? "none" : bg, "stroke-width": 4, "stroke-linejoin": "round", opacity: o.opacity ?? 1,
-    }, parent);
-    n.textContent = str;
-    return n;
-  };
-  const line = (parent, a, b, o = {}) => kit.svg("line", {
-    x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: o.stroke || body, "stroke-width": o.w || 1.5,
-    "stroke-dasharray": o.dash || "none", opacity: o.opacity ?? 1, "stroke-linecap": "round",
-  }, parent);
-  const arrow = (parent, a, b, o = {}) => {
-    line(parent, a, b, o);
-    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), s = 9;
-    const p1 = [b[0] - s * Math.cos(ang - 0.45), b[1] - s * Math.sin(ang - 0.45)];
-    const p2 = [b[0] - s * Math.cos(ang + 0.45), b[1] - s * Math.sin(ang + 0.45)];
-    kit.svg("polygon", { points: [b, p1, p2].map((q) => q.join(",")).join(" "), fill: o.stroke || body, opacity: o.opacity ?? 1 }, parent);
-  };
-
-  // Seeded PRNG (mulberry32) for the deterministic roughness of CBCT crowns.
-  const rng = (seed) => () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let r = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
+  const { text, line, arrow } = kit.pen({ textSize: 21, stroke: body });
 
   // Five lower teeth, FDI 32 (lateral incisor) to 36 (first molar). w = width; cusps = occlusal profile
   // as [u (0..1 across the crown), height above the crown shoulder]; roots = apex offsets (u) and length factor.
@@ -101,7 +69,7 @@ export default function mount(el, { kit, lang }) {
 
   // Crown outline (closed path) above the cemento-enamel junction at y0; dir = -1 grows upward (lower jaw).
   const crownPath = (d, cx, y0, dir, rough, seed) => {
-    const r = rng(seed);
+    const r = kit.rng(seed);
     const half = d.w / 2;
     const pts = [[cx - half * 0.86, y0]];
     pts.push([cx - half * 1.02, y0 + dir * d.ch * 0.45]);
@@ -201,7 +169,7 @@ export default function mount(el, { kit, lang }) {
       if (i === 0) {
         // left: stack of 2D slices with a schematic dental arch; the front slice gets labelled
         text(g, 104, 40, L.slices, { size: 23, fill: body, weight: 600 });
-        const lab = ease(seg01(t, 0.05, 0.45));
+        const lab = kit.easeOut(seg01(t, 0.05, 0.45));
         for (let n = 4; n >= 0; n--) {
           const x = 30 + n * 14, y = 60 + n * 14;
           kit.svg("rect", { x, y, width: 116, height: 116, rx: 4, fill: ink, "fill-opacity": 0.9, stroke: mute, "stroke-width": 1 }, g);
@@ -227,11 +195,11 @@ export default function mount(el, { kit, lang }) {
         const sc = 1.2, tx = 296, ty = 186;
         const defs = kit.svg("defs", {}, s);
         const cp = kit.svg("clipPath", { id: "liu-reveal" }, defs);
-        const yTop = 340 - ease(seg01(t, 0.3, 1)) * 320;
+        const yTop = 340 - kit.easeOut(seg01(t, 0.3, 1)) * 320;
         kit.svg("rect", { x: 262, y: yTop, width: 378, height: 360 - yTop }, cp);
         const m = kit.svg("g", { "clip-path": "url(#liu-reveal)" }, g);
         jaw(place(m, sc, tx, ty), 0, 0, -1, { bone: true, roots: true, crown: cbctCrown(1) });
-        const v = ease(seg01(t, 0.75, 1));
+        const v = kit.easeOut(seg01(t, 0.75, 1));
         const mid = tx + (ROW_W / 2) * sc;
         text(g, mid, 84, L.coarse, { size: 24, fill: body, opacity: v });
         line(g, [mid, 94], [mid, 112], { stroke: mute, w: 1.4, opacity: v });
@@ -241,8 +209,8 @@ export default function mount(el, { kit, lang }) {
       if (i === 1) {
         // intraoral scan: crowns + gum, no roots; IOSNet numbers the crowns; then the gum is removed
         const sc = 1.4, tx = (640 - ROW_W * sc) / 2, ty = 214;
-        const col = ease(seg01(t, 0.15, 0.55));
-        const gumOff = ease(seg01(t, 0.6, 1));
+        const col = kit.easeOut(seg01(t, 0.15, 0.55));
+        const gumOff = kit.easeOut(seg01(t, 0.6, 1));
         const m = place(g, sc, tx, ty);
         let d = `M-18,40 L-18,-6`;
         TEETH.forEach((tt, k) => {
@@ -267,14 +235,14 @@ export default function mount(el, { kit, lang }) {
       if (i === 2) {
         // closed bite in CBCT: upper and lower crowns touch; curvature marks the contact; jaws separate
         const sc = 1.05, tx = (640 - ROW_W * sc) / 2, occl = 178;
-        const lift = 26 * ease(seg01(t, 0.55, 1));
-        const marks = ease(seg01(t, 0.1, 0.45));
-        const sep = ease(seg01(t, 0.6, 1));
+        const lift = 26 * kit.easeOut(seg01(t, 0.55, 1));
+        const marks = kit.easeOut(seg01(t, 0.1, 0.45));
+        const sep = kit.easeOut(seg01(t, 0.6, 1));
         jaw(place(g, sc, tx, occl + 50 * sc), 0, 0, -1, { bone: true, roots: true, rootLen: 46, crown: cbctCrown(1) });
         jaw(place(g, sc, tx, occl - 50 * sc - lift), 0, 0, 1, { bone: true, roots: true, rootLen: 46, crown: cbctCrown(1) });
         // high point-curvature vertices along the contact (before separation)
-        const r = rng(7);
-        const mg = kit.svg("g", { opacity: marks * (1 - ease(seg01(t, 0.5, 0.8))) }, g);
+        const r = kit.rng(7);
+        const mg = kit.svg("g", { opacity: marks * (1 - kit.easeOut(seg01(t, 0.5, 0.8))) }, g);
         for (let k = 0; k < 26; k++) {
           const x = tx + (4 + (k / 25) * (ROW_W - 8)) * sc;
           kit.svg("circle", { cx: x, cy: occl + (r() - 0.5) * 8 - 2, r: 3.4, fill: CURV }, mg);
@@ -293,8 +261,8 @@ export default function mount(el, { kit, lang }) {
         // registration: IOS crowns move from an arbitrary pose onto the CBCT lower jaw
         const sc = 1.3, tx = (640 - ROW_W * sc) / 2, ty = 208;
         jaw(place(g, sc, tx, ty), 0, 0, -1, { bone: true, roots: true, crown: cbctCrown(1) });
-        const g1 = ease(seg01(t, 0, 0.6));
-        const g2 = ease(seg01(t, 0.6, 1));
+        const g1 = kit.easeOut(seg01(t, 0, 0.6));
+        const g2 = kit.easeOut(seg01(t, 0.6, 1));
         // start pose: shifted and rotated; after the global stage: small residual; after ICP: aligned
         const dx = 46 * (1 - g1) + 5 * g1 * (1 - g2);
         const dy = -40 * (1 - g1) - 6 * g1 * (1 - g2);
@@ -315,13 +283,13 @@ export default function mount(el, { kit, lang }) {
       if (i === 4) {
         // crown replacement and fusion
         const sc = 1.3, tx = (640 - ROW_W * sc) / 2, ty = 204;
-        const cut = ease(seg01(t, 0, 0.45));
-        const put = ease(seg01(t, 0.35, 0.8));
+        const cut = kit.easeOut(seg01(t, 0, 0.45));
+        const put = kit.easeOut(seg01(t, 0.35, 0.8));
         const m = place(g, sc, tx, ty);
         jaw(m, 0, 0, -1, { bone: true, roots: true, crown: cbctCrown(1 - cut) });
         jaw(m, 0, 0, -1, { crown: iosCrown(put) });
         fdiLabels(g, sc, tx, ty - 66 * sc, put);
-        const v = ease(seg01(t, 0.7, 1));
+        const v = kit.easeOut(seg01(t, 0.7, 1));
         text(g, 320, 34, L.stat, { size: 24, fill: accent, weight: 600, opacity: v });
         text(g, 320, 64, L.time, { size: 21, fill: body, opacity: v });
         swatch(g, 70, 352, accent, L.fromIos, v);

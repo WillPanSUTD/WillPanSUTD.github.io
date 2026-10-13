@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ran Gao | 潘威</title><link>https://willpan.xyz/zh/author/ran-gao/</link><atom:link href="https://willpan.xyz/zh/author/ran-gao/index.xml" rel="self" type="application/rss+xml"/><description>Ran Gao</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Mon, 01 Jan 2024 00:00:00 +0000</lastBuildDate><item><title>A Point Cloud Contour Extraction Method based on Plane Segmentation</title><link>https://willpan.xyz/zh/publications/lu-2024-a-point-cloud-contour-extraction-method/</link><pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2024-a-point-cloud-contour-extraction-method/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>点云轮廓特征提取广泛应用于工业检测、机器人操作等领域。受设备和环境等因素影响，实际采集的点云含有噪声，且点与点之间没有拓扑关系，这给轮廓检测带来了困难。在平面检测方面，已有方法包括 Hough 变换、区域生长和迭代 RANSAC；在边界提取方面，有基于三角网格的方法、按断裂线排序再拟合 B 样条曲线的方法，以及 alpha shape 算法。alpha shape 可以提取多边形的内、外轮廓点，但面对数据量大的点云时，其时间复杂度较高。&lt;/p>
+&lt;p>RANSAC 本身也有短板：当点云中存在明显的噪声时，它表现良好；但若有点紧贴平面（例如相邻平面上的点），就会引入误差。本文关注物体各表面的轮廓，具体对象是电路板上各芯片的轮廓。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-problem.webp" alt="上图为一块深色电路板的照片，可见芯片、连接器和金色触点；下图为同一电路板按高度着色的点云，芯片呈蓝色，背景由绿到红，右侧为高度色标。" loading="lazy">
+&lt;/a>&lt;figcaption>实验对象：(a) 电路板实物；(b) 按高度着色的电路板点云。任务是提取各芯片表面的轮廓。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>方法分为两个阶段。平面分割阶段融合 RANSAC 与 PCA，把点云分成若干平面点集；轮廓提取阶段再把每个平面转换为二维图像，根据图像梯度求出边界，并将边界点映射回三维空间。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2024-a-point-cloud-contour-extraction-method/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>RANSAC 提出候选平面。&lt;/strong> 随机选取三个相距较远的点拟合平面，到平面距离小于阈值 d&lt;sub>th&lt;/sub> 的点归入该平面的点集。迭代 N&lt;sub>iterate&lt;/sub> 次后，把点数最多的点集作为当前平面并从点云中移除，再继续搜索，直到剩余点数少于 N&lt;sub>minnum&lt;/sub>。&lt;/li>
+&lt;li>&lt;strong>PCA 精化并整理平面。&lt;/strong> 对每个点集用 PCA 重新拟合：平面经过质心，法向量取协方差矩阵最小特征值对应的特征向量。若两个平面法向量夹角小于 15°，且超过 90% 的点到另一平面的距离小于 d&lt;sub>th&lt;/sub>，则将二者合并；点数过少的平面对被剔除。重复上述操作，直到没有平面可以合并或剔除。&lt;/li>
+&lt;li>&lt;strong>把平面展平为图像。&lt;/strong> 先用旋转矩阵把平面点云调整到与 XOY 平面平行，再借助焦距和偏移量投影为二维图像：有物体点的像素置 0，其余像素置 1。&lt;/li>
+&lt;li>&lt;strong>由梯度求边界。&lt;/strong> 先用高斯滤波平滑图像，再计算梯度幅值和方向。对于初步得到的边缘像素，只有当它沿梯度方向在相邻像素中取得最大值时，才保留为边界点。&lt;/li>
+&lt;li>&lt;strong>映射回三维。&lt;/strong> 边界像素经投影逆变换和逆旋转，得到三维空间中的轮廓点。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-method.webp" alt="流程图：输入点云，经过包含 RANSAC、PCA 和平面特征的平面分割模块，再经过包含降维、梯度计算和升维的轮廓提取模块，最后输出轮廓点。" loading="lazy">
+&lt;/a>&lt;figcaption>算法流程：平面分割（RANSAC、PCA、平面特征）之后进行轮廓提取（降维、梯度计算、恢复三维）。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>单个芯片的轮廓提取耗时 64.614 ms&lt;/strong>，alpha shapes 为 745.253 ms，两者处理的是同一个 62668 点的点云（表 1）。&lt;br>本文方法提取出 &lt;strong>919 个边界点&lt;/strong>，alpha shapes 为 514 个（表 1）。&lt;/aside>
+&lt;p>实验以电路板为对象提取芯片轮廓，运行平台为 Intel i7-12700 CPU、16 GB 内存。在平面分割上，本文方法与区域生长和传统 RANSAC 在同一数据上进行了对比。在下图所示的芯片上，区域生长额外并入了相邻区域，RANSAC 则多出芯片下方相连的一条，而 PCA-RANSAC 只保留了芯片表面本身；论文认为本文方法的结果受噪声影响最小。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-segmentation.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-segmentation.webp" alt="三幅灰色背景上的白色平面点集。(a) 方形芯片表面右侧多出一块；(b) 方形下方多出一条；(c) 只有方形本身。" loading="lazy">
+&lt;/a>&lt;figcaption>单个芯片表面的平面分割结果：(a) 区域生长，(b) RANSAC，(c) PCA-RANSAC。引自论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;p>在边界提取上，本文方法与 alpha shape 算法进行了对比。对单个芯片，alpha shapes 得到的轮廓稀疏且断续，本文方法得到的轮廓更稠密、更连续，耗时也更短。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-results.webp" alt="两幅灰色背景上的白色方形轮廓。(a) 点状、断续的轮廓；(b) 连续的轮廓，并沿左下角的小缺口走线。" loading="lazy">
+&lt;/a>&lt;figcaption>单个芯片的边界提取结果：(a) alpha shapes，(b) 本文方法。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-contours.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-a-point-cloud-contour-extraction-method/fig-contours.webp" alt="灰色背景上散布着八个不同颜色的矩形轮廓，位置对应电路板上的各个芯片。" loading="lazy">
+&lt;/a>&lt;figcaption>电路板上全部目标芯片的轮廓提取结果，每个芯片一种颜色。引自论文图 7。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

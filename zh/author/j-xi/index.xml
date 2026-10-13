@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>J Xi | 潘威</title><link>https://willpan.xyz/zh/author/j-xi/</link><atom:link href="https://willpan.xyz/zh/author/j-xi/index.xml" rel="self" type="application/rss+xml"/><description>J Xi</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Tue, 01 Sep 2020 00:00:00 +0000</lastBuildDate><item><title>Automated reconstruction of multiple objects with individual movement based on PSP</title><link>https://willpan.xyz/zh/publications/lu-2020-automated-multiple/</link><pubDate>Tue, 01 Sep 2020 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2020-automated-multiple/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）向物体投射多幅带相移的正弦条纹图（通常至少三幅），并根据相机拍到的相位恢复物体形貌。由于需要采集多幅图像，采集期间物体必须保持静止。一旦物体运动，各幅条纹图之间不再对应，预先设计的相移量也被破坏，重建结果随之产生误差。&lt;/p>
+&lt;p>作者此前的工作用旋转矩阵和平移向量描述物体运动，并将这一信息引入重建模型，以此处理运动问题。该方法也能重建多个相互分离的物体，但要求它们的运动完全相同。而实际中更常见的是各物体运动各不相同；在重建多个各自运动的物体时，已有方法会引入误差。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-problem.webp" alt="暗背景上两个玩具车模的四幅俯视图：(a) 中车模呈蓝色、无条纹；(b) 至 (d) 中车模覆盖红蓝相间的水平条纹，且在各图之间发生平移和转动。" loading="lazy">
+&lt;/a>&lt;figcaption>实验所用的两个车模：(a) 无条纹图像；(b)–(d) 两车各自运动时采集到的 3 步 PSP 条纹图。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>本方法为每个物体单独描述其运动：先找出各个物体，再在条纹图序列中逐一跟踪，分别计算其旋转和平移，最后结合各物体自身的运动信息求解相位。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2020-automated-multiple/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>分离条纹与物体图像。&lt;/strong> 以红色投射条纹图，用彩色相机采集。红色分量包含条纹信息，用于求解相位；蓝色分量滤除了条纹，得到纯物体图像，用于跟踪和特征提取。&lt;/li>
+&lt;li>&lt;strong>识别物体。&lt;/strong> 在蓝色分量图像中，用 OTSU 方法将物体与背景分开。阈值分割可能把一个物体分成几块，因此再用膨胀运算将其重新合并，并由每个物体的轮廓得到包围框。&lt;/li>
+&lt;li>&lt;strong>用 KCF 跟踪各物体。&lt;/strong> 以每个包围框内的物体为模板，核相关滤波（KCF）跟踪算法在下一幅条纹图中找到其新的包围框，新包围框再作为后续图像的模板。&lt;/li>
+&lt;li>&lt;strong>估计各物体的运动。&lt;/strong> SIFT 提取物体运动前后的特征点及其对应关系；利用这些点，通过奇异值分解（SVD）为每个物体求出旋转矩阵和平移向量。&lt;/li>
+&lt;li>&lt;strong>逐个物体重建。&lt;/strong> 结合各自的运动信息，从红色分量中以最小二乘法求解含运动信息的重建模型，得到每个物体的相位并完成重建，直到最后一个物体。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-method.webp" alt="四格示意图：标为 Object1 至 Object3 的三个轮廓图形（两个星形和一个三角形）、套有虚线包围框的同样图形，以及从各包围框指向图形运动后新位置的箭头。" loading="lazy">
+&lt;/a>&lt;figcaption>多物体跟踪：(a) 三个待测物体；(b) 每个物体的包围框；(c)–(d) 用 KCF 在运动前后的图像之间跟踪各物体。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-components.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-components.webp" alt="同一幅双车模图像的三种形式：带条纹的彩色原图、只含红色条纹的暗图像，以及无条纹的蓝色车模图像。" loading="lazy">
+&lt;/a>&lt;figcaption>一幅采集图像 (a) 分解为只含条纹信息的红色分量 (b) 和作为纯物体图像的蓝色分量 (c)。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">对两个各自运动的车模，本文方法的 &lt;strong>RMS 误差为 0.0773 mm&lt;/strong>，传统 PSP 为 &lt;strong>8.981 mm&lt;/strong>（第 4 节，图 10）。&lt;/aside>
+&lt;p>实验系统采用彩色相机（Allied Vision Manta 504C，分辨率 2452 × 2056）和投影仪（Wintech DLP PRO 4500，分辨率 912 × 1140）。两个车模在参考平面上各自做旋转和平移运动，采用红色条纹的 3 步 PSP 进行测量，并以静止物体的 6 步 PSP 重建结果为参考。传统 PSP 的结果存在明显的运动误差，在物体边缘等高度突变处尤为严重；本文方法则消除了这些误差。此外，只需在识别物体后选定感兴趣的对象，该方法也可以只重建指定物体而忽略其他物体。&lt;/p>
+&lt;p>作者也说明了方法的适用条件：只考虑刚体的二维运动；物体与背景之间的灰度差异足够大时，物体识别效果更好，且由于膨胀会扩大物体区域，各物体之间需保持一定距离；条纹颜色应与物体颜色有较大差异，环境光较弱时应在投射图案中加入蓝色背景光；对运动速度没有限制，但采集速度需足够快，以获得清晰图像。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-results.webp" alt="两个车模的四幅彩色高度图：上排表面平滑，下排出现水平条状伪影和参差不齐的边缘。" loading="lazy">
+&lt;/a>&lt;figcaption>本文算法的重建结果 (a) 正视图和 (b) 网格显示，以及传统 PSP 的 (c) 正视图和 (d) 网格显示。引自论文图 10。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-error.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2020-automated-multiple/fig-error.webp" alt="两个车模的残差图：左图为约 0.1 mm 及以下的均匀噪声，右图为约 −12 至 8 mm 的条状误差。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 本文算法与 (b) 传统 PSP 的残差，注意两者色标范围不同。引自论文图 11。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

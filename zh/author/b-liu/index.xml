@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>B Liu | 潘威</title><link>https://willpan.xyz/zh/author/b-liu/</link><atom:link href="https://willpan.xyz/zh/author/b-liu/index.xml" rel="self" type="application/rss+xml"/><description>B Liu</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Sun, 01 Mar 2020 00:00:00 +0000</lastBuildDate><item><title>Gaussian Curvature Filter on 3D Meshes</title><link>https://willpan.xyz/zh/publications/tang-2020-gaussian-curvature/</link><pubDate>Sun, 01 Mar 2020 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/tang-2020-gaussian-curvature/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>由三维扫描等方式获取的三角网格往往带有噪声，而含噪网格的高斯曲率高于对应的无噪声模型。因此，降低高斯曲率即可对网格进行平滑和去噪；若高斯曲率处处为零，得到的就是可展曲面——它能够无畸变地展开到平面上，也便于工业制造。&lt;/p>
+&lt;p>最小化高斯曲率的经典方法是高斯曲率流，但它存在两个问题。其一，它需要显式计算高斯曲率，这隐含地假设曲面二阶可微，而实际网格很难满足这一条件。其二，为保证数值稳定，它的时间步长必须很小，因而速度很慢；在论文的实验中，步长还需针对不同网格分别调节。专门的去噪方法大多基于顶点或面法向，同样有其困难：需要人工设定大量参数并依赖较强的先验假设，而且在处理纹理丰富的模型时，去噪过程容易破坏原有特征。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-problem.webp" alt="高斯曲率能量随迭代次数变化的曲线，从约 1000 迅速下降并趋近于零；图中还有三个花瓶渲染：第 0 次迭代时粗糙多棱，第 50 次时较光滑，第 100 次时光滑。" loading="lazy">
+&lt;/a>&lt;figcaption>高斯曲率滤波器作用于含噪 Vase 网格：100 次迭代中的高斯曲率能量变化，以及第 0、50、100 次迭代时的网格。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该滤波器建立在一个观察之上：在可展曲面上，任意一点附近总存在另一点位于其切平面上，且两点可以任意接近（论文定理 1）。因此，只要移动某个顶点，使它的某个邻点落在其切平面上，就能降低该顶点处的高斯曲率；若已有邻点位于切平面上，顶点则无需移动。整个过程从不计算高斯曲率本身，也不需要二阶导数。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/tang-2020-gaussian-curvature/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>切平面上的邻点。&lt;/strong> 在柱面、锥面、切线曲面这类可展曲面上，点 x 附近总有一点 x&lt;sub>0&lt;/sub> 位于其切平面上。在离散网格上，这个点未必恰好是顶点，因此滤波器把一环邻域顶点都作为候选，并取其中之一作为近似。&lt;/li>
+&lt;li>&lt;strong>区域分解。&lt;/strong> 通过着色（算法 1）为每个顶点分配一个与其所有邻点都不同的标签。各颜色集合依次更新，从而保证某一顶点移动时，其一环邻域顶点保持不动。这正是迭代得以收敛的前提；同时，这些相互独立的集合也便于并行实现。&lt;/li>
+&lt;li>&lt;strong>无约束的移动距离。&lt;/strong> 对顶点 v&lt;sub>i&lt;/sub>，计算各一环邻点到 v&lt;sub>i&lt;/sub> 切平面的距离，取绝对值最小者作为移动距离 |d|。&lt;/li>
+&lt;li>&lt;strong>带约束的移动距离。&lt;/strong> 为保持特征，还需用到各邻点的法向（由该邻点相邻两条边的叉积单位化得到）。将 v&lt;sub>i&lt;/sub> 到各邻点的每条边分别投影到 v&lt;sub>i&lt;/sub> 的法向和每个邻点的法向上，对五个邻点的一环邻域共得到 5 × 6 = 30 个距离，取其中绝对值最小者。对于位于平面、棱边或角点上的顶点，总有某个法向与某条边垂直，于是 |d| = 0，顶点保持原位。&lt;/li>
+&lt;li>&lt;strong>顶点更新。&lt;/strong> 顶点移动到 v′ = v + |d|·δ，其中 δ 是微分坐标（顶点减去其邻点质心）反方向的单位向量，近似于法向的反方向。边界顶点不移动。对所有颜色集合按设定的迭代次数（滤波器唯一的参数）反复更新，整个网格的高斯曲率随之降低。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-theorem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-theorem.webp" alt="三种以蓝色绘制的可展曲面：直纹面片、锥面和扭曲的切线曲面，每个曲面上都贴着一个浅绿色三角形，其上有一个红点和一个深蓝色点。" loading="lazy">
+&lt;/a>&lt;figcaption>定理 1 在三类可展曲面上的示意：从左到右依次为柱面、锥面和切线曲面。对于点 x（红色），另一点 x&lt;sub>0&lt;/sub>（蓝色）位于其切平面上。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-method.webp" alt="三幅线图，顶点 v i 与五个邻点 v j1 至 v j5 构成棱锥。(a) v i 处的红色切平面，以及到邻点 v j2 的竖直虚线距离 d 2；(b) 同一棱锥上，v i 和各邻点处画有彩色法向箭头；(c) 顶点沿红色箭头下移到 v i′，旁边是公式 v i′ = v i &amp;#43; |d|·δ。" loading="lazy">
+&lt;/a>&lt;figcaption>两种投影策略与顶点更新：(a) 无约束，计算各邻点到 v&lt;sub>i&lt;/sub> 切平面的距离；(b) 带约束，使用 v&lt;sub>i&lt;/sub> 及其各邻点的法向；(c) 更新 v′&lt;sub>i&lt;/sub> = v&lt;sub>i&lt;/sub> + |d|·δ。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在与七种方法的去噪对比中，四个测试网格上的平均平方角度误差（MSAE）均为最低&lt;/strong>，例如 &lt;strong>Armadillo（噪声 σ&lt;sub>n&lt;/sub> = 0.3 l&lt;sub>e&lt;/sub>）上为 9.72&lt;/strong>，最优对比方法为 12.15（表 3）。&lt;br>&lt;strong>高斯曲率分布最接近真值&lt;/strong>：在 Armadillo、Bunny 和 Vaselion 上的 KL 散度分别为 0.08、0.05 和 0.02，均为所有方法中最低；在 Max Planck 上为 0.07，与另一种方法并列（表 3）。&lt;br>&lt;strong>在 Max Planck 上耗时 56.39 s，标准高斯曲率流为 1016.41 s&lt;/strong>（均为 100 次迭代），速度约为后者的 18 倍（表 1）。&lt;/aside>
+&lt;p>论文检验了两方面的性质。在高斯曲率最小化方面，作者在 Max Planck 头像和 Vase 两个网格上与高斯曲率流进行比较，分别测试无噪声和加入 0.3 倍平均边长 l&lt;sub>e&lt;/sub> 噪声的情形。两种投影策略降低高斯曲率能量的速度都快于曲率流。不加约束时，滤波器约 10 次迭代即收敛，但会丢失细节，角度误差在快速下降后又回升；加入约束后，约 40 次迭代收敛，能在去噪的同时保留细节。与 Stein 等人的可展性方法（SIGGRAPH 2018）相比，二者在无噪声网格上结果相近，而滤波器得到的能量更低。在含噪 bunny 上，滤波器的高斯曲率能量为 83.48（对方为 323.21），MSAE 为 11.86（对方为 12.59），耗时 37.90 s（对方为 1571.10 s）（表 2）。在含噪 mask 上，Stein 等人的方法产生了奇异点，而滤波器没有（图 7）。&lt;/p>
+&lt;p>在去噪实验中，滤波器迭代 40 次，七种基于优化和基于滤波的对比方法均使用默认参数。除 MSAE 最低外，滤波器在四个网格上的高斯曲率能量也都是所有方法中最低的；论文认为较低的 MSAE 说明其几何特征保持得最好。在两个含未知噪声的真实扫描模型（angel 和 rabbit）上，它同样能在去除噪声的同时保持几何特征（图 13 和图 14）。若不加几何约束，滤波器虽能去噪，却无法保持特征。作者计划在未来研究并行版本的滤波器，以便在 GPU 上处理超大规模网格。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-results.webp" alt="两行共十个 armadillo 模型，每个模型上方是面部局部放大图，下方标有 MSAE 和 GCE：含噪输入、原始模型、七种对比方法，以及本文滤波器（MSAE 9.72、GCE 1665.57，以粗体标出）。" loading="lazy">
+&lt;/a>&lt;figcaption>噪声 σ&lt;sub>n&lt;/sub> = 0.3 l&lt;sub>e&lt;/sub> 下的 Armadillo：(a) 含噪输入，(b) 原始模型，(c)–(i) 七种对比方法，(j) 高斯曲率滤波器；每个结果都附有方框区域的局部放大图及其 MSAE 和 GCE。引自论文图 8。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-curves.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/tang-2020-gaussian-curvature/fig-curves.webp" alt="四组面板。每组上方是 Max Planck 头像或 Vase 的四个彩色编码渲染（Input、GC Flow、Ours W/O FP、Ours With FP），下方是高斯曲率能量和 MSAE 随迭代次数变化的两张折线图：黑线为 GC Flow，蓝线为不带特征保持的滤波器，红线为带特征保持的滤波器。" loading="lazy">
+&lt;/a>&lt;figcaption>在 Max Planck 头像和 Vase 上最小化高斯曲率：上排为无噪声，下排为噪声 σ&lt;sub>n&lt;/sub> = 0.3 l&lt;sub>e&lt;/sub>。每组依次为输入、高斯曲率流、不带和带特征保持（FP）的滤波器，下方为 100 次迭代中高斯曲率能量（GCE）和 MSAE 的变化。引自论文图 6。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

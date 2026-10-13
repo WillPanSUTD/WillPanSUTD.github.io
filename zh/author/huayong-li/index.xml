@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Huayong Li | 潘威</title><link>https://willpan.xyz/zh/author/huayong-li/</link><atom:link href="https://willpan.xyz/zh/author/huayong-li/index.xml" rel="self" type="application/rss+xml"/><description>Huayong Li</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>Photometric stereo-based defect detection for lithium battery top covers</title><link>https://willpan.xyz/zh/publications/li-2025-photometric-stereo-based-defect-detection-for/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/li-2025-photometric-stereo-based-defect-detection-for/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>圆柱形锂电池在生产过程中，顶盖会因碰撞、摩擦等外力产生划痕和凹坑。人工目检至今仍很常见，但效率低、精度差，且容易出错。普通二维机器视觉缺少深度信息：在反光的金属表面上，亮区和暗区都难以准确检测，文字、污物也容易与真实缺陷混淆。结构光、条纹投影等三维方法检测更精确，但成本高、数据量大。&lt;/p>
+&lt;p>光度立体（PS）提供了一条折中路线：在多个光照方向下拍摄表面，由亮度变化恢复表面法向和曲率，因而善于揭示表面的细微变化。然而，传统光度立体只适用于静止物体，难以满足产线需求；浅划痕这类细微缺陷也仍然难以检出。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-problem.webp" alt="同一个圆形电池顶盖的四幅灰度图像并排排列，各自从不同方向照明，亮边和表面细微痕迹在各幅图像中各不相同。" loading="lazy">
+&lt;/a>&lt;figcaption>电池顶盖的四幅图像，每幅对应一个光源分区。引自论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法同时改进了硬件和算法。线阵相机在顶盖运动过程中成像，四分区球形积分光源按时分方式频闪，使相邻扫描行分别从不同方向照明。光源顶部常规的圆形开孔被改为窄缝，以减少阴影伪影。随后在 GPU 上用 CUDA 由四幅图像计算反射率图和曲率图，对曲率图进行增强，再通过图像处理提取缺陷。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/li-2025-photometric-stereo-based-defect-detection-for/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>分时采集。&lt;/strong> 运动平台的编码器发出行信号，分频器据此生成四路信号，依次开关四个光源分区并同步触发相机，使每一扫描行只由一个分区照明。&lt;/li>
+&lt;li>&lt;strong>一次扫描得到四幅图像。&lt;/strong> 把交错采集的扫描行按光源分区归类，即得到运动顶盖在四个不同照明方向下的四幅图像。&lt;/li>
+&lt;li>&lt;strong>最小二乘求法向。&lt;/strong> 在朗伯反射模型下，像素亮度为 I = ρ L · N，其中 ρ 为表面反射率，L 为光源方向，N 为表面法向。四个光源为每个像素提供四个方程，用最小二乘法求解。反射率图用于发现异物和污染；由法向得到表面梯度和平均曲率图，用于识别划痕、褶皱等缺陷。&lt;/li>
+&lt;li>&lt;strong>图像增强。&lt;/strong> 对比度拉伸扩大曲率图中的灰度差异；随后用加权最小二乘滤波这一保边平滑方法，抑制工件表面纹理，同时保留划痕等缺陷。&lt;/li>
+&lt;li>&lt;strong>缺陷提取。&lt;/strong> 先选取感兴趣区域（ROI），对图像进行滤波和采样处理；再求差分图像并阈值二值化，经形态学处理细化区域，最后按形状和灰度特征筛选出缺陷。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-method.webp" alt="框图：编码器行信号进入分频控制器，一路输出行信号触发相机采图，另一路经事件拆分得到信号 1 至 4，分别驱动光源分区 1 至 4。" loading="lazy">
+&lt;/a>&lt;figcaption>采集系统的信号流程。编码器的行信号送入分频控制器，由其触发相机，并把事件拆分为四路信号，分别对应一个光源分区。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-pipeline.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-pipeline.webp" alt="流程图：图像输入、绘制 ROI、滤波处理、采样处理、图像差分、图像二值化、形态学处理、按缺陷特征筛选、结果输出。" loading="lazy">
+&lt;/a>&lt;figcaption>对合成后的光度立体图像进行缺陷检测的流程。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>划痕检出率 95.38%，凹坑检出率 96.43%&lt;/strong>，统计对象为 100 幅含已知缺陷的铝合金表面图像中的 376 条划痕和 336 个凹坑（表 2）。&lt;br>与 Ren 等人的方法（参考文献 12）相比，增强后图像的&lt;strong>清晰度为 77.06（对比 16.91），方差为 168.88（对比 41.03）&lt;/strong>；信息熵、PSNR 和 SSIM 也均更高（表 1）。&lt;/aside>
+&lt;p>系统运行在一台配备 Intel Core i5-12500 处理器和 Nvidia GeForce RTX 3060 GPU 的工控机上。先用环形光标定各光源方向，再用 CUDA 并行处理四幅图像，生成反射率图和平均曲率图。论文从清晰度、信息熵、方差、PSNR 和 SSIM 五项图像质量指标，将增强后的曲率图与 Ren 等人的方法进行比较。本文方法五项指标全部更优（信息熵 4.70 对 4.16，PSNR 12.37 对 10.84，SSIM 0.527 对 0.512），作者据此认为该方法在增强缺陷对比度的同时保留了原始图像结构。作者还在不同图像尺寸下比较了基于 Intel TBB 的 CPU 并行计算与基于 CUDA 的 GPU 并行计算，结果表明 GPU 加速显著提高了计算效率。&lt;/p>
+&lt;p>后续工作将把算法推广到非朗伯表面，并进一步提高实时处理效率。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-curvature.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-curvature.webp" alt="电池顶盖的两幅方形图像：左为深色的反射率图，可见明亮的外缘和内圈；右为平坦的灰色平均曲率图，轮廓隐约可见。" loading="lazy">
+&lt;/a>&lt;figcaption>由四幅采集图像计算得到的反射率图（左）和平均曲率图（右）。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-results.webp" alt="左：顶盖的黑色二值图，带有白色噪点和若干明亮线段。右：灰色顶盖图像，蓝色圆圈标出检测区域，检出的缺陷以绿色标记。" loading="lazy">
+&lt;/a>&lt;figcaption>二值化图像（左）与检测结果（右），检出的缺陷以绿色标记。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-detail.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-detail.webp" alt="三行四列的图像网格：两条线状划痕和一个点状小缺陷，各自展示四个处理阶段，最后为黑底上的白色缺陷形状。" loading="lazy">
+&lt;/a>&lt;figcaption>三个缺陷在提取过程中的局部特写，最右一列为提取出的缺陷区域。引自论文图 8。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

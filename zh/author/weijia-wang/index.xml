@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Weijia Wang | 潘威</title><link>https://willpan.xyz/zh/author/weijia-wang/</link><atom:link href="https://willpan.xyz/zh/author/weijia-wang/index.xml" rel="self" type="application/rss+xml"/><description>Weijia Wang</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Sun, 01 Sep 2024 00:00:00 +0000</lastBuildDate><item><title>Segmentation-Driven Feature-Preserving Mesh Denoising</title><link>https://willpan.xyz/zh/publications/wang-2024-mesh-denoising/</link><pubDate>Sun, 01 Sep 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/wang-2024-mesh-denoising/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>网格去噪的任务是从受噪声污染的三角网格中恢复出干净的网格，供三维建模、计算机动画和工业设计等任务使用。难点在于既要去除噪声，又要保留决定形状的特征：棱边、边界和角点。&lt;/p>
+&lt;p>许多基于面法向的去噪方法这样处理特征：对各向异性曲面（相邻面片朝向差异明显）分配较小的权重，对各向同性曲面（相邻面片朝向相近）分配较大的权重。然而，即使权重很小，各向异性曲面上的面片仍会影响去噪结果。另一些各向异性去噪方法在特征被强噪声淹没时难以恢复特征，而基于低秩矩阵的方法计算复杂度高、速度很慢。此前借助分割来引导去噪的方法也各有不足：有的难以保留区域之间的尖锐特征，有的需要针对输入形状手动调节聚类数目，有的在已滤波的网格上聚类，有的在高噪声下效果仍不理想。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法先把含噪网格沿特征划分为若干区域，再逐区域独立去噪，使每个面片都不会与其他区域的面片一起滤波。对于高噪声网格（σ&lt;sub>n&lt;/sub> ≥ 0.3 l&lt;sub>e&lt;/sub>，以平均边长为单位），面片朝向严重扭曲甚至翻转，直接分割变得不可靠；此时先通过一个凸优化问题对网格预滤波，在预滤波结果上分割，再把区域映射回原始含噪网格。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/wang-2024-mesh-denoising/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>仅靠权重不够。&lt;/strong> 在基于法向的滤波中，尖锐棱边另一侧的面片权重虽小，却仍参与更新，依然会影响棱边附近的去噪结果。&lt;/li>
+&lt;li>&lt;strong>逐边检验。&lt;/strong> 对两个面片共享的每条边，将两面片法向夹角的余弦与全局阈值 N&lt;sub>thr&lt;/sub>（网格所有边上余弦的平均值）比较，并将面积型边算子 D(e) 的 L2 范数与用户设定的阈值 D&lt;sub>thr&lt;/sub> 比较；D(e) 由两个三角形的四个顶点计算。两个三角形共面时 ‖D(e)‖&lt;sub>2&lt;/sub> 为 0，二面角越尖锐，其值越大。&lt;/li>
+&lt;li>&lt;strong>从种子出发生长区域。&lt;/strong> 若法向余弦大于 N&lt;sub>thr&lt;/sub>，或 ‖D(e)‖&lt;sub>2&lt;/sub> 小于 D&lt;sub>thr&lt;/sub>，种子面片就把标签传给通过该边相连的面片；新标记的面片继而成为种子。生长停止后，从未标记的面片中随机选取新种子，直到所有面片都归入某个区域。&lt;/li>
+&lt;li>&lt;strong>细化小簇。&lt;/strong> 噪声可能留下零散的小簇。面片数少于 50 的小簇会被拆散：其中每个面片在二环邻域内按标签累加法向余弦，改归余弦和最大的相邻标签。&lt;/li>
+&lt;li>&lt;strong>逐区域去噪。&lt;/strong> 由现有的滤波方法（本文为 BNF、UNF、GNF 和 L1）更新法向和顶点，且只使用同一区域内的面片，各方法自身的参数保持不变。唯一新增的参数是 D&lt;sub>thr&lt;/sub>。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-method.webp" alt="以带三个圆孔的 CAD 零件为例的流程图：含噪网格被分割为彩色区域后去噪；虚线框为高噪声分支，网格先预滤波、再分割，并把区域映射回原网格。" loading="lazy">
+&lt;/a>&lt;figcaption>方法流程。低噪声时直接对含噪网格分割；高噪声时（虚线框）先预滤波，再把区域映射回原始网格。随后由这些区域引导去噪。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-growing.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-growing.webp" alt="尖锐棱边处三角网格的六幅局部放大图：粉色区域 S1 从一个三角形出发沿下方曲面生长，随后黄色区域 S2 沿上方曲面生长。" loading="lazy">
+&lt;/a>&lt;figcaption>尖锐棱边处的区域生长。种子 S1 向外扩展，直到抵达棱边（1–3）；随后新种子 S2 填满棱边另一侧的曲面（4–6）。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在全部六个合成测试模型上，顶点误差 E&lt;sub>v&lt;/sub> 均为所有对比方法中最低&lt;/strong>，其中在 Casting 上与原始 L1 并列（表 2）。&lt;br>&lt;strong>Dodecahedron，σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub>：&lt;/strong> 在 BNF 中加入分割主干后，E&lt;sub>v&lt;/sub> 从 13.808 降至 3.878（×10⁻³）；在 GNF 中从 6.832 降至 2.695（表 2）。&lt;br>&lt;strong>Icosahedron，σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub>：&lt;/strong> 以 BNF 为例，MAE 降低 62.4%（9.859° → 3.712°），E&lt;sub>v&lt;/sub> 降低 72.0%（图 15）。&lt;/aside>
+&lt;p>定量实验在六个已知真值的模型（Cube、Casting、Double torus、Dodecahedron、Icosahedron 和 Cad）上添加零均值高斯噪声，噪声标准差与平均边长成比例。评价指标为面法向的平均角度误差（MAE，单位为度）和基于顶点的网格间误差 E&lt;sub>v&lt;/sub>。对比方法包括 L0、BNF、UNF、GNF、L1、HLO 和 TGV；其中四个开源方法 BNF、UNF、GNF 和 L1 还被嵌入分割主干运行，参数与各自原始版本相同。在这 24 组模型–方法组合中，加入分割主干后 MAE 在 23 组中下降，E&lt;sub>v&lt;/sub> 在 22 组中下降。MAE 方面的结果具有竞争力，但并非处处最优：Casting 上 MAE 最低的是 TGV，Double torus 上则是 L0。特征保持上的优势在类 CAD 模型 Cube、Dodecahedron 和 Icosahedron 上最为明显，L0、BNF 和 TGV 在这些模型的棱边处误差较大。&lt;/p>
+&lt;p>视觉上，分割主干有助于恢复 Octaflower 的尖端并保持其曲面区域，恢复 Nicolo 模型耳朵和眼睛的细节，并在强噪声（σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub>）下保留 Fandisk 的特征。在噪声并非高斯分布的原始扫描网格上，它保留了 Angel 的羽毛以及 Wilhelm 的头发和嘴唇细节，并帮助恢复 Iron 和 Rabbit 模型的细节。在用于引导同一去噪方法的几种分割方法（K-means、VSA、SDF 和本文方法）中，本文的分割得到的总体 E&lt;sub>v&lt;/sub> 最低（图 8）。分割主干还使 UNF 和 GNF 对自身参数更不敏感（图 25–28），而细化步骤减少了去噪结果中的凹坑和粗糙棱边（图 29）。作者也指出了一个局限：对于三角剖分极其稀疏且不规则的网格（如一个齿轮模型），分割结果虽然合理，去噪后的网格却不能完全恢复原有形状，棱边处尤为明显（图 30）。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-dodecahedron.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-dodecahedron.webp" alt="Dodecahedron 结果：含噪网格及其分割，以及 L0、BNF、UNF、GNF、L1、HLO、TGV 和本文方法的八个去噪结果，下方为顶点误差色图，本文方法整体呈深蓝色。" loading="lazy">
+&lt;/a>&lt;figcaption>噪声 σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub> 的 Dodecahedron；下排以颜色表示顶点误差 E&lt;sub>v&lt;/sub>（蓝色低、红色高）。“Ours”以 GNF 为去噪主干。引自论文图 12。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-gains.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-gains.webp" alt="含噪 Icosahedron 的两组结果：上排为 BNF、UNF、GNF、L1 的误差色图和数值，下排为加入分割主干后的结果及降低百分比。" loading="lazy">
+&lt;/a>&lt;figcaption>Icosahedron 上 BNF、UNF、GNF 和 L1 未加入（上排）与加入（下排）分割主干时的 MAE（左，单位为度）和 E&lt;sub>v&lt;/sub>（右，×10⁻³），括号内为降低的百分比。引自论文图 15。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-scan.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-scan.webp" alt="原始扫描的 Angel 网格：含噪输入、分割结果和八种方法的去噪结果，每幅上方为翅膀羽毛的局部放大图。" loading="lazy">
+&lt;/a>&lt;figcaption>原始扫描的 Angel 网格：含噪输入、分割结果及各方法的去噪结果，上方为羽毛的局部放大。“Ours”以 L1 为去噪主干。引自论文图 19。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

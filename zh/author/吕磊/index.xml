@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>吕磊 | 潘威</title><link>https://willpan.xyz/zh/author/%E5%90%95%E7%A3%8A/</link><atom:link href="https://willpan.xyz/zh/author/%E5%90%95%E7%A3%8A/index.xml" rel="self" type="application/rss+xml"/><description>吕磊</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>Calibration Method of Fringe Projection Based on High-Order Polynomial</title><link>https://willpan.xyz/zh/publications/zhang-2025-fringe-projection-calibration/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2025-fringe-projection-calibration/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>相移轮廓术（PSP）向物体投射正弦条纹，从相机拍到的变形条纹中提取相位，再把像素坐标和相位转换为三维坐标，从而获得物体的三维形貌。这一转换关系由系统标定确定，而传统标定方法较为繁琐。基于相位–高度映射的方法需要面积大、精度高的标定靶，并要用精密平移台带动标靶移动，模型参数受标定靶精度和平移精度的影响；基于立体视觉的方法在获得标靶坐标及其在相机和投影仪中的图像坐标后，用非线性优化求解标定参数，计算耗时，且精度同时受相机和投影仪图像坐标精度的影响。&lt;/p>
+&lt;p>多项式标定模型无需投影仪模型，也不需要平移台：它直接把三维世界坐标拟合为像素坐标 (u, v) 和绝对相位 ϕ 的多项式。阶数越高，对这一关系的描述越准确，但系数数量随之迅速增加；当阶数大于 3 时，最小二乘法拟合的速度变慢、稳定性变差。已有工作用主成分分析剔除冗余项来简化模型，计算速度有所提高，但重建精度随之下降。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-problem.webp" alt="实验装置照片：前方平板上是相机和小型投影仪，后方是带白色圆点的黑色标定板，左侧有白色台阶块，右侧是笔记本电脑。" loading="lazy">
+&lt;/a>&lt;figcaption>实验系统，由 CCD 相机、DLP 投影仪、圆形标定板和计算机组成。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>本文保留高阶多项式标定模型（无需投影仪模型和平移台），并用稀疏贪婪随机 Kaczmarz（SGRK）算法代替最小二乘法拟合模型系数。SGRK 兼具随机稀疏 Kaczmarz 算法的高效迭代特性和贪婪算法的精选策略：每一步只处理一个经过挑选的方程，而不是一次求解整个方程组。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2025-fringe-projection-calibration/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>采集标定点。&lt;/strong> 将条纹投射到圆形标定板上，并采集标定板的多个姿态。以圆心作为特征点：每个特征点给出像素坐标 (u, v)、由三频四步相移得到的绝对相位 ϕ，以及由张氏标定法得到的世界坐标。&lt;/li>
+&lt;li>&lt;strong>建立多项式模型。&lt;/strong> 世界坐标 X、Y、Z 均表示为 u、v、ϕ 的 n 阶多项式，标定由此转化为线性方程组 W = Ax。3 阶、4 阶、5 阶模型分别有 60、105、168 个系数；综合考虑重构精度与计算效率，本文以 4 阶模型作为标准模型。&lt;/li>
+&lt;li>&lt;strong>贪婪选取方程。&lt;/strong> 每次迭代中，SGRK 计算各方程的残差，保留残差超过阈值的行，再按与残差平方成正比的概率从中抽取一行。误差大的方程因此优先得到更新，收敛更快。&lt;/li>
+&lt;li>&lt;strong>更新并稀疏化。&lt;/strong> 用选中的行对系数做加权 Kaczmarz 投影更新，再通过软阈值操作将较小的系数置零，使解保持稀疏。&lt;/li>
+&lt;li>&lt;strong>迭代收敛后重建。&lt;/strong> 迭代持续到系数的相对标准误差低于 10⁻⁶ 为止。测量物体时，将各点的像素坐标和绝对相位代入拟合好的多项式，即可求得其三维坐标。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-method.webp" alt="三幅黑色标定板的灰度图像，板上为七乘七排列的白色圆点：原始标定板、圆点上覆盖竖直条纹、每个圆心标有十字。" loading="lazy">
+&lt;/a>&lt;figcaption>标定板图像：（a）圆形标定板；（b）投射条纹后的标定板；（c）选作特征点的圆心。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>标准陶瓷球（直径 25.0001 mm），4 阶模型：SGRK 的直径偏差为 0.0232 mm，耗时 1.63 s&lt;/strong>；最小二乘法为 0.0727 mm、3.96 s（表 2）。&lt;br>&lt;strong>标准台阶，4 阶模型：SGRK 在两处台阶高度上的平均误差为 0.004 mm 和 −0.003 mm，耗时 1.78 s&lt;/strong>；最小二乘法为 0.009 mm 和 0.006 mm、4.32 s（表 1）。&lt;br>&lt;strong>陶瓷玩偶：SGRK 的均方根误差为 0.0729 mm，最小二乘法为 0.9250 mm&lt;/strong>，以 Mech-Eye Pro S Enhanced 扫描结果为真值（第 3 节，图 9）。&lt;/aside>
+&lt;p>实验系统采用 DLP LightCrafter 4500 投影仪（912 × 1140 像素）、CCD 相机（1280 × 1024 像素）和 300 mm × 300 mm 的圆形标定板（圆心间距 30 mm）。两种方法分别用于完整的 4 阶模型和经主成分分析简化的 4 阶模型。两种情况下 SGRK 都更快、更准：对标准球，简化模型下 SGRK 的直径偏差为 0.0449 mm、耗时 1.17 s，最小二乘法为 0.0932 mm、3.17 s；且无论用哪种方法求解，简化模型的精度都低于完整模型（表 2）。每次标定完成后，对台阶重复测量 3 次，以检验重复精度（表 1）。&lt;/p>
+&lt;p>在其他阶数下，SGRK 同样占优（表 3）。3 阶模型下，SGRK 的标准球直径偏差为 0.0549 mm、耗时 1.02 s，最小二乘法为 0.1470 mm、3.04 s；5 阶模型下分别为 0.0177 mm、2.31 s 和 0.0400 mm、6.15 s。5 阶模型的精度高于 4 阶，但 168 个系数使计算时间明显增加；4 阶和 5 阶模型的精度都高于 3 阶模型。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-results.webp" alt="三幅图：陶瓷天使玩偶的灰度照片，以及两幅按深度着色的重建结果，头部均有虚线框和放大图，右侧放大图更平滑。" loading="lazy">
+&lt;/a>&lt;figcaption>陶瓷玩偶：（a）被测物体；（b）最小二乘法标定的重建结果；（c）SGRK 标定的重建结果。小图为头部放大。引自论文图 9。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

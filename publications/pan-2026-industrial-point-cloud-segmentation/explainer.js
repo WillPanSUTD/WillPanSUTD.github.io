@@ -34,24 +34,13 @@ export default function mount(el, { kit, lang }) {
     },
   }, lang);
 
-  const ink = kit.token("--c-ink") || "#0a0a0a";
-  const body = kit.token("--c-body") || "#525252";
-  const accent = kit.token("--c-accent") || "#1e3a8a";
-  const mute = kit.token("--c-mute") || "#a3a3a3";
-  const bg = kit.token("--c-bg") || "#ffffff";
+  const { ink, body, accent, mute, bg } = kit.palette();
   // Literal semantic class colours for the two defect classes shown (normal surface uses the mute token).
   const CLS = [mute, "#d9622b", "#2b7bb9"]; // normal, burst, pit
 
-  const ease = (t) => 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3);
 
   // --- Deterministic profile: flat weld surface with a burst (protrusion) and a pit (depression) ---
-  let seed = 11;
-  const rnd = () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let r = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
+  const rnd = kit.rng(11);
   const Y0 = 226;
   const burst = (x) => -80 * Math.exp(-Math.pow((x - 190) / 58, 4));
   const pit = (x) => 62 * Math.exp(-Math.pow((x - 455) / 52, 4));
@@ -81,32 +70,13 @@ export default function mount(el, { kit, lang }) {
   const knn = (q, k) => pts.filter((p) => p !== q)
     .sort((a, b) => Math.hypot(a.x - q.x, a.y - q.y) - Math.hypot(b.x - q.x, b.y - q.y)).slice(0, k);
 
-  const text = (parent, x, y, str, o = {}) => {
-    const n = kit.svg("text", {
-      x, y, "font-size": o.size || 22, fill: o.fill || ink, "text-anchor": o.anchor || "middle",
-      "font-weight": o.weight || 400, "font-family": "var(--f-sans)", "paint-order": "stroke",
-      stroke: bg, "stroke-width": 4, "stroke-linejoin": "round", opacity: o.opacity ?? 1,
-    }, parent);
-    n.textContent = str;
-    return n;
-  };
+  const { text, line, arrow } = kit.pen({ textSize: 22, stroke: body, head: 8 });
   // Symbol with a real subscript (e.g. n + "0" -> n₀).
   const subText = (parent, x, y, base, sub, o = {}) => {
     const n = text(parent, x, y, "", o);
     kit.svg("tspan", { "font-style": "italic" }, n).textContent = base;
-    kit.svg("tspan", { "baseline-shift": "sub", "font-size": Math.round((o.size || 22) * 0.72) }, n).textContent = sub;
+    kit.svg("tspan", { "baseline-shift": "sub", "font-size": Math.max(14, Math.round((o.size || 22) * 0.72)) }, n).textContent = sub;
     return n;
-  };
-  const line = (parent, a, b, o = {}) => kit.svg("line", {
-    x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: o.stroke || body, "stroke-width": o.w || 1.5,
-    "stroke-dasharray": o.dash || "none", opacity: o.opacity ?? 1, "stroke-linecap": "round",
-  }, parent);
-  const arrow = (parent, a, b, o = {}) => {
-    line(parent, a, b, o);
-    const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), s = o.head || 8;
-    const p1 = [b[0] - s * Math.cos(ang - 0.45), b[1] - s * Math.sin(ang - 0.45)];
-    const p2 = [b[0] - s * Math.cos(ang + 0.45), b[1] - s * Math.sin(ang + 0.45)];
-    kit.svg("polygon", { points: [b, p1, p2].map((q) => q.join(",")).join(" "), fill: o.stroke || body, opacity: o.opacity ?? 1 }, parent);
   };
   const dot = (parent, p, o = {}) => kit.svg("circle", {
     cx: p.x, cy: p.y, r: o.r || 4, fill: o.fill || mute, opacity: o.opacity ?? 1,
@@ -127,7 +97,7 @@ export default function mount(el, { kit, lang }) {
     lang,
     render(stage, i, t) {
       stage.replaceChildren();
-      const e = ease(t);
+      const e = kit.easeOut(t);
       const s = kit.svg("svg", { viewBox: "0 0 640 360", role: "img", "aria-label": L.steps[i] }, stage);
       const g = kit.svg("g", {}, s);
 

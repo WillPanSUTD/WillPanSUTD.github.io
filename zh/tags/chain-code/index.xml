@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Chain Code | 潘威</title><link>https://willpan.xyz/zh/tags/chain-code/</link><atom:link href="https://willpan.xyz/zh/tags/chain-code/index.xml" rel="self" type="application/rss+xml"/><description>Chain Code</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>Fast Shape Retrieval Based on Differential Chain Code Descriptor and Fuzzy Contour Matching</title><link>https://willpan.xyz/zh/publications/pan-2025-fast-shape-retrieval/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2025-fast-shape-retrieval/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>在图像中匹配已知形状，是工业检测与测量中的基础环节。SIFT、SURF、ORB 等基于特征的方法依靠关键点描述子，但在强噪声、模糊或视角变化较大时表现不佳，而且特征点多、匹配流程复杂，计算量大。基于模板的方法直接比较图像块，在搜索空间大时代价高昂，并且对尺度、旋转和光照变化敏感。因此，本文转而对轮廓进行匹配，利用轮廓所蕴含的结构与拓扑信息。&lt;/p>
+&lt;p>链码把轮廓转化为方向变化的序列，形状相似的轮廓会得到相似的序列，匹配问题随之变为序列比对。问题在于序列是有序的：一个噪声点会使其后各点的对应关系发生错位，链码越长，错位的点越多，误差也越大。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-problem.webp" alt="点集 P 中有一个噪声点 p6 偏离直线，下方为点集 Q，以及四行数字序列：P 的差分链码（噪声点处为 1、2、1）、Q 的全零差分链码、匹配代价数组和滑动窗口处理结果。" loading="lazy">
+&lt;/a>&lt;figcaption>点集 P 中的单个噪声点（p6）使连续三个差分码变为 1、2、1。将 Q 的短码沿 P 滑动得到匹配代价数组，再用大小为 3 的滑动窗口处理。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法先把每条轮廓整理为有序、等间距的点集，并编码为差分链码；然后把局部轮廓切成若干短段，分别与模板匹配，使噪声点只影响其所在的一段；最后对每个候选位置进行几何验证。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2025-fast-shape-retrieval/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>提取、平滑并重采样轮廓。&lt;/strong> 对二值图像做游程编码，经连通性分析和深度优先搜索得到外轮廓与内轮廓，相邻点间距约 1 像素。先用邻域点均值对点集平滑，再按固定间距采样，在保留形状的同时减少点数。&lt;/li>
+&lt;li>&lt;strong>编码转角。&lt;/strong> 不先计算普通链码，而是由每个点与前后两点构成两个向量，将两向量间的旋转角量化为差分码。轮廓由此变为一段码序列，且不随形状平移而改变。&lt;/li>
+&lt;li>&lt;strong>分段匹配。&lt;/strong> 将局部轮廓的码序列切分为若干短段。每一段沿较长的模板码序列滑动，在每个位置以码值之差的绝对值之和作为代价。每段得到一个与模板码序列等长的代价数组。&lt;/li>
+&lt;li>&lt;strong>合并代价，选取候选位置。&lt;/strong> 用滑动窗口把窗口内的最小代价写入窗口中心，以吸收最佳位置的小幅偏移；再把各段的代价数组合并为总代价。总代价呈若干“谷”状分布，保留代价较小的位置，取每个谷的中心作为候选起始位置。&lt;/li>
+&lt;li>&lt;strong>SVD 验证。&lt;/strong> 模糊匹配也可能给出形状相似的位置或错误位置。对每个候选位置，将局部点与模板点组成点对，用奇异值分解（SVD）估计变换矩阵，并以变换后点对的平均距离评价匹配质量，保留平均距离最小的位置。最后可再用 ICP 精化对齐结果。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-coding.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-coding.webp" alt="左：三个点 p1、p2、p3 由两支绿色箭头相连，并标出向量 p1p2 与 p2p3 之间的夹角 θ。右：被正负 22.5°、67.5°、112.5° 和 157.5° 分成八个扇区的八边形，扇区标有码值 0 到 4。" loading="lazy">
+&lt;/a>&lt;figcaption>差分码的计算：(a) 向量 p₁p₂ 与 p₂p₃ 之间的夹角 θ；(b) 八个角度扇区及对应码值。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-method.webp" alt="局部点集被分为 Partial 1 和 Partial 2，二者分别在绿色框内与虚线表示的模板点集匹配，得到 costarray1 和 costarray2。" loading="lazy">
+&lt;/a>&lt;figcaption>分段模糊匹配：局部点集被切分为若干部分，每部分与模板点集匹配，各得到一个代价数组。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在全部 8 幅测试图像上，平均距离均低于 Halcon 和 Smart：&lt;/strong> 本文方法为 0.376–0.601，Halcon 为 0.694–1.027，Smart 为 0.642–0.958（表 1）。&lt;br>&lt;strong>经 ICP 精化后为 0.372–0.447&lt;/strong>，标准差为 0.155–0.189，Halcon 为 0.269–0.483（表 1）。&lt;/aside>
+&lt;p>实验材料是用 SmartFlash-2020 一键测量传感器采集的 CAD 图纸。该仪器适用于大尺寸平面产品的检测，测量范围可达 300 × 200 mm。每幅原始图像分别顺时针旋转 30°、60°、90°、120° 和 150°，再与原图匹配；另有实验检验多目标干扰下的匹配。定量比较中，表 1 给出了 8 幅测试图像上匹配轮廓与真值之间的平均距离和标准差，对比对象为 Halcon、一个称为 Smart 的基线方法、本文方法以及本文方法加 ICP。&lt;/p>
+&lt;p>本文方法在每幅图像上的平均距离都是三种方法中最低的；例如在测试图像 2 上为 0.426，而 Halcon 为 1.027，Smart 为 0.715。ICP 精化在 7 幅图像上进一步降低了平均距离，在图像 6 上保持不变（0.376），降幅最大的是图像 8、5 和 4（0.601 → 0.372、0.581 → 0.391、0.578 → 0.419）。作者计划在后续工作中引入更先进的平滑方法、改进模糊匹配算法，并探索结合深度学习。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-results.webp" alt="八行零件截面图。第一列为黑色的原始图纸，其余五列为旋转后的副本，匹配到的轮廓以蓝色叠加显示。" loading="lazy">
+&lt;/a>&lt;figcaption>旋转图像上的匹配结果：每行对应一个零件，第一列为原始图纸，其余各列为旋转后的图像，叠加的蓝色为匹配轮廓。引自论文图 11。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-multitarget.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2025-fast-shape-retrieval/fig-multitarget.webp" alt="三行零件图纸。每行先是一幅较大的型材图纸，随后是三个场景，每个场景包含多个不同型材，摆放角度各异。" loading="lazy">
+&lt;/a>&lt;figcaption>多目标匹配结果：场景中包含多个不同零件，摆放角度各异。引自论文图 10。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

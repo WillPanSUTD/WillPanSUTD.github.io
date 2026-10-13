@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Geometry Processing | 潘威</title><link>https://willpan.xyz/zh/tags/geometry-processing/</link><atom:link href="https://willpan.xyz/zh/tags/geometry-processing/index.xml" rel="self" type="application/rss+xml"/><description>Geometry Processing</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>Surface Smoothing based on Discrete Orthogonal Polynomial</title><link>https://willpan.xyz/zh/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>三角网格是表示三维物体的一种通用方式，在逆向设计、快速成型、3D 打印和虚拟仿真中都有广泛应用。然而，通过三维测量得到的网格会带有扫描和数字化过程中引入的噪声，必须在预处理阶段去除。难点在于，去噪的同时要尽可能保留尖锐边等几何特征。&lt;/p>
+&lt;p>早期的光顺方法是各向同性的，无法保持这类特征：例如简单快速的拉普拉斯光顺还会使曲面收缩。各向异性方法效果更好，其中许多方法先对面片法向做平滑，再更新顶点；在去噪过程中区分特征的方法往往只关注局部邻域，容易受噪声干扰；而 L0 最小化等稀疏方法虽能保持特征，却要面对非凸且缓慢的优化过程。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>本方法同样先平滑法向、再移动顶点，但做了两处改动。一是面片法向不再由单个面片或其直接邻域估计，而是由非局部相似结构估计，即在更大邻域内与其朝向一致的面片组。二是用正交多项式对这些法向进行拟合滤波，不同阶的正交多项式彼此互不干扰。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>局部结构的法向张量。&lt;/strong> 单个带噪面片的法向可能不够准确。对每个面片，其 r 邻域内的面片按距离和法向夹角加权，投票构成法向张量；最大特征值对应的特征向量即为该局部结构的代表方向。&lt;/li>
+&lt;li>&lt;strong>同向局部结构。&lt;/strong> 法向与该方向夹角超过阈值 θth 的面片被剔除，从而去掉结构中误差较大的面片。噪声越大的模型，阈值设得越大。&lt;/li>
+&lt;li>&lt;strong>非局部相似结构。&lt;/strong> 将搜索范围扩大到 R 邻域（R &amp;gt; r），其中与当前结构夹角不超过 θth（高噪声取 40°，低噪声取 20°）的同向结构，都被加入该面片的非局部相似结构集合。&lt;/li>
+&lt;li>&lt;strong>正交多项式滤波。&lt;/strong> 将这些结构的面片法向作为行堆叠成矩阵，并重排为近似方阵。在 [−1, 1] 上构造 X、Y 两个方向的离散 Legendre 多项式基，用它们拟合该矩阵。结构之间有重叠时，对每个面片的估计累加后再除以该面片被使用的次数，得到更新后的法向。&lt;/li>
+&lt;li>&lt;strong>顶点更新。&lt;/strong> 每个顶点根据周围面片更新后的法向移动，网格经多次迭代完成更新。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-method.webp" alt="流程图：输入带噪网格、相似结构、DOP 法向滤波、更新顶点；下方为一个机械零件从带噪输入到去噪结果各阶段的九幅渲染图，其中一些以红色标出局部区域，一些显示法向场，一些为彩色误差图。" loading="lazy">
+&lt;/a>&lt;figcaption>算法总览：输入带噪网格 → 相似结构 → 离散正交多项式（DOP）法向滤波 → 顶点更新，下方为机械零件在各中间阶段的渲染；彩色图采用右下角的 Ev 误差色标。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>Cube（噪声 0.2 lₑ）：MSAE 为 0.075 × 10⁻²&lt;/strong>，次优的 UNF 为 0.135 × 10⁻²；顶点误差 Ev 同样最低，为 1.224 × 10⁻³（表 2）。&lt;br>&lt;strong>Fandisk（噪声 0.4 lₑ）：顶点误差 Ev 最低，为 5.983 × 10⁻³&lt;/strong>，GNF 为 6.976 × 10⁻³（表 2）。&lt;br>&lt;strong>Cad（噪声 0.3 lₑ）：法向误差 MSAE 最低，为 0.640 × 10⁻²&lt;/strong>，SNF 为 2.529 × 10⁻²（表 2）。&lt;/aside>
+&lt;p>对比方法共七种：L0 最小化、双边法向滤波（BNF）、单边法向滤波（UNF）、引导法向滤波（GNF）、L1 中值滤波、半核拉普拉斯算子（HLO），以及分割驱动的特征保持滤波（SNF）。合成测试网格通过添加零均值高斯噪声得到，其标准差 σn 与平均边长 lₑ 成正比。与真值比较的误差有两项：基于顶点的位置误差 Ev，以及面片法向的均方角度误差 MSAE。本方法在 Cube 上两项指标均最低，在 Fandisk 和 Cad 上各有一项最低；Fandisk 的 MSAE 以 L0 最小化最低，Cad 的 Ev 以 SNF 最低。在 Octaflower 上，SNF 的误差最低（L1 的 Ev 与之并列），而论文中的局部放大图表明本方法能够保留局部特征。&lt;/p>
+&lt;p>在 Angel 模型的原始扫描数据上，本方法略逊于 SNF，但在去噪和特征保持上优于其余方法。在同一个扫描 Bunny 模型上加入三档噪声后，本方法在 0.1 和 0.3 时表现良好，在 0.5 时则存在一定局限。作者指出，与其他方法一样，本方法对过强噪声和不规则三角剖分的鲁棒性有限；作为后续工作，他们提出先对网格分区，再分别对特征部分（角点和边）与非特征部分拟合正交多项式。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-results.webp" alt="两行共十幅立方体渲染图：原始、带噪及八种去噪结果；下行按误差从蓝到绿、红着色。" loading="lazy">
+&lt;/a>&lt;figcaption>噪声 σn = 0.2 lₑ 的 Cube：真值、带噪输入，以及七种对比方法和本方法的结果，下行按顶点误差 Ev 着色。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-scan.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-scan.webp" alt="九幅扫描天使雕像渲染图：带噪输入与八种去噪结果，每幅上方为同一细节的放大图。" loading="lazy">
+&lt;/a>&lt;figcaption>原始扫描的 Angel 网格：带噪输入，以及七种对比方法和本方法的结果，上方为框选区域的放大图。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-noise.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lei-2025-surface-smoothing-based-on-discrete-orthogonal/fig-noise.webp" alt="七幅兔子模型渲染图：原始模型、噪声逐级增大的三个带噪版本，以及三个去噪结果。" loading="lazy">
+&lt;/a>&lt;figcaption>同一 Bunny 模型在噪声 σn = 0.1、0.3、0.5 下的输入及本方法对应的结果。引自论文图 9。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Segmentation-Driven Feature-Preserving Mesh Denoising</title><link>https://willpan.xyz/zh/publications/wang-2024-mesh-denoising/</link><pubDate>Sun, 01 Sep 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/wang-2024-mesh-denoising/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>网格去噪的任务是从受噪声污染的三角网格中恢复出干净的网格，供三维建模、计算机动画和工业设计等任务使用。难点在于既要去除噪声，又要保留决定形状的特征：棱边、边界和角点。&lt;/p>
+&lt;p>许多基于面法向的去噪方法这样处理特征：对各向异性曲面（相邻面片朝向差异明显）分配较小的权重，对各向同性曲面（相邻面片朝向相近）分配较大的权重。然而，即使权重很小，各向异性曲面上的面片仍会影响去噪结果。另一些各向异性去噪方法在特征被强噪声淹没时难以恢复特征，而基于低秩矩阵的方法计算复杂度高、速度很慢。此前借助分割来引导去噪的方法也各有不足：有的难以保留区域之间的尖锐特征，有的需要针对输入形状手动调节聚类数目，有的在已滤波的网格上聚类，有的在高噪声下效果仍不理想。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法先把含噪网格沿特征划分为若干区域，再逐区域独立去噪，使每个面片都不会与其他区域的面片一起滤波。对于高噪声网格（σ&lt;sub>n&lt;/sub> ≥ 0.3 l&lt;sub>e&lt;/sub>，以平均边长为单位），面片朝向严重扭曲甚至翻转，直接分割变得不可靠；此时先通过一个凸优化问题对网格预滤波，在预滤波结果上分割，再把区域映射回原始含噪网格。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/wang-2024-mesh-denoising/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>仅靠权重不够。&lt;/strong> 在基于法向的滤波中，尖锐棱边另一侧的面片权重虽小，却仍参与更新，依然会影响棱边附近的去噪结果。&lt;/li>
+&lt;li>&lt;strong>逐边检验。&lt;/strong> 对两个面片共享的每条边，将两面片法向夹角的余弦与全局阈值 N&lt;sub>thr&lt;/sub>（网格所有边上余弦的平均值）比较，并将面积型边算子 D(e) 的 L2 范数与用户设定的阈值 D&lt;sub>thr&lt;/sub> 比较；D(e) 由两个三角形的四个顶点计算。两个三角形共面时 ‖D(e)‖&lt;sub>2&lt;/sub> 为 0，二面角越尖锐，其值越大。&lt;/li>
+&lt;li>&lt;strong>从种子出发生长区域。&lt;/strong> 若法向余弦大于 N&lt;sub>thr&lt;/sub>，或 ‖D(e)‖&lt;sub>2&lt;/sub> 小于 D&lt;sub>thr&lt;/sub>，种子面片就把标签传给通过该边相连的面片；新标记的面片继而成为种子。生长停止后，从未标记的面片中随机选取新种子，直到所有面片都归入某个区域。&lt;/li>
+&lt;li>&lt;strong>细化小簇。&lt;/strong> 噪声可能留下零散的小簇。面片数少于 50 的小簇会被拆散：其中每个面片在二环邻域内按标签累加法向余弦，改归余弦和最大的相邻标签。&lt;/li>
+&lt;li>&lt;strong>逐区域去噪。&lt;/strong> 由现有的滤波方法（本文为 BNF、UNF、GNF 和 L1）更新法向和顶点，且只使用同一区域内的面片，各方法自身的参数保持不变。唯一新增的参数是 D&lt;sub>thr&lt;/sub>。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-method.webp" alt="以带三个圆孔的 CAD 零件为例的流程图：含噪网格被分割为彩色区域后去噪；虚线框为高噪声分支，网格先预滤波、再分割，并把区域映射回原网格。" loading="lazy">
+&lt;/a>&lt;figcaption>方法流程。低噪声时直接对含噪网格分割；高噪声时（虚线框）先预滤波，再把区域映射回原始网格。随后由这些区域引导去噪。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-growing.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-growing.webp" alt="尖锐棱边处三角网格的六幅局部放大图：粉色区域 S1 从一个三角形出发沿下方曲面生长，随后黄色区域 S2 沿上方曲面生长。" loading="lazy">
+&lt;/a>&lt;figcaption>尖锐棱边处的区域生长。种子 S1 向外扩展，直到抵达棱边（1–3）；随后新种子 S2 填满棱边另一侧的曲面（4–6）。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在全部六个合成测试模型上，顶点误差 E&lt;sub>v&lt;/sub> 均为所有对比方法中最低&lt;/strong>，其中在 Casting 上与原始 L1 并列（表 2）。&lt;br>&lt;strong>Dodecahedron，σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub>：&lt;/strong> 在 BNF 中加入分割主干后，E&lt;sub>v&lt;/sub> 从 13.808 降至 3.878（×10⁻³）；在 GNF 中从 6.832 降至 2.695（表 2）。&lt;br>&lt;strong>Icosahedron，σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub>：&lt;/strong> 以 BNF 为例，MAE 降低 62.4%（9.859° → 3.712°），E&lt;sub>v&lt;/sub> 降低 72.0%（图 15）。&lt;/aside>
+&lt;p>定量实验在六个已知真值的模型（Cube、Casting、Double torus、Dodecahedron、Icosahedron 和 Cad）上添加零均值高斯噪声，噪声标准差与平均边长成比例。评价指标为面法向的平均角度误差（MAE，单位为度）和基于顶点的网格间误差 E&lt;sub>v&lt;/sub>。对比方法包括 L0、BNF、UNF、GNF、L1、HLO 和 TGV；其中四个开源方法 BNF、UNF、GNF 和 L1 还被嵌入分割主干运行，参数与各自原始版本相同。在这 24 组模型–方法组合中，加入分割主干后 MAE 在 23 组中下降，E&lt;sub>v&lt;/sub> 在 22 组中下降。MAE 方面的结果具有竞争力，但并非处处最优：Casting 上 MAE 最低的是 TGV，Double torus 上则是 L0。特征保持上的优势在类 CAD 模型 Cube、Dodecahedron 和 Icosahedron 上最为明显，L0、BNF 和 TGV 在这些模型的棱边处误差较大。&lt;/p>
+&lt;p>视觉上，分割主干有助于恢复 Octaflower 的尖端并保持其曲面区域，恢复 Nicolo 模型耳朵和眼睛的细节，并在强噪声（σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub>）下保留 Fandisk 的特征。在噪声并非高斯分布的原始扫描网格上，它保留了 Angel 的羽毛以及 Wilhelm 的头发和嘴唇细节，并帮助恢复 Iron 和 Rabbit 模型的细节。在用于引导同一去噪方法的几种分割方法（K-means、VSA、SDF 和本文方法）中，本文的分割得到的总体 E&lt;sub>v&lt;/sub> 最低（图 8）。分割主干还使 UNF 和 GNF 对自身参数更不敏感（图 25–28），而细化步骤减少了去噪结果中的凹坑和粗糙棱边（图 29）。作者也指出了一个局限：对于三角剖分极其稀疏且不规则的网格（如一个齿轮模型），分割结果虽然合理，去噪后的网格却不能完全恢复原有形状，棱边处尤为明显（图 30）。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-dodecahedron.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-dodecahedron.webp" alt="Dodecahedron 结果：含噪网格及其分割，以及 L0、BNF、UNF、GNF、L1、HLO、TGV 和本文方法的八个去噪结果，下方为顶点误差色图，本文方法整体呈深蓝色。" loading="lazy">
+&lt;/a>&lt;figcaption>噪声 σ&lt;sub>n&lt;/sub> = 0.4 l&lt;sub>e&lt;/sub> 的 Dodecahedron；下排以颜色表示顶点误差 E&lt;sub>v&lt;/sub>（蓝色低、红色高）。“Ours”以 GNF 为去噪主干。引自论文图 12。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-gains.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-gains.webp" alt="含噪 Icosahedron 的两组结果：上排为 BNF、UNF、GNF、L1 的误差色图和数值，下排为加入分割主干后的结果及降低百分比。" loading="lazy">
+&lt;/a>&lt;figcaption>Icosahedron 上 BNF、UNF、GNF 和 L1 未加入（上排）与加入（下排）分割主干时的 MAE（左，单位为度）和 E&lt;sub>v&lt;/sub>（右，×10⁻³），括号内为降低的百分比。引自论文图 15。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-scan.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wang-2024-mesh-denoising/fig-scan.webp" alt="原始扫描的 Angel 网格：含噪输入、分割结果和八种方法的去噪结果，每幅上方为翅膀羽毛的局部放大图。" loading="lazy">
+&lt;/a>&lt;figcaption>原始扫描的 Angel 网格：含噪输入、分割结果及各方法的去噪结果，上方为羽毛的局部放大。“Ours”以 L1 为去噪主干。引自论文图 19。&lt;/figcaption>
+&lt;/figure></description></item><item><title>HLO: Half-kernel Laplacian Operator for surface smoothing</title><link>https://willpan.xyz/zh/publications/pan-2020-hlo/</link><pubDate>Wed, 01 Jan 2020 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2020-hlo/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>由扫描仪或其他传感设备采集的网格不可避免地含有噪声，在用于形状分析、动画或渲染之前必须先进行光顺。其主要难点在于：既要去除噪声，又要保持特征、抑制收缩。均匀拉普拉斯算子将每个顶点与其邻点的质心作比较，能有效光顺曲面，但由于其各向同性，会抹平特征并使曲面收缩。论文还分析了特征点的微分性质：在尖锐边上的特征点处，曲面不可微，拉普拉斯算子所近似的二阶导数并不存在，因此对这类顶点用其全部邻点计算均匀拉普拉斯是没有意义的。现有的特征保持方法大多依赖面法向或顶点法向，其中不少方法包含多个步骤和大量参数，难以调节，对复杂模型尤其如此。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-problem.webp" alt="两行各五个花瓶渲染图：带噪输入以及迭代 1、3、5、15 次后的结果。上行花瓶逐渐变细，上部和下部特征消失；下行花瓶保持了原有轮廓。" loading="lazy">
+&lt;/a>&lt;figcaption>带噪花瓶分别经均匀拉普拉斯算子（上行）和 HLO（下行）迭代 1、3、5、15 次后的结果。均匀拉普拉斯明显使花瓶收缩，而 HLO 保留了上部和下部特征。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>HLO 保留了均匀拉普拉斯算子的简洁性，但不再作用于整个邻域，而是作用于半窗口，即顶点邻点的子集。对每个顶点，HLO 生成全部半窗口，在每个半窗口上计算拉普拉斯，并保留能量最小的那一个；随后用这些半核拉普拉斯迭代地更新曲面。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2020-hlo/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2020-hlo/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>完整窗口在特征处失效。&lt;/strong> 均匀拉普拉斯算子将顶点 v₀ 与其全部邻点的质心 v′₀ 作比较。在尖锐边上的顶点处，曲面不可微，该算子并不适用；实际光顺时，它会抹平特征并使网格收缩（图 2）。&lt;/li>
+&lt;li>&lt;strong>将邻域划分为半窗口。&lt;/strong> 依次以每个邻点为起点，例如邻点 A，将其与到 v₀、A、v′₀ 所在平面距离最短的邻点 D 配对。直线 A–D 将邻点划分为左、右两个半窗口。&lt;/li>
+&lt;li>&lt;strong>半窗口拉普拉斯。&lt;/strong> 在每个半窗口上分别计算均匀拉普拉斯，得到 d₁、d₂ 等向量。&lt;/li>
+&lt;li>&lt;strong>投影到完整窗口方向。&lt;/strong> 半窗口拉普拉斯还会带来切向偏移，可能导致三角面片翻转或退化。因此将其投影到完整窗口拉普拉斯的方向 n 上：δ = (d·n)n。论文指出，这样可使特征顶点处的拉普拉斯幅值较小、非特征顶点处较大，从而光顺非特征区域并保持特征。&lt;/li>
+&lt;li>&lt;strong>选取能量最小者并迭代。&lt;/strong> 有 |NV| 个邻点的顶点共有 2|NV| 个候选半窗口。HLO 选取能量最小者，即拉普拉斯的长度与顶点到初始位置距离之和最小的一个，用它更新顶点。唯一的参数是迭代次数。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-method.webp" alt="三幅线框示意图：顶点 v0 及其邻点 vA 至 vG。左图中经过 vA 和 vD 的直线划分邻域；中图和右图以橙色标出一个半窗口，并在 v0 处画出其拉普拉斯 d 及投影后的向量 δ。" loading="lazy">
+&lt;/a>&lt;figcaption>顶点 v₀ 上的半核拉普拉斯算子。左：邻点 A 与 D 配对，D 是到 v₀、A 和质心 v′₀ 所在平面距离最短的邻点，直线 A–D 将邻域分为两个半窗口。中、右：两个半窗口的拉普拉斯 d₁、d₂ 及其在完整窗口拉普拉斯上的投影 δ₁、δ₂。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>仅有一个参数&lt;/strong>，即迭代次数；对比的法向滤波方法和 L0 方法有三至六个参数（表 1）。&lt;br>&lt;strong>在所有运行时间测试中最快&lt;/strong>，例如在 Armadillo（43,243 个顶点）上耗时 1.81 s，次快的 UNF 为 5.68 s，顶点迭代均为 10 次（表 3）。&lt;br>&lt;strong>在 9 组测试中有 4 组法向误差（MSAE）最低&lt;/strong>，例如在噪声 σn = 0.5 lₑ 的 Armadillo 上为 9.33 × 10⁻²，L0 最小化为 9.59 × 10⁻²（表 2）。&lt;/aside>
+&lt;p>论文将 HLO 与均匀拉普拉斯、余切拉普拉斯以及七种去噪方法进行了比较：双边网格滤波、单边、双边与引导法向滤波（UNF、BNF、GNF）、L0 最小化、级联法向回归（CNR）和非局部低秩法向滤波（NLLR）。合成测试在模型上添加零均值高斯噪声，其标准差 σn 与平均边长 lₑ 成正比；真实测试使用 Microsoft Kinect 扫描的模型以及扫描得到的 Angel 和 Rabbit 模型。与均匀拉普拉斯相比，HLO 显著减轻了收缩，在 Julius 模型上的平均顶点误差也低得多；余切拉普拉斯对几何更敏感，但容易在曲面上产生尖锐的“毛刺”。由于均匀拉普拉斯在光顺过程中能展开翻转的三角面片，HLO 对高噪声的敏感程度低于大多数对比方法。在法向误差 MSAE 上，L0 最小化和 HLO 通常是最好的两种方法。顶点误差 Ev 与视觉比较结果不一定一致，因为展开翻转三角面片可能使顶点远离其真实位置。在运行时间对比中 HLO 速度最快，而其代码尚未经过优化或并行加速。&lt;/p>
+&lt;p>作者也指出了局限：HLO 不是基于边的算子，因此难以在顶点数较少的类 CAD 模型上恢复光滑的尖锐边；对于顶点数较多的真实扫描类 CAD 模型，其结果与其他方法相当。与以往工作一样，HLO 固定输入网格的开放边界，有时会导致不理想的结果。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-results.webp" alt="布满红色翻转三角面片的带噪狮头花瓶，以及七个去噪结果，每个结果上方附有瓶口局部放大图；部分结果仍可见红色三角面片。" loading="lazy">
+&lt;/a>&lt;figcaption>重噪声（σn = 0.8 lₑ）下的 Vaselion 模型：带噪输入以及 UNF、BNF、L0、GNF、CNR、NLLR 和 HLO（Ours）的结果，上方为框选区域的局部放大。翻转的三角面片以红色显示。引自论文图 9。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-errors.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-errors.webp" alt="三个男性头像渲染图：绿色的带噪输入、布满红蓝误差斑块的结果，以及大部分为绿色的结果。" loading="lazy">
+&lt;/a>&lt;figcaption>Julius 模型（σn = 0.2 lₑ）经均匀拉普拉斯（ULO，中）和 HLO（右）各迭代 10 次后的逐顶点误差；暖色和冷色分别表示正向和负向位移。引自论文图 5。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

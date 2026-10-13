@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>3D Measurement | 潘威</title><link>https://willpan.xyz/zh/tags/3d-measurement/</link><atom:link href="https://willpan.xyz/zh/tags/3d-measurement/index.xml" rel="self" type="application/rss+xml"/><description>3D Measurement</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>Precision 3D volume measurement of transparent adhesives via spectrally optimized line laser scanning and enhanced centroid extraction</title><link>https://willpan.xyz/zh/publications/cao-2025-precision-3d-volume/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/cao-2025-precision-3d-volume/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>在电子封装和精密制造中，自动点胶机以点胶、画线、涂覆等方式施加胶体。气动点胶机通过气压大小和阀门开启时间控制出胶量，而气压波动会使出胶不均匀：胶量过多会溢胶，胶量过少则会导致粘接强度不足或气密性下降。测量实际点出的胶体体积，可以为出胶量校准提供数据依据。人工用卡尺测量费时且不准确，超声方法对材料特性和环境变化敏感，电化学方法则因大多数胶体是电介质而难以可靠应用。光学非接触三维测量效果很好，但主要适用于不透明材料。&lt;/p>
+&lt;p>透明胶体违背了结构光、光度立体和立体视觉等方法所依赖的漫反射假设：光线会发生多次反射和折射，材料表面又缺乏纹理特征，导致重建结果不准确甚至不完整。已有针对透明物体的激光扫描方法，或依赖复杂的光线追迹，计算代价高；或采用多阶段立体成像框架，在强交叉反射下仍不稳定，且硬件成本更高。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-problem.webp" alt="透明胶体置于黄绿色基板上的示意图。入射激光照射到胶体表面，小圆圈标出漫反射，虚线椭圆标出镜面反射；折射光穿过胶体到达基板，虚线框标出吸收位置。" loading="lazy">
+&lt;/a>&lt;figcaption>激光照射透明胶体时的光路：一部分光在表面发生漫反射或镜面反射，其余部分折射穿过胶体到达基板，被黄绿色基板吸收。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>系统为单目线激光扫描系统：紫色激光器向点胶区域投射光条，CMOS 相机对其成像，移动机器人平台带动试样在传感器下方运动。相机标定是自动完成的：将标定板固定在精密升降台上，按已知步长逐级升高；在每个高度先采集一幅激光光条图像，再关闭激光、打开固定光源，采集一幅标定板图像。合并两幅图像即可得到光条中心点的世界坐标，随后联合估计全部相机参数，并以最大似然估计和 Levenberg–Marquardt 迭代进行优化。这取代了传统的两阶段标定（先用至少 15 个位姿标定相机，再单独标定相机与激光平面的关系），避免了第一阶段的误差传递到第二阶段。每次扫描随后依次经过以下步骤。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/cao-2025-precision-3d-volume/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>互补光谱背景优化（CSBO）。&lt;/strong> 将胶体点在黄绿色基板上。黄绿色是紫色的互补色，因此基板会吸收穿过胶体的紫色激光，抑制这部分光本会引起的散射和反射干扰，且无需光线追迹模型或辅助设备。&lt;/li>
+&lt;li>&lt;strong>提取候选中心点。&lt;/strong> 先对每幅光条图像做均值滤波。在每一像素行中，经方向一致性校验的梯度分析找出灰度先上升、再下降至少阈值 K 的候选区域；再以 w(I) = I / (256 − I) 加权的灰度重心法，在每个区域内求出一个亚像素候选中心。&lt;/li>
+&lt;li>&lt;strong>动态加权多因子评分（DWMF-SS）。&lt;/strong> 对同一行中的每个候选点，按连续性（相邻行中位置偏移在阈值内的点数）、灰度强度、与上一行保留点的接近程度三项打分，权重分别为 0.1、0.8、0.1。灰度低于该行最亮候选点 10% 或宽度超过 20 像素的候选点记零分，保留得分最高的点。&lt;/li>
+&lt;li>&lt;strong>得到完整中心线和深度图。&lt;/strong> 二次筛选剔除长度小于最小连续长度的异常跳变区域，长度小于插值阈值的断裂处用线性插值补齐。借助标定参数，将每条中心线转换为世界坐标，再把所有轮廓投影到深度图空间，得到胶体表面的深度图。&lt;/li>
+&lt;li>&lt;strong>计算体积。&lt;/strong> 用主成分分析（PCA）在平台的感兴趣区域上拟合基准平面，并通过刚体变换将深度图校正到该平面。基于连通域的分割（三维 Otsu 阈值、游程编码、八邻域连通分析）提取出胶体区域。每个像素视为底面为 Δx × Δy、高为 z 的棱柱，体积为 V = Δx·Δy·Σz。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-method.webp" alt="四个模块的流程图。输入：三维线激光扫描系统和以绿色基板表示的 CSBO 方法。三维重建：改进的激光中心线提取，随后得到红色胶条的深度图数据。几何分析：平面拟合与校正、基于连通域的分割、以堆叠棱柱表示的基于投影的体积算法。输出：透明胶体体积。" loading="lazy">
+&lt;/a>&lt;figcaption>系统总览：线激光扫描系统和 CSBO 基板为三维重建（中心线提取和深度图）提供输入，随后进行几何分析（平面拟合与校正、基于连通域的分割、基于投影的体积计算）。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-centerline.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-centerline.webp" alt="两幅灰度图像，显示点胶胶条上方明亮的拱形激光光条；右图沿光条描出一条细红色中心线。" loading="lazy">
+&lt;/a>&lt;figcaption>点胶胶条上的激光光条，左为提取前，右为提取后（红色为中心线）。引自论文图 9。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>光条中心提取在标定板上的 RMSD 为 0.0682 像素&lt;/strong>，Steger 法为 0.2657，灰度重心法为 1.0253，细化法为 0.1518（表 2）。&lt;br>&lt;strong>黄绿色基板上的体积平均相对误差为 1.62%&lt;/strong>，黑色基板为 4.41%，紫色、粉色和蓝色基板为 8.29%–8.76%（表 4、图 22）。&lt;br>&lt;strong>中心提取每幅图像耗时 0.0053 s&lt;/strong>，速度是 Steger 法的 4.66 倍、细化法的 3.17 倍（表 3）。&lt;/aside>
+&lt;p>在中心提取实验中，各方法首先在一幅带有强边缘扩散噪声的光条图像上比较，噪声来自金属表面的光泽。Steger 法在光条边缘附近误提取了噪声点，灰度重心法在噪声干扰下无法准确提取中心线，细化法则沿噪声点提取出错误的骨架；而本文方法得到的中心线连续、平滑，与光条形状吻合。以标定板上的真实中心线为参照，其 RMSD 比 Steger 法、灰度重心法和细化法分别降低 74%、93% 和 55%。权重 0.1、0.8、0.1 是在这幅噪声图像上比较六组权重后选定的。由于需要处理额外的候选点，本文方法的耗时是普通灰度重心法的 1.13 倍，但作者认为其速度仍满足工业实时要求。在其系统中，基于 FPGA 的实现最高处理速度可达 18 kHz（约 55.6 µs 每帧）。&lt;/p>
+&lt;p>在体积测量实验中，将形状相近的直线胶条分别点在黄绿色、蓝色、粉色、紫色和黑色五种基板上。每个试样用精密电子天平称重作为真值，测得的体积按 0.0011 g/mm³ 的密度换算为重量。每种基板做五次重复实验，每次测量 20 次并取平均。黄绿色基板的误差最低，各次重复实验的误差在 1.11% 到 2.25% 之间；其他基板上的深度图则因内部光学干扰而出现不同程度的表面重建畸变。在黄绿色基板上另测了六个形状更复杂的胶条：曲线形图案的误差为 2.38%、5.57% 和 8.59%，环形图案为 2.17%、5.56% 和 5.17%（表 5）。误差较大的样本，其深度图存在表面数据缺失：胶条较厚或形状复杂时，会遮挡相机对后方区域的视线，这是线激光三角测量的固有局限。作者指出，目前主流的解决办法是从不同视角扫描两次；后续工作将把系统推广到复杂背景，并研究补充单次扫描数据的方法。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-results.webp" alt="五个试样的平均误差比例（%）柱状图：试样 1 绿色 1.62，试样 2 蓝色 8.76，试样 3 粉色 8.43，试样 4 紫色 8.29，试样 5 黑色 4.41，每根柱上有橙色误差棒。" loading="lazy">
+&lt;/a>&lt;figcaption>五种基板的体积平均相对误差：黄绿色（试样 1）、蓝色、粉色、紫色和黑色。误差棒表示平均误差比例的标准差。引自论文图 22。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-recon.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-recon.webp" alt="七幅彩色编码的细长胶条三维渲染图。(a) 黄绿色基板上的胶条表面平滑；(b) 至 (e) 分别在蓝色、粉色、紫色和黑色基板上，胶条边缘出现锯齿状条纹。(f) 和 (g) 为内表面视图：(f) 平滑，(g) 两侧有高耸的尖刺状伪影。" loading="lazy">
+&lt;/a>&lt;figcaption>胶条在 (a) 黄绿色、(b) 蓝色、(c) 粉色、(d) 紫色、(e) 黑色基板上的三维重建结果，以及 (f) 黄绿色基板试样和 (g) 其他试样的内表面成像。引自论文图 23。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-shapes.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2025-precision-3d-volume/fig-shapes.webp" alt="六幅绿色背景上胶条的彩色编码三维渲染图：上排为三个 S 形弯曲胶条，下排为三个圆润的环形胶条，其中几幅存在表面数据缺失的区域。" loading="lazy">
+&lt;/a>&lt;figcaption>六个复杂胶条的重建结果：曲线形图案 (a)–(c) 和环形图案 (d)–(f)。部分图中可见表面数据缺失的区域。引自论文图 24。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Gap measurement method based on projection lines and convex analysis of 3D point clouds</title><link>https://willpan.xyz/zh/publications/pan-2024-gap-measurement/</link><pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2024-gap-measurement/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>继电器下表面与地面之间的间隙是影响继电器质量的关键因素，关系到其导电性和可靠性；合格继电器在工作状态下的间隙必须小于 0.07 mm。常见的位移传感器各有不足：电涡流传感器需针对被测对象定制，成本较高；电感式传感器易受温度、湿度和电磁干扰影响；电容式传感器需要高压电源，且非线性误差较大；光电式传感器抗环境光干扰能力差。&lt;/p>
+&lt;p>光学测量虽然是非接触的，但不同方式也各有局限。此前用于悬浮间隙测量的两种视觉方法 Pixel Area 和 SelfConvNet 需要在速度和精度之间取舍：Pixel Area 速度快但精度较低，SelfConvNet 精度较高但速度慢。二维方法还会丢失维度信息，包括遮挡区域的深度，精度因此受限。三维点云保留了这些信息，但点云的无序性和稀疏性使测量过程十分耗时。此外，受金属表面加工工艺所限，表面容易出现凹坑、毛刺等缺陷。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-problem.webp" alt="三幅子图：顶部带金属端子的黑色小型继电器照片；立于平板底座上的方形继电器灰色三维模型；继电器与底座的侧视示意图，在继电器下边缘直线 l0 与底座直线 l1 之间标出间隙 G。" loading="lazy">
+&lt;/a>&lt;figcaption>继电器实物 (a)、工作位置下的三维模型 (b)，以及继电器下边缘 l&lt;sub>0&lt;/sub> 与底座边缘 l&lt;sub>1&lt;/sub> 之间的间隙 G (c)。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法结合了两个测量模型。二维投影线模型从间隙的背光图像中测量间隙；三维表面点云模型确定继电器与地面之间的支撑面，并以此为基准测量间隙。检测时先运行速度快的二维模型，再由三维模型复检通过初筛的继电器。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2024-gap-measurement/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>背光投影成像。&lt;/strong> 高指向性背光源从间隙中透过，抑制照明光的衍射，使边缘清晰成像。相机看到继电器下边缘 l&lt;sub>0&lt;/sub> 和底座边缘 l&lt;sub>1&lt;/sub> 是两条清晰的直线，中间为明亮的间隙。&lt;/li>
+&lt;li>&lt;strong>投影线提取。&lt;/strong> 图像先经引导滤波，在平滑噪声的同时保持边缘；随后用竖直搜索线穿过感兴趣区域，每条线上 Sobel 梯度最大的两个点即为边缘点。直线偏差指标剔除与左右相邻点的偏差都超过阈值的点，从而去除毛刺造成的噪声点。对剩余的点做最小二乘直线拟合，两直线间的像素距离 d 按 D = k·d 换算为毫米，其中系数 k 由多组已知间隙的测量结果取平均得到。&lt;/li>
+&lt;li>&lt;strong>点云预处理。&lt;/strong> 线激光轮廓仪把继电器下表面采集为三维点云。若某点邻域中距离超过阈值的邻点过多，则将其视为离群点剔除。随后用连通域分割把表面划分为若干独立区域。&lt;/li>
+&lt;li>&lt;strong>凸包与质心。&lt;/strong> 对点云进行曲面拟合较为复杂，计算效率和拟合精度难以同时保证。因此，该方法用快速凸包算法构建表面点的凸包，并按各材料部分的密度加权计算继电器的质心。物体所受合力与合力矩为零时才能达到平衡，因此沿重力方向投影质心，即可确定凸包上构成支撑面的那个面。间隙即下表面各点到该平面的竖直距离。&lt;/li>
+&lt;li>&lt;strong>两级检测。&lt;/strong> 投影线模型作为粗检阶段，对每个继电器进行初筛；通过初筛的继电器进入精检阶段，由点云模型再次测量。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-method.webp" alt="六幅彩色编码的点云子图：继电器下表面的原始点云、清理后的点云、编号 1 至 5 的五个分割模块、带紫色凸包的点云、带紫色参考平面的点云，以及标注支撑面的侧视图。" loading="lazy">
+&lt;/a>&lt;figcaption>三维处理流程：(a) 传感器采集的点云，(b) 清理后的点云，(c) 分割得到的主要模块，(d) 凸包，(e) 参考平面，(f) 显示支撑面的侧视图。引自论文图 12。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-flow.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-flow.webp" alt="流程图：开始，二维投影，表面直线模型计算间隙距离，判断是否合格；不合格则输出不合格；合格则由线扫相机采集点云，表面点云模型计算间隙距离，再次判断是否合格；合格则输出合格并计算间隙均值，结束。" loading="lazy">
+&lt;/a>&lt;figcaption>串联二维模型（第一个虚线框）与三维模型（第二个虚线框）的检测流程。引自论文图 14。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>二维 + 三维集成模型：平均误差 0.0054 mm，最大误差 0.009 mm&lt;/strong>（间隙 0–0.1 mm），在五个对比模型中最低（图 17）。&lt;br>&lt;strong>集成模型在 11,931 个继电器上的误判率为 0.05%，每个继电器耗时 182.4 ms&lt;/strong>；单独使用点云模型为 2%、236.8 ms，单独使用投影线模型为 5%、19.8 ms（表 2）。&lt;br>&lt;strong>点云模型的平均误差为 0.0087 mm，投影线模型为 0.016 mm&lt;/strong>（图 17）。&lt;/aside>
+&lt;p>实验中，二维图像由一台 4000 × 3000 分辨率的相机配合高指向性背光源采集，点云由 OPT-LPE50 三维激光轮廓仪获取，对比方法为 Pixel Area 和 SelfConvNet。精度实验在同一个继电器上依次设置 0–0.1 mm 等间距的多个间隙。Pixel Area 的误差最大（最大 0.047 mm，平均 0.038 mm），其后依次为投影线模型（0.021 mm 和 0.016 mm）、SelfConvNet（0.02 mm 和 0.0095 mm）和点云模型（0.015 mm 和 0.0087 mm）。在线性度实验中，点云模型比 Pixel Area 和 SelfConvNet 更贴近真实间隙，集成模型的线性度最好。&lt;/p>
+&lt;p>在工厂检测实验中，共测试 11,931 个继电器，其中良品 9,247 个、不良品 2,684 个。投影线模型的精度和速度均优于 Pixel Area（6.6%，48.5 ms），点云模型则在两方面都优于 SelfConvNet（2.6%，510 ms）。集成模型的误判率最低，速度也快于点云模型和 SelfConvNet，满足现场实时检测的要求。对误检继电器的人工复查发现，它们都存在不同程度的表面缺陷，尤其是凹坑和毛刺。在凹坑处，由于边缘遮挡，投影图像中的下表面位于直线 b，而非凹坑底部对应的直线 a；Pixel Area、SelfConvNet 和投影线模型都基于投影图像计算间隙，在这种情况下精度明显下降。点云模型计算的是整个表面到支撑面的距离，因此受凹坑的影响较小。作者总结了其中的取舍：二维方法流程简单、速度快，但受维度缺失限制，也更容易因表面缺陷产生测量误差；三维方法精度高、可靠性好，代价是算法处理时间更长。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-results.webp" alt="上图：五个模型的误差（mm）随真实间隙（0 至 0.1 mm）变化的折线图，绿色 Pixel Area 曲线波动最大，黑色 2D&amp;#43;3D 曲线最贴近零。下图：最大误差与平均误差柱状图，Pixel Area 为 0.047 和 0.038，Projection Line 为 0.021 和 0.016，SelfConvNet 为 0.02 和 0.0095，Surface PointCloud 为 0.015 和 0.0087，2D&amp;#43;3D 为 0.009 和 0.0054。" loading="lazy">
+&lt;/a>&lt;figcaption>五个模型在 0–0.1 mm 间隙上的测量误差（上），以及各自的最大误差和平均误差，单位 mm（下）。上图图例中的“Surface Line”即投影线模型。引自论文图 17。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-defect.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2024-gap-measurement/fig-defect.webp" alt="左：继电器底脚示意图，其下表面有一个凹坑，下方为粉色底座；距离 a 从凹坑底部量到底座，较短的距离 b 从可见下边缘量到底座。右：带弧形凹坑的绿色三维块体，多支蓝色箭头向下指向凹坑表面。" loading="lazy">
+&lt;/a>&lt;figcaption>表面缺陷模型。凹坑底部的深度对应直线 a，但由于边缘遮挡，投影图像中的下表面显示为直线 b。引自论文图 18。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

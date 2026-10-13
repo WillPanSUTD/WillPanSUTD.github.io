@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ge Gao | 潘威</title><link>https://willpan.xyz/zh/author/ge-gao/</link><atom:link href="https://willpan.xyz/zh/author/ge-gao/index.xml" rel="self" type="application/rss+xml"/><description>Ge Gao</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 28 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Fusing Phase Map Servoing and MPC for High-Precision Robotic Tracking of Dynamic Objects</title><link>https://willpan.xyz/zh/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/</link><pubDate>Wed, 28 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>工业机器人常采用“停—拍—动”的作业方式：先移动到固定位姿、采集图像，再执行任务。要处理在传送带上持续运动的工件，机器人必须依靠连续的视觉反馈闭环控制，即视觉伺服。点、边缘、轮廓等常规视觉特征在工业中常见的弱纹理或高反光表面上难以可靠提取。条纹投影得到的相位图提供了另一种选择：投影仪投射正弦条纹，解调得到的相位无需三维重建，就能给出稠密的亚像素级几何信息。然而，以往基于相位图的伺服研究只针对静止或缓慢变化的场景。&lt;/p>
+&lt;p>运动目标带来两方面困难。其一，感知和图像处理延迟使测得的相位图滞后于物体的实际状态，且目标速度越快，滞后越严重。其二，模型预测控制（MPC）能在约束下对未来状态进行规划，天然适合动态跟踪；但若直接作用于相位图中成千上万个像素，求解代价过高，难以高频运行。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-problem.webp" alt="示意图：机械臂末端的投影仪和相机向物体投射条纹图案，标有“相位分离”的箭头指向物体的相位图，彩色图中物体呈块状凸显。" loading="lazy">
+&lt;/a>&lt;figcaption>感知链路。机械臂上的投影仪–相机向物体投射条纹，相位解调将条纹图像转换为稠密相位图，直接用作视觉特征。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该框架保留稠密相位图作为反馈信号，但压缩由其构建的控制问题，使 MPC 能以相机帧率运行；同时引入扩展卡尔曼滤波（EKF），越过感知延迟进行前瞻预测。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>以相位图为特征。&lt;/strong> 相机和投影仪安装在机械臂末端。观测相位图与期望相位图之差，经解析推导的相位交互矩阵 L（每个相位像素对应一行）映射为末端的六自由度速度。&lt;/li>
+&lt;li>&lt;strong>梯度引导稀疏化。&lt;/strong> 相位梯度低于阈值 ε 的像素几乎不含运动信息，其在 L 中对应的行被剔除。所有实验中，ε 取最大梯度幅值的 0.15 倍。&lt;/li>
+&lt;li>&lt;strong>PCA 嵌入。&lt;/strong> 将剩余的相位特征投影到 d = 8 个主成分上，MPC 因而只需处理 8 × 6 的交互矩阵，而非 m × 6。在相位梯度充足的场景中，降维后的矩阵仍保持秩 6，六个运动方向均可控。&lt;/li>
+&lt;li>&lt;strong>自适应预测时域。&lt;/strong> MPC 的预测时域随相位变化率调整：相位变化缓慢时保持 N&lt;sub>min&lt;/sub> = 3，目标加速时经 tanh 函数平滑增大，趋近 N&lt;sub>max&lt;/sub> = 10。&lt;/li>
+&lt;li>&lt;strong>以 EKF 预测作为 MPC 参考。&lt;/strong> EKF 估计目标的位置和速度，在预测时域内递推，并将每个预测位置转换为预测相位图。MPC 以这一序列为参考轨迹进行跟踪，从而补偿延迟，每次只执行优化解中的第一个控制量。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-method.webp" alt="框图：期望相位图与观测相位图得到误差相位图，送入控制器模块；模块内含扩展卡尔曼滤波预测、视觉伺服控制律和优化的 MPC 控制器，后者驱动机械臂，机械臂处的观测相位图构成反馈闭环。" loading="lazy">
+&lt;/a>&lt;figcaption>控制框架。误差相位图送入视觉伺服控制律，所得速度 V&lt;sub>c&lt;/sub> 与 EKF 的预测相位图一起输入优化的 MPC 控制器；机器人处观测到的相位图构成反馈闭环。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>MPC/QP 求解时间 6.8 → 1.9 ms&lt;/strong>（中位数，表 4），&lt;strong>闭环延迟 12.9 → 8.3 ms&lt;/strong>（中位数；95 分位数为 19.2 → 10.4 ms），对比基线与所提 M6 配置（表 4）。&lt;br>&lt;strong>目标以 0.1 m/s 运动时，跟踪成功率 100%，基线仅 33%&lt;/strong>，12 次试验的最终误差为 0.05 ± 0.02 mm（表 5）。&lt;br>&lt;strong>0.05 m/s 时，最终误差 0.04 ± 0.01 mm，基线为 0.07 ± 0.02 mm；收敛时间 290 ± 40 ms，基线为 420 ± 55 ms&lt;/strong>（表 5）。&lt;/aside>
+&lt;p>仿真在 MATLAB 中进行，比较了八种控制器：两种基线（A 使用完整相位图并在每一步重新计算交互矩阵；B 在 A 的基础上加入热启动），以及使用一种、两种或全部三种降维策略的六种变体（M1–M6）。同时结合 PCA、稀疏交互矩阵和自适应时域的 M6 在约 20 次迭代内收敛，RMS 误差最低，求解时间分布也最低、最集中。对降维参数的扫描表明 ε = 0.15、d = 8 是较好的折中：求解时间 1.9 ms，RMS 误差 0.048 mm（表 2）；较宽松的设置（ε = 0.05，d = 12）为 3.5 ms 和 0.042 mm，较激进的设置（ε = 0.30，d = 6）为 1.3 ms 和 0.081 mm（表 2）。相机曝光、相位计算和 EKF 更新的耗时与是否降维无关，节省的时间来自 MPC/QP 求解环节。实验使用 640 × 480、120 Hz 的相机，在 Intel Core i7-12700 上单线程运行，求解器为 qpOASES。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-results.webp" alt="四幅图。(a) 八种方法的综合误差随迭代次数的变化：七条灰色虚线下降缓慢，蓝色 M6 曲线下降快得多，在第 20 次迭代时已接近零。(b) M6 的四个误差通道均在第 20 次迭代前衰减至零。(c) RMS 误差柱状图，M6 的柱高不到其余七种方法的一半。(d) MPC 求解时间箱线图，从 A 到 M5 逐渐降低，M6 最低且最集中。" loading="lazy">
+&lt;/a>&lt;figcaption>八种控制器的仿真对比：(a) 综合收敛曲线，(b) M6 下四个误差通道的收敛，(c) RMS 误差，(d) MPC 求解时间分布。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;p>实物实验中，投影仪–相机安装在机械臂上，物体在传送带上运动。物体静止时，所提控制器的精度与原始相位图伺服控制律相当，误差约 0.3 mm，但收敛所需迭代次数由约 30 次减少到 20 次。目标高速运动时 EKF 的作用最为明显：不加 EKF 时相位误差峰值接近 0.2 rad，加入 EKF 后典型峰值低于 0.1 rad。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-ekf.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-ekf.webp" alt="相位误差（rad）随时间变化的曲线，时长 2 秒：红色曲线（无 EKF）在约 ±0.2 rad 范围内大幅波动，蓝色曲线（有 EKF）在 0.5 s 高速运动开始后明显更接近零。" loading="lazy">
+&lt;/a>&lt;figcaption>高速运动时有 EKF（蓝）与无 EKF（红）的相位误差对比。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;p>作者指出，可达到的跟踪速度受限于感知吞吐量。在 120 Hz 相机、约 8.3 ms 控制周期下，系统可稳定跟踪约 0.12 m/s 以内的目标；速度更高时，相位图生成跟不上，相位噪声显著增大，因此论文未报告更高速度下的结果。目前的实现针对相对受控视觉条件下的单目标跟踪；加快相位图生成和多目标跟踪留待后续工作。&lt;/p></description></item><item><title>Few-Shot 6D Object Pose Estimation via Decoupled Rotation and Translation with Viewpoint Encoding</title><link>https://willpan.xyz/zh/publications/lu-2026-few-shot-6d-object-pose-estimation/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2026-few-shot-6d-object-pose-estimation/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>6D 位姿估计要求出物体相对相机的三维旋转和三维平移，是机器人抓取、自动驾驶和增强现实中的关键环节。深度传感器易受噪声、遮挡和成本的影响，在反光或透明物体上也存在局限，因此仅依赖单张 RGB 图像的方法受到关注。基于关键点、模板或直接回归的单目方法不断进步，但都严重依赖大规模真实标注数据，真实位姿标注的稀缺限制了其进一步提升。&lt;/p>
+&lt;p>本文将旋转与平移解耦：旋转只用合成图像学习，因此只有平移部分需要用真实图像训练，而且平移网络无须从这些图像中学习旋转信息，从而减少了所需的真实样本数量。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>首先由目标检测器从图像中裁剪出物体，随后旋转和平移由两个相互独立的分支分别估计。旋转分支把完整旋转 R 分解为平面外部分 R&lt;sup>γ&lt;/sup>（物体的视角）和平面内部分 R&lt;sup>θ&lt;/sup>（绕相机光轴的旋转），即 R = R&lt;sup>θ&lt;/sup>R&lt;sup>γ&lt;/sup>，两部分都由仅用合成图像训练的模块处理。平移分支以 GDR-Net 为基础，是唯一用真实图像训练的部分。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2026-few-shot-6d-object-pose-estimation/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>检测与裁剪。&lt;/strong> 目标检测器从 RGB 图像中提取物体周围 128×128 的感兴趣区域（ROI），两个分支都以该区域为输入。&lt;/li>
+&lt;li>&lt;strong>检索候选视角。&lt;/strong> 视角编码器在由 ShapeNet 渲染的图像上训练，把 ROI 映射为 64 维向量；该向量对视角变化敏感，而对平面内旋转保持不变。对目标物体，在其网格模型周围的球面上均匀采样 4,000 个视角并渲染，构建视角码本；与码本计算余弦相似度，得到前 K 个候选视角。&lt;/li>
+&lt;li>&lt;strong>回归平面内旋转。&lt;/strong> 对每个候选视角，回归头比较 ROI 与该视角下的渲染图，预测平面内旋转，得到一个完整的三维旋转假设。&lt;/li>
+&lt;li>&lt;strong>姿态验证。&lt;/strong> 验证头为每个假设计算与 ROI 的一致性分数，得分最高的假设作为旋转估计结果。&lt;/li>
+&lt;li>&lt;strong>回归平移。&lt;/strong> 沿用 GDR-Net 的设计，ResNet-34 从 ROI 预测三幅 64×64 的特征图（稠密 2D–3D 对应图、表面区域注意力图和可见物体掩膜），再由轻量网络根据对应图和表面区域注意力图回归尺度不变的平移参数。该分支每个物体用 600 张真实图像训练。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-method.webp" alt="流程图：RGB 图像经目标检测器得到 ROI；旋转分支包括视角编码器、码本、平面内旋转回归和姿态验证，输出 R；平移分支包括几何特征回归得到的特征图和平移回归，输出 T；二者合成的 6 自由度位姿绘制在图像上。" loading="lazy">
+&lt;/a>&lt;figcaption>网络总览：(A) 目标检测；(B) 通过视角检索、平面内旋转回归和姿态验证估计旋转；(C) 基于稠密几何特征估计平移。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-viewpoints.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-viewpoints.webp" alt="小黄鸭模型周围由灰色视角点组成的半球；两个高亮视角 a 和 b 各自显示鸭子在三种平面内旋转下的渲染图。" loading="lazy">
+&lt;/a>&lt;figcaption>在物体周围球面上均匀采样的视角。对视角 a 和 b，分别渲染三种平面内旋转下的物体图像，说明旋转如何分解为视角 R&lt;sup>γ&lt;/sup> 和平面内旋转 R&lt;sup>θ&lt;/sup>。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>LM-O 上 ADD(-S) 为 65.3%&lt;/strong>，GDR-Net 为 62.2%（表 2）。&lt;br>&lt;strong>YCB-V 上 ADD(-S) 为 65.9%，AUC of ADD-S 为 92.4%&lt;/strong>，GDR-Net 分别为 60.1% 和 91.6%（表 4）。&lt;br>&lt;strong>LINEMOD 上 ADD(-S) 为 97.6%&lt;/strong>（使用真值 ROI），使用 Fast R-CNN 检测结果时为 94.8%（表 1）。&lt;br>用同样 600 张真实图像重新训练后，ZebraPose 和 CheckerPose 在 LM-O 上为 &lt;strong>38.2% 和 40.5%&lt;/strong>（表 3）。&lt;/aside>
+&lt;p>实验使用 LINEMOD（杂乱场景中的 13 个物体）、LM-O（8 个部分遮挡的物体，1,214 张测试图像）和 YCB-V（21 个物体，遮挡严重，且包含多个对称物体）。当 ADD(-S) 误差小于物体直径的 10% 时，位姿判为正确；在 YCB-V 上还报告了阈值上限为 10 cm 的 ADD(-S) 曲线下面积（AUC）。旋转网络只用合成图像训练，平移网络每个物体使用 600 张真实图像；在 YCB-V 上，训练还额外使用了基于物理渲染（PBR）的图像。&lt;/p>
+&lt;p>在 LM-O 上，该方法在大多数物体上领先于对比方法，相对 GDR-Net 提升最大的是 Holepuncher（74.5% 对 60.1%）、Duck 和 Ape；在 Can 和 Eggbox 上，GDR-Net 仍略高。在 YCB-V 上，该方法的 AUC of ADD(-S) 也领先，为 86.9%，GDR-Net 为 84.4%。小样本对比的差距最为明显：用同样 600 张真实图像重新训练 ZebraPose 和 CheckerPose 后，它们在 YCB-V 上的 ADD(-S) 降至 35.7% 和 37.8%，而本方法为 65.9%（表 5）。论文还在 LINEMOD 上单独评估了旋转各模块：在真实图像、预测 ROI 条件下，视角检索误差在 10° 以内的比例超过 70%；平面内旋转误差在 10° 以内的比例，在使用预测视角和预测 ROI 时为 74%，使用真值视角时超过 90%（图 5、图 6），可见平面内旋转精度在很大程度上取决于视角检索的质量。作者指出，该方法的精度部分依赖目标检测器的可靠性，对未见物体类别的泛化能力仍然有限。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-lmo.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-lmo.webp" alt="LM-O 中六个杂乱桌面场景，每个场景中一个物体的估计位姿以绿色三维包围盒标出。" loading="lazy">
+&lt;/a>&lt;figcaption>LM-O 上的定性结果，估计位姿以绿色三维包围盒表示。引自论文图 7(a)。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-ycbv.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-few-shot-6d-object-pose-estimation/fig-results-ycbv.webp" alt="YCB-Video 中六个场景，糖盒、碗、芥末瓶、水壶等日常物体各被一个绿色三维包围盒框出。" loading="lazy">
+&lt;/a>&lt;figcaption>YCB-Video 上的定性结果。引自论文图 7(b)。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Robust Object 6D Pose Estimation Under High Dynamic Ambient Light</title><link>https://willpan.xyz/zh/publications/lu-2026-robust-object-6d-pose-estimation-under/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2026-robust-object-6d-pose-estimation-under/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>物体 6D 位姿估计是指求出物体相对于相机的三维旋转和平移，本文的输入是单张 RGB 图像。Gen6D 是一种无需物体模型的位姿估计器：测试时不需要高质量的物体模型、深度图或物体掩码，而是借助物体的参考图像完成估计。它分三个阶段：检测器定位物体并估计其尺寸，选择器挑出最相似的参考图像得到粗略旋转，精化器再对估计结果进行修正。&lt;/p>
+&lt;p>在高动态环境光下，高光与阴影之间反差强烈，这一流程便难以奏效。物体表面的反射随光照变化，阴影改变表面的亮度和纹理，颜色也会失真。作者用投射光源人为制造高动态光照场景，使物体表面反光不均，结果 Gen6D 的位姿估计效果很差。精化器往往难以单独弥补，因为它高度依赖前两个阶段给出的粗略估计，而这些估计已经受到光照的影响。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-problem.webp" alt="一排四张灰度照片：强光照射下深色桌面上的白色物体，每张图中 Gen6D 给出的红色三维包围框都与物体贴合不佳。" loading="lazy">
+&lt;/a>&lt;figcaption>高动态环境光下的 Gen6D：在强光源照射下的四张测试图像 (a)–(d)，红色三维框为估计的位姿。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法保留 Gen6D 的&amp;quot;检测器—选择器—精化器&amp;quot;流程，改动的是三个阶段共用的特征提取网络：在 VGG 骨干网络中嵌入高效通道注意力（ECA）模块。由此得到的 VGG-ECA 网络会增强信息丰富的特征通道、削弱噪声通道，使特征受高光和阴影的干扰更小。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2026-robust-object-6d-pose-estimation-under/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>高光让原模型失效。&lt;/strong> 对于带金属部件的物体（如刀、剪刀），Gen6D 往往只识别出反光较弱的塑料手柄，而漏掉强反光的金属部分。&lt;/li>
+&lt;li>&lt;strong>在骨干网络中加入通道注意力。&lt;/strong> 在 VGG 中 64、128、256 个滤波器的卷积层之后加入 ECA 模块。每个模块先把各通道平均为一个数值，再沿相邻通道做一维卷积（卷积核大小由通道数自适应确定），经 Sigmoid 映射为 0–1 之间的权重，最后与各通道相乘。与其所基于的 SE 模块不同，ECA 不需要先降低通道维度。&lt;/li>
+&lt;li>&lt;strong>检测器。&lt;/strong> 以参考图像的 VGG-ECA 特征为卷积核，在若干预设尺度上与查询图像的特征做卷积。所得热图的峰值即物体中心的二维投影，尺度图在该处的取值给出包围框尺寸，由此得到深度和初始平移。&lt;/li>
+&lt;li>&lt;strong>选择器。&lt;/strong> 将物体区域与各参考图像比较，最相似的一张给出初始旋转。&lt;/li>
+&lt;li>&lt;strong>精化器。&lt;/strong> 3D CNN 回归当前位姿与真实位姿之间的残差，并据此更新估计。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-method.webp" alt="流程图：检测器、选择器、精化器三个面板均由 VGG-ECA 特征提取器提供输入，另一面板展示 ECA 模块接在 VGG 网络各层之后。" loading="lazy">
+&lt;/a>&lt;figcaption>方法总览：检测器（位置与尺度）、选择器（由最相似的参考图像得到旋转）和精化器（由 3D CNN 回归位姿残差）均使用 VGG-ECA 骨干网络。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-eca.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-eca.webp" alt="ECA 模块示意图：特征块经全局平均池化得到 1×1×C 的向量，经 K = 5 的一维卷积连接到第二列，Sigmoid 生成通道权重，再与原特征逐通道相乘。" loading="lazy">
+&lt;/a>&lt;figcaption>ECA 模块：全局平均池化、跨通道的一维卷积（图中卷积核大小 K = 5）、Sigmoid，以及与输入特征的逐通道相乘。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>ADD-0.1d 为 51.48，Gen6D 为 49.48&lt;/strong>，为 GenMOP 中七个物体的平均值（表 1）。&lt;br>&lt;strong>Prj-5 为 91.94，Gen6D 为 89.64&lt;/strong>，提升最大的是刀：&lt;strong>77.21 对 69.73&lt;/strong>（表 1）。&lt;br>&lt;strong>推理时间 0.5322 s，原 VGG 模型为 0.4965 s&lt;/strong>，增加 35.7 ms（7.19%）（表 2）。&lt;/aside>
+&lt;p>模型在 Gen6D 的官方数据集 GenMOP（共 10 个物体）上训练，测试时作者专门挑选了表面反光强的物体。ADD-0.1d 统计模型点与真值之间的平均距离小于物体直径 10% 的位姿所占比例；Prj-5 统计二维投影误差小于 5 像素的位姿所占比例。表 1 中的七个物体上，改进模型在两项指标上均高于 Gen6D。&lt;/p>
+&lt;p>在高动态环境光下另行采集的 RGB 图像直观地展示了效果。Gen6D 只框住了刀和剪刀的塑料手柄，改进模型则能捕捉物体的整体位姿；对于透明的玻璃杯，Gen6D 检测失败，改进模型则成功检测出其位姿。在由暗到亮的五个光照等级（L1–L5）下，Gen6D 对刀和剪刀的估计在低光（L1、L2）和强光（L4、L5）下都明显变差，而改进模型更为准确，玻璃杯上的提升尤为明显。作者也报告了失败情况：强光使部分刀身在图像中呈黑色，改进模型无法检测这些刀身部分的位姿；金属剪刀在 L1、L2 下仍有错位。作者提出，未来工作包括扩展到更多物体和数据集、尝试其他注意力机制，以及在实际工业应用中进行测试。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-results.webp" alt="四个面板（刀、剪刀、杯子、Miffy），每个面板有两行、每行五张光照等级 L1 到 L5 的照片，并画出红色三维位姿框；(a) 行为 Gen6D，(b) 行为本文方法。" loading="lazy">
+&lt;/a>&lt;figcaption>刀、剪刀、玻璃杯和 Miffy 在由暗（L1）到亮（L5）五个光照等级下的位姿估计：(a) 原始 Gen6D，(b) 本文方法。引自论文图 10。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

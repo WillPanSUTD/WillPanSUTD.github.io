@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>EKF | 潘威</title><link>https://willpan.xyz/zh/tags/ekf/</link><atom:link href="https://willpan.xyz/zh/tags/ekf/index.xml" rel="self" type="application/rss+xml"/><description>EKF</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 28 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Fusing Phase Map Servoing and MPC for High-Precision Robotic Tracking of Dynamic Objects</title><link>https://willpan.xyz/zh/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/</link><pubDate>Wed, 28 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>工业机器人常采用“停—拍—动”的作业方式：先移动到固定位姿、采集图像，再执行任务。要处理在传送带上持续运动的工件，机器人必须依靠连续的视觉反馈闭环控制，即视觉伺服。点、边缘、轮廓等常规视觉特征在工业中常见的弱纹理或高反光表面上难以可靠提取。条纹投影得到的相位图提供了另一种选择：投影仪投射正弦条纹，解调得到的相位无需三维重建，就能给出稠密的亚像素级几何信息。然而，以往基于相位图的伺服研究只针对静止或缓慢变化的场景。&lt;/p>
+&lt;p>运动目标带来两方面困难。其一，感知和图像处理延迟使测得的相位图滞后于物体的实际状态，且目标速度越快，滞后越严重。其二，模型预测控制（MPC）能在约束下对未来状态进行规划，天然适合动态跟踪；但若直接作用于相位图中成千上万个像素，求解代价过高，难以高频运行。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-problem.webp" alt="示意图：机械臂末端的投影仪和相机向物体投射条纹图案，标有“相位分离”的箭头指向物体的相位图，彩色图中物体呈块状凸显。" loading="lazy">
+&lt;/a>&lt;figcaption>感知链路。机械臂上的投影仪–相机向物体投射条纹，相位解调将条纹图像转换为稠密相位图，直接用作视觉特征。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该框架保留稠密相位图作为反馈信号，但压缩由其构建的控制问题，使 MPC 能以相机帧率运行；同时引入扩展卡尔曼滤波（EKF），越过感知延迟进行前瞻预测。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>以相位图为特征。&lt;/strong> 相机和投影仪安装在机械臂末端。观测相位图与期望相位图之差，经解析推导的相位交互矩阵 L（每个相位像素对应一行）映射为末端的六自由度速度。&lt;/li>
+&lt;li>&lt;strong>梯度引导稀疏化。&lt;/strong> 相位梯度低于阈值 ε 的像素几乎不含运动信息，其在 L 中对应的行被剔除。所有实验中，ε 取最大梯度幅值的 0.15 倍。&lt;/li>
+&lt;li>&lt;strong>PCA 嵌入。&lt;/strong> 将剩余的相位特征投影到 d = 8 个主成分上，MPC 因而只需处理 8 × 6 的交互矩阵，而非 m × 6。在相位梯度充足的场景中，降维后的矩阵仍保持秩 6，六个运动方向均可控。&lt;/li>
+&lt;li>&lt;strong>自适应预测时域。&lt;/strong> MPC 的预测时域随相位变化率调整：相位变化缓慢时保持 N&lt;sub>min&lt;/sub> = 3，目标加速时经 tanh 函数平滑增大，趋近 N&lt;sub>max&lt;/sub> = 10。&lt;/li>
+&lt;li>&lt;strong>以 EKF 预测作为 MPC 参考。&lt;/strong> EKF 估计目标的位置和速度，在预测时域内递推，并将每个预测位置转换为预测相位图。MPC 以这一序列为参考轨迹进行跟踪，从而补偿延迟，每次只执行优化解中的第一个控制量。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-method.webp" alt="框图：期望相位图与观测相位图得到误差相位图，送入控制器模块；模块内含扩展卡尔曼滤波预测、视觉伺服控制律和优化的 MPC 控制器，后者驱动机械臂，机械臂处的观测相位图构成反馈闭环。" loading="lazy">
+&lt;/a>&lt;figcaption>控制框架。误差相位图送入视觉伺服控制律，所得速度 V&lt;sub>c&lt;/sub> 与 EKF 的预测相位图一起输入优化的 MPC 控制器；机器人处观测到的相位图构成反馈闭环。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>MPC/QP 求解时间 6.8 → 1.9 ms&lt;/strong>（中位数，表 4），&lt;strong>闭环延迟 12.9 → 8.3 ms&lt;/strong>（中位数；95 分位数为 19.2 → 10.4 ms），对比基线与所提 M6 配置（表 4）。&lt;br>&lt;strong>目标以 0.1 m/s 运动时，跟踪成功率 100%，基线仅 33%&lt;/strong>，12 次试验的最终误差为 0.05 ± 0.02 mm（表 5）。&lt;br>&lt;strong>0.05 m/s 时，最终误差 0.04 ± 0.01 mm，基线为 0.07 ± 0.02 mm；收敛时间 290 ± 40 ms，基线为 420 ± 55 ms&lt;/strong>（表 5）。&lt;/aside>
+&lt;p>仿真在 MATLAB 中进行，比较了八种控制器：两种基线（A 使用完整相位图并在每一步重新计算交互矩阵；B 在 A 的基础上加入热启动），以及使用一种、两种或全部三种降维策略的六种变体（M1–M6）。同时结合 PCA、稀疏交互矩阵和自适应时域的 M6 在约 20 次迭代内收敛，RMS 误差最低，求解时间分布也最低、最集中。对降维参数的扫描表明 ε = 0.15、d = 8 是较好的折中：求解时间 1.9 ms，RMS 误差 0.048 mm（表 2）；较宽松的设置（ε = 0.05，d = 12）为 3.5 ms 和 0.042 mm，较激进的设置（ε = 0.30，d = 6）为 1.3 ms 和 0.081 mm（表 2）。相机曝光、相位计算和 EKF 更新的耗时与是否降维无关，节省的时间来自 MPC/QP 求解环节。实验使用 640 × 480、120 Hz 的相机，在 Intel Core i7-12700 上单线程运行，求解器为 qpOASES。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-results.webp" alt="四幅图。(a) 八种方法的综合误差随迭代次数的变化：七条灰色虚线下降缓慢，蓝色 M6 曲线下降快得多，在第 20 次迭代时已接近零。(b) M6 的四个误差通道均在第 20 次迭代前衰减至零。(c) RMS 误差柱状图，M6 的柱高不到其余七种方法的一半。(d) MPC 求解时间箱线图，从 A 到 M5 逐渐降低，M6 最低且最集中。" loading="lazy">
+&lt;/a>&lt;figcaption>八种控制器的仿真对比：(a) 综合收敛曲线，(b) M6 下四个误差通道的收敛，(c) RMS 误差，(d) MPC 求解时间分布。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;p>实物实验中，投影仪–相机安装在机械臂上，物体在传送带上运动。物体静止时，所提控制器的精度与原始相位图伺服控制律相当，误差约 0.3 mm，但收敛所需迭代次数由约 30 次减少到 20 次。目标高速运动时 EKF 的作用最为明显：不加 EKF 时相位误差峰值接近 0.2 rad，加入 EKF 后典型峰值低于 0.1 rad。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-ekf.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/fig-ekf.webp" alt="相位误差（rad）随时间变化的曲线，时长 2 秒：红色曲线（无 EKF）在约 ±0.2 rad 范围内大幅波动，蓝色曲线（有 EKF）在 0.5 s 高速运动开始后明显更接近零。" loading="lazy">
+&lt;/a>&lt;figcaption>高速运动时有 EKF（蓝）与无 EKF（红）的相位误差对比。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;p>作者指出，可达到的跟踪速度受限于感知吞吐量。在 120 Hz 相机、约 8.3 ms 控制周期下，系统可稳定跟踪约 0.12 m/s 以内的目标；速度更高时，相位图生成跟不上，相位噪声显著增大，因此论文未报告更高速度下的结果。目前的实现针对相对受控视觉条件下的单目标跟踪；加快相位图生成和多目标跟踪留待后续工作。&lt;/p></description></item></channel></rss>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Guoping Qiu | 潘威</title><link>https://willpan.xyz/zh/author/guoping-qiu/</link><atom:link href="https://willpan.xyz/zh/author/guoping-qiu/index.xml" rel="self" type="application/rss+xml"/><description>Guoping Qiu</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2020 00:00:00 +0000</lastBuildDate><item><title>HLO: Half-kernel Laplacian Operator for surface smoothing</title><link>https://willpan.xyz/zh/publications/pan-2020-hlo/</link><pubDate>Wed, 01 Jan 2020 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2020-hlo/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>由扫描仪或其他传感设备采集的网格不可避免地含有噪声，在用于形状分析、动画或渲染之前必须先进行光顺。其主要难点在于：既要去除噪声，又要保持特征、抑制收缩。均匀拉普拉斯算子将每个顶点与其邻点的质心作比较，能有效光顺曲面，但由于其各向同性，会抹平特征并使曲面收缩。论文还分析了特征点的微分性质：在尖锐边上的特征点处，曲面不可微，拉普拉斯算子所近似的二阶导数并不存在，因此对这类顶点用其全部邻点计算均匀拉普拉斯是没有意义的。现有的特征保持方法大多依赖面法向或顶点法向，其中不少方法包含多个步骤和大量参数，难以调节，对复杂模型尤其如此。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-problem.webp" alt="两行各五个花瓶渲染图：带噪输入以及迭代 1、3、5、15 次后的结果。上行花瓶逐渐变细，上部和下部特征消失；下行花瓶保持了原有轮廓。" loading="lazy">
+&lt;/a>&lt;figcaption>带噪花瓶分别经均匀拉普拉斯算子（上行）和 HLO（下行）迭代 1、3、5、15 次后的结果。均匀拉普拉斯明显使花瓶收缩，而 HLO 保留了上部和下部特征。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>HLO 保留了均匀拉普拉斯算子的简洁性，但不再作用于整个邻域，而是作用于半窗口，即顶点邻点的子集。对每个顶点，HLO 生成全部半窗口，在每个半窗口上计算拉普拉斯，并保留能量最小的那一个；随后用这些半核拉普拉斯迭代地更新曲面。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2020-hlo/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2020-hlo/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>完整窗口在特征处失效。&lt;/strong> 均匀拉普拉斯算子将顶点 v₀ 与其全部邻点的质心 v′₀ 作比较。在尖锐边上的顶点处，曲面不可微，该算子并不适用；实际光顺时，它会抹平特征并使网格收缩（图 2）。&lt;/li>
+&lt;li>&lt;strong>将邻域划分为半窗口。&lt;/strong> 依次以每个邻点为起点，例如邻点 A，将其与到 v₀、A、v′₀ 所在平面距离最短的邻点 D 配对。直线 A–D 将邻点划分为左、右两个半窗口。&lt;/li>
+&lt;li>&lt;strong>半窗口拉普拉斯。&lt;/strong> 在每个半窗口上分别计算均匀拉普拉斯，得到 d₁、d₂ 等向量。&lt;/li>
+&lt;li>&lt;strong>投影到完整窗口方向。&lt;/strong> 半窗口拉普拉斯还会带来切向偏移，可能导致三角面片翻转或退化。因此将其投影到完整窗口拉普拉斯的方向 n 上：δ = (d·n)n。论文指出，这样可使特征顶点处的拉普拉斯幅值较小、非特征顶点处较大，从而光顺非特征区域并保持特征。&lt;/li>
+&lt;li>&lt;strong>选取能量最小者并迭代。&lt;/strong> 有 |NV| 个邻点的顶点共有 2|NV| 个候选半窗口。HLO 选取能量最小者，即拉普拉斯的长度与顶点到初始位置距离之和最小的一个，用它更新顶点。唯一的参数是迭代次数。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-method.webp" alt="三幅线框示意图：顶点 v0 及其邻点 vA 至 vG。左图中经过 vA 和 vD 的直线划分邻域；中图和右图以橙色标出一个半窗口，并在 v0 处画出其拉普拉斯 d 及投影后的向量 δ。" loading="lazy">
+&lt;/a>&lt;figcaption>顶点 v₀ 上的半核拉普拉斯算子。左：邻点 A 与 D 配对，D 是到 v₀、A 和质心 v′₀ 所在平面距离最短的邻点，直线 A–D 将邻域分为两个半窗口。中、右：两个半窗口的拉普拉斯 d₁、d₂ 及其在完整窗口拉普拉斯上的投影 δ₁、δ₂。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>仅有一个参数&lt;/strong>，即迭代次数；对比的法向滤波方法和 L0 方法有三至六个参数（表 1）。&lt;br>&lt;strong>在所有运行时间测试中最快&lt;/strong>，例如在 Armadillo（43,243 个顶点）上耗时 1.81 s，次快的 UNF 为 5.68 s，顶点迭代均为 10 次（表 3）。&lt;br>&lt;strong>在 9 组测试中有 4 组法向误差（MSAE）最低&lt;/strong>，例如在噪声 σn = 0.5 lₑ 的 Armadillo 上为 9.33 × 10⁻²，L0 最小化为 9.59 × 10⁻²（表 2）。&lt;/aside>
+&lt;p>论文将 HLO 与均匀拉普拉斯、余切拉普拉斯以及七种去噪方法进行了比较：双边网格滤波、单边、双边与引导法向滤波（UNF、BNF、GNF）、L0 最小化、级联法向回归（CNR）和非局部低秩法向滤波（NLLR）。合成测试在模型上添加零均值高斯噪声，其标准差 σn 与平均边长 lₑ 成正比；真实测试使用 Microsoft Kinect 扫描的模型以及扫描得到的 Angel 和 Rabbit 模型。与均匀拉普拉斯相比，HLO 显著减轻了收缩，在 Julius 模型上的平均顶点误差也低得多；余切拉普拉斯对几何更敏感，但容易在曲面上产生尖锐的“毛刺”。由于均匀拉普拉斯在光顺过程中能展开翻转的三角面片，HLO 对高噪声的敏感程度低于大多数对比方法。在法向误差 MSAE 上，L0 最小化和 HLO 通常是最好的两种方法。顶点误差 Ev 与视觉比较结果不一定一致，因为展开翻转三角面片可能使顶点远离其真实位置。在运行时间对比中 HLO 速度最快，而其代码尚未经过优化或并行加速。&lt;/p>
+&lt;p>作者也指出了局限：HLO 不是基于边的算子，因此难以在顶点数较少的类 CAD 模型上恢复光滑的尖锐边；对于顶点数较多的真实扫描类 CAD 模型，其结果与其他方法相当。与以往工作一样，HLO 固定输入网格的开放边界，有时会导致不理想的结果。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-results.webp" alt="布满红色翻转三角面片的带噪狮头花瓶，以及七个去噪结果，每个结果上方附有瓶口局部放大图；部分结果仍可见红色三角面片。" loading="lazy">
+&lt;/a>&lt;figcaption>重噪声（σn = 0.8 lₑ）下的 Vaselion 模型：带噪输入以及 UNF、BNF、L0、GNF、CNR、NLLR 和 HLO（Ours）的结果，上方为框选区域的局部放大。翻转的三角面片以红色显示。引自论文图 9。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-errors.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-errors.webp" alt="三个男性头像渲染图：绿色的带噪输入、布满红蓝误差斑块的结果，以及大部分为绿色的结果。" loading="lazy">
+&lt;/a>&lt;figcaption>Julius 模型（σn = 0.2 lₑ）经均匀拉普拉斯（ULO，中）和 HLO（右）各迭代 10 次后的逐顶点误差；暖色和冷色分别表示正向和负向位移。引自论文图 5。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Parallel Curvature Filter for High Performance Image Processing</title><link>https://willpan.xyz/zh/publications/pan-2019-parallel/</link><pubDate>Tue, 01 Jan 2019 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2019-parallel/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>曲率滤波通过隐式地降低曲率能量（如高斯曲率、平均曲率或全变分）来实现图像平滑和去噪。它把图像视为一张曲面，对每个像素反复施加计算量很小的局部算子，每一轮迭代都使正则化能量下降。曲率滤波本身已经很快，但许多待增强的图像分辨率很高，或者需要实时、准实时处理；在 CPU 上，处理一幅 2048 × 2048 的大图仍需数分钟。&lt;/p>
+&lt;p>曲率滤波中计算量最大的部分是对图像的 8 次卷积。受 GPU 处理卷积神经网络中卷积运算的启发，作者将这些卷积放到 GPU 上并行计算。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>曲率滤波的每次迭代为每个像素枚举 8 种候选更新量，从中选出最小的一个并加以应用。PCF 在 GPU 上用卷积核一次性为所有像素计算这 8 个候选量。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2019-parallel/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2019-parallel/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>把图像看作曲面。&lt;/strong> 图像灰度 U 被视为定义在像素网格上的曲面。各种曲率正则项都作用于每个像素周围的 3 × 3 局部邻域。&lt;/li>
+&lt;li>&lt;strong>8 个切平面投影。&lt;/strong> 曲面在局部可以用切平面近似。在 3 × 3 邻域内枚举 8 个经过相邻像素的切平面，得到中心像素的 8 个投影距离 d&lt;sub>1&lt;/sub> … d&lt;sub>8&lt;/sub>。&lt;/li>
+&lt;li>&lt;strong>在 GPU 上执行 8 次卷积。&lt;/strong> 每种距离都以一次图像卷积的形式对所有像素同时计算。这 8 次卷积是算法中计算量最大的部分；PCF 用 CUDA 实现它们，并借助 GPU 的共享内存加速。&lt;/li>
+&lt;li>&lt;strong>选取最小距离并更新。&lt;/strong> 对每个像素，选出绝对值最小的距离 d&lt;sub>m&lt;/sub>（ABSMIN），并将其加到该像素上：U&lt;sup>t+1&lt;/sup> = U&lt;sup>t&lt;/sup> + d&lt;sub>m&lt;/sub>。最小距离意味着该像素最接近期望的几何形态，同时与原始图像拟合得最好。&lt;/li>
+&lt;li>&lt;strong>迭代。&lt;/strong> 反复执行这一更新，图像曲面便逐步得到正则化；论文通过绘制图像中一条直线上经 10 次和 30 次迭代后的灰度分布展示了这一过程。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-method.webp" alt="流程图：8 种 3 × 3 投影模式；红色 GPU 框内的卷积核将一张照片变换为 d1 到 d8 的一叠距离图；ABSMIN 步骤得到距离图 dm；加号节点将其反馈回图像。" loading="lazy">
+&lt;/a>&lt;figcaption>并行曲率滤波流程：在 3 × 3 邻域内枚举 8 个投影距离，在 GPU 上通过卷积为每个像素计算这些距离；每次迭代用其中最小的距离（d&lt;sub>m&lt;/sub>）更新图像。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">单块 GPU 每秒处理 &lt;strong>332 亿像素（33.2 Gpixel/s）&lt;/strong>（摘要）。&lt;br>对同一幅图像迭代 3000 次，&lt;strong>CPU 约需 87 秒，GPU 约需 6 秒&lt;/strong>（图 3）。&lt;/aside>
+&lt;p>PCF 的 CUDA 实现在 GPU 线程块大小为 16 到 32 的设置下运行，所用 GPU 为 NVIDIA GeForce GTX 1080 Ti（3584 个 CUDA 核心、11264 MB 全局内存、每个线程块 49152 字节共享内存），对比对象是在 Intel Xeon E5-1620 v4（3.50 GHz）CPU 上运行的原始曲率滤波。图 3 中，两者的计算时间都随迭代次数增长，但 GPU 上的增长要慢得多。作者据此认为，这样的速度使曲率滤波可以用于视频处理、生物医学图像处理等实时应用。&lt;/p>
+&lt;p>论文还将高斯曲率和平均曲率两种 PCF 应用于一张照片，并绘制图中一条直线上经 10 次和 30 次迭代后的灰度分布。两种方法下，灰度剖面都随迭代次数增加而变得更平滑；作者认为平均曲率 PCF 比高斯曲率 PCF 更高效。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-timing.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-timing.webp" alt="计算时间（秒）随迭代次数（0 到 3000）变化的折线图：蓝色虚线（CPU）升至约 87 秒，红色实线（GPU）始终低于约 7 秒。" loading="lazy">
+&lt;/a>&lt;figcaption>同一幅图像在 CPU 和 GPU 上的计算时间随迭代次数的变化。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-results.webp" alt="一张大型雕塑前人群照片的三个版本，上面横贯一条橙色虚线；每张下方是沿该线的灰度剖面，从左到右逐渐平滑。" loading="lazy">
+&lt;/a>&lt;figcaption>平均曲率 PCF 处理一张照片的结果：原图，以及迭代 10 次和 30 次后的结果。下方曲线为沿橙色虚线的灰度分布。引自论文图 5。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

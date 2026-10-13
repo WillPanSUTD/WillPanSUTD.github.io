@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Chi Zhou | 潘威</title><link>https://willpan.xyz/zh/author/chi-zhou/</link><atom:link href="https://willpan.xyz/zh/author/chi-zhou/index.xml" rel="self" type="application/rss+xml"/><description>Chi Zhou</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate><item><title>SFRF6D: Selective Fewer-Reference Fusion for 6D Pose Estimation</title><link>https://willpan.xyz/zh/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/</link><pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>6D 位姿估计是指求出物体的三维旋转和三维平移，这正是机器人进行精密抓取和装配所需的信息。现有方法大多依赖物体的 CAD 模型，或者依赖大量参考图像。基于模型的方法将图像特征与 CAD 模型进行匹配，而在实际场景中往往没有现成的模型，应用因此受限。Gen6D、OnePose、FoundationPose 等无需物体模型的方法改为从大量参考图像或视频中构建多视角表示，但在严重遮挡或视角变化较大时，跨视角对齐难以保持稳定。只需少量参考图像的方法，在参考视角之间几乎没有重叠时，特征匹配能力会大幅下降。&lt;/p>
+&lt;p>SFRF6D 的目标是：不使用 CAD 模型，只借助少量已知位姿的 RGB-D 参考图像完成位姿估计，同时在物体被严重遮挡时依然保持鲁棒。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-problem.webp" alt="四张倾斜排列的杂乱桌面 RGB-D 参考照片和一张查询照片；标有 Rendering 的箭头指向红色物体的裁剪视图，查询照片中的物体上画有绿色位姿框。" loading="lazy">
+&lt;/a>&lt;figcaption>问题设定：输入少量 RGB-D 参考图像和一张查询图像，渲染出物体的不同视角，并在查询图像中估计其 6D 位姿。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>SFRF6D 先由参考图像重建物体的粗略三维形状，并与查询图像进行粗对齐；然后在该粗略位姿下渲染参考视角，借助由三维几何引导的注意力与查询图像匹配，使可见区域发挥作用、被遮挡区域不参与匹配；最后对位姿进行精化，并通过渲染比较在多个位姿假设中做出选择。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>少量参考图像与一张查询图像。&lt;/strong> 输入是一小组带真值位姿的 RGB-D 参考图像（主实验中为四张）和一张 RGB-D 查询图像，查询掩码将物体分割出来。&lt;/li>
+&lt;li>&lt;strong>粗略三维形状。&lt;/strong> 选取视角与查询图像最接近的参考图像作为锚点，用 ResNet18 提取其特征，并由其深度图生成初始的物体点云。其余参考图像借助相机内参和已知位姿变换到同一世界坐标系中，补全物体形状，再将其归一化到 [−1, 1] 范围内。&lt;/li>
+&lt;li>&lt;strong>粗对齐。&lt;/strong> 用有向包围盒求出物体的中心（点云的均值）和旋转（对点云协方差做主成分分析得到的主轴）。由于此时的对齐仍较粗糙，再以最大化 IoU 为目标调整旋转和尺度，得到粗对齐结果。&lt;/li>
+&lt;li>&lt;strong>几何引导的稀疏注意力。&lt;/strong> 在查询图像的粗略位姿下渲染参考点云。参考点与查询点之间的归一化方向向量为交叉注意力构建 Top-K 掩码，并采用 Gumbel-Softmax 进行软性 Top-K 采样；匹配失败的点对被屏蔽，使注意力集中于可见且相关的区域。多尺度融合模块则自适应地权衡全局特征与局部特征。&lt;/li>
+&lt;li>&lt;strong>精化与选择。&lt;/strong> 联合优化物体尺度和位姿：位姿通过渲染物体形状、最小化其与锚点图像之间的投影误差来优化；尺度则在给定范围内采样，依据与重建形状之间的 IoU 选取。随后求出相对于查询图像的位姿。每个位姿假设被渲染后与查询图像比较，得到一个特征向量；自注意力模块综合所有假设给出评分，再经 Top-K 筛选得到最终位姿。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-method.webp" alt="流程图：参考 RGB-D 图像输入灰色的三维重建模型，再渲染出多个视角；精化/选择位姿模块经物体更新回连到重建模型，查询 RGB-D 经精化/选择位姿得到带绿色位姿框的 6D 位姿。" loading="lazy">
+&lt;/a>&lt;figcaption>整体流程。参考图像被重建为三维形状；查询图像生成粗略位姿；渲染视角经过位姿精化与选择（同时更新物体），最终估计出 6D 位姿。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-attention.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-attention.webp" alt="注意力模块示意图：参考图像、查询图像和查询掩码；归一化方向向量生成成对的 Query/Ref 行，进入 Top-K 选择；位置编码、Query/Key/Value、投影、注意力分数、Gumbel、注意力加权聚合、自注意力和混合注意力，最终得到增强的查询特征。" loading="lazy">
+&lt;/a>&lt;figcaption>几何引导的稀疏注意力。归一化方向向量与基于特征相似度的 Top-K 选择共同约束每个查询特征所关注的参考特征。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>使用四张参考图像，在 LM、LMO 和 YCBV 上的平均 ADD(-S) 精度为 83.2%，单个物体耗时 0.9 s&lt;/strong>；FS6D + ICP 和 LatentFusion（均使用 16 张参考图像）分别为 75.8% 和 70.1%，Any6D 为 76.5%（表 1）。&lt;br>&lt;strong>在严重遮挡的 LMO 上达到 67.3%&lt;/strong>，上述三种方法分别为 58.6%、53.5% 和 57.9%（表 1）。&lt;br>在 LMO 上，将几何引导的稀疏注意力替换为普通的全连接注意力后，精度降至 &lt;strong>64.5%&lt;/strong>（表 2）。&lt;/aside>
+&lt;p>对比实验使用 BOP 的三个基准：LINEMOD（LM）、物体可见比例有时不足 40% 的 Occlusion LINEMOD（LMO），以及 YCB-Video（YCBV）。精度指标为阈值取物体直径 0.1 倍时的 ADD(-S)。在不使用 CAD 模型的方法中，SFRF6D 在三个数据集上的精度均最高（92.1%、67.3% 和 90.2%），速度也最快。使用 CAD 模型的 FoundationPose 精度仍然更高，平均为 89.7%，耗时 1.0 s；作者指出，SFRF6D 的精度略低，但换来了无需 CAD 模型和更小的计算量。&lt;/p>
+&lt;p>LMO 上的消融实验（表 2）分别考察了各个部分。去掉视角选择器、改用全部渲染视角时，精度变化不大（66.2%），但耗时从 0.94 s 增加到 1.32 s。参考图像较少时，数量的影响最大：一张为 57.3%，两张为 63.4%，四张为 67.3%，八张为 68.1%（耗时 1.03 s），因此作者选用四张，以兼顾精度与开销。只有一张参考图像时，重建的形状严重依赖这一个视角，遮挡或视角差异较大时特征无法稳健对齐。作者将引入预训练基础模型、动态场景中的多物体交互，以及面向移动端和边缘计算平台的模型轻量化列为未来工作。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-table.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-table.webp" alt="对比表：FS6D &amp;#43; ICP、LatentFusion、FoundationPose、Any6D 和 Ours 在是否使用 CAD 模型、模态、参考图像数量、LM/LMO/YCBV 精度、平均值和耗时上的比较。" loading="lazy">
+&lt;/a>&lt;figcaption>在 0.1 d 阈值下与少参考方法的对比。SFRF6D（Ours）不使用 CAD 模型，参考图像为四张。引自论文表 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-results.webp" alt="四幅相同的桌面场景，含电钻、香蕉、瓶子和盒子；Ours、FoundationPose、LatentFusion 和 Any6D 的结果中，盒子和瓶子上覆盖着绿色的投影模型点。" loading="lazy">
+&lt;/a>&lt;figcaption>定性对比：从物体 CAD 模型中采样 1,000 个点，按各方法预测的位姿变换后投影到查询图像上，显示为绿色点。引自论文图 4。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>
