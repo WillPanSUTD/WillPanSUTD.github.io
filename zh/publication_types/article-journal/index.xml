@@ -1142,6 +1142,48 @@
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-errors.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/pan-2020-hlo/fig-errors.webp" alt="三个男性头像渲染图：绿色的带噪输入、布满红蓝误差斑块的结果，以及大部分为绿色的结果。" loading="lazy">
 &lt;/a>&lt;figcaption>Julius 模型（σn = 0.2 lₑ）经均匀拉普拉斯（ULO，中）和 HLO（右）各迭代 10 次后的逐顶点误差；暖色和冷色分别表示正向和负向位移。引自论文图 5。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Iteratively weighted principal component analysis and orientation consistency for normal estimation in point cloud</title><link>https://willpan.xyz/zh/publications/wen-2020-iteratively-weighted/</link><pubDate>Wed, 01 Jan 2020 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/wen-2020-iteratively-weighted/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>点云只是一组三维坐标。去噪、分割、曲面重建和可视化等后续处理都需要每个点的表面法向，因此法向估计是点云处理中的一项基础操作。经典方法由 Hoppe 等人提出：用主成分分析（PCA）对每个点的近邻拟合平面，并以该平面的法向作为点的法向。这一方法假设邻域近似为平面，在点稀疏或表面存在尖锐边的地方表现欠佳：例如，在直角处法向可能绕着拐角逐渐过渡，而不是反映真实的边缘（图 2）。&lt;/p>
+&lt;p>当各点密度不同且存在局部尖锐特征时，相邻点的法向方向也可能不一致，有的指向内侧，有的指向外侧。滚球法（ball-pivoting）和泊松（Poisson）等重建方法都要求法向朝向一致。尖锐特征处的法向不准确，会使重建后的尖锐特征变得模糊；法向朝向不一致，则可能导致重建曲面出现破损。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-problem.webp" alt="两幅二维示意图，红色采样点上画有蓝色法向线。左图为矩形轮廓，左侧拐角处的法向绕拐角呈扇形逐渐过渡，右侧拐角处的法向则始终垂直于各边。右图为椭圆，法向部分指向外侧、部分指向内侧。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 左侧直角处的法向绕拐角平滑过渡，不能反映尖锐边；右侧拐角处的法向始终垂直于各边。(b) 相邻点的法向有的指向内侧，有的指向外侧。引自论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-poisson.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-poisson.webp" alt="两个青色的 Stanford bunny 泊松重建结果。左图兔耳断裂成漂浮的碎片，身体也有损坏；右图兔子完整，兔耳完好。" loading="lazy">
+&lt;/a>&lt;figcaption>Stanford bunny 的泊松重建：(a) 法向朝向不一致时，兔耳被破坏；(b) 法向朝向一致时，兔子被完整重建。引自论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>该方法以 PCA 平面拟合为核心，并在其基础上加入两项改进。为提高法向的鲁棒性和可靠性，它按距离和法向相似度为每个邻点加权，并将加权拟合重复数次，作者称之为迭代加权主成分分析（IWPCA）。为使法向朝向一致，它先利用点云中心翻转法向，再沿最小生成树（MST）传播朝向。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/wen-2020-iteratively-weighted/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>局部平面拟合。&lt;/strong> 用 Kd 树查找每个点的 k 近邻，并对其进行最小二乘平面拟合。邻域协方差矩阵最小特征值对应的特征向量即为法向。&lt;/li>
+&lt;li>&lt;strong>双边权重。&lt;/strong> IWPCA 以该点本身为中心构造协方差矩阵，并为每个邻点赋予两种权重。空间权重随邻点与该点距离的增大而减小，由 σ&lt;sub>d&lt;/sub> 控制，通常取 kNN 搜索半径的一半；法向权重随邻点法向与该点法向偏差的增大而减小，由 σ&lt;sub>n&lt;/sub> 控制，通常取 15° 到 30°。首次计算时，两者的法向均设为默认值 (1, 0, 0)。&lt;/li>
+&lt;li>&lt;strong>迭代。&lt;/strong> 每一轮都把上一轮得到的法向代入法向权重。迭代次数越多，估计越好，但耗时也越长；作者建议迭代 2 到 3 次，并以最后一轮的结果作为输出。&lt;/li>
+&lt;li>&lt;strong>向外预翻转。&lt;/strong> 计算整个点云的中心，将所有指向该中心的法向翻转。&lt;/li>
+&lt;li>&lt;strong>沿最小生成树传播。&lt;/strong> 用 Prim 算法在相邻点之间构建最小生成树，边权为 1 − |n&lt;sub>i&lt;/sub> · n&lt;sub>j&lt;/sub>|。从根节点开始，若子节点法向与父节点法向的点积为负，则翻转子节点的法向。&lt;/li>
+&lt;/ol>
+&lt;p>对于尖锐部位，还可以用同样的空间权重和法向权重对法向进行平滑（双边加权平滑）。在作者的实验中，这使尖锐部位的法向更加鲁棒，但可靠性有所下降；由于 IWPCA 本身已能提高边缘处法向的鲁棒性，作者建议仅在需要时使用。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-method.webp" alt="立方体点云的四个视图，布满密集的绿色法向线。(a) 中法向杂乱，边缘难以辨认；(b) 和 (c) 中边缘略为清晰；(d) 中交汇于前方顶点的三条棱十分清晰。" loading="lazy">
+&lt;/a>&lt;figcaption>立方体模型的法向：(a) 经典 PCA；(b) IWPCA 迭代 1 次；(c) IWPCA 迭代 3 次；(d) 用改进的 MST 方法对 (c) 重新定向后的法向。引自论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>四个测试模型&lt;/strong>均来自斯坦福大学计算机图形实验室：Stanford bunny（34,835 个点）、立方体（39,846 个点）、尖锥（50,000 个点）和一块扫描曲面（30,443 个点），参数均为 σ&lt;sub>n&lt;/sub> = 30°、σ&lt;sub>d&lt;/sub> = 0.5（表 1）。&lt;br>&lt;strong>Stanford bunny 的运行时间：PCA 为 564 ms，IWPCA 迭代 1 次为 697 ms，迭代 3 次为 896 ms&lt;/strong>（表 1）。&lt;br>建议&lt;strong>迭代 2 到 3 次&lt;/strong>（第 4.1 节）。&lt;/aside>
+&lt;p>论文中的对比均为可视化比较。在立方体上，IWPCA 提高了尖锐边处法向的鲁棒性；经 MST 重新定向后，全部法向的可靠性、鲁棒性和朝向一致性都得到改善，立方体的形状也更加清晰（图 7）。用泊松方法重建立方体时，基于 IWPCA 法向重建出的棱和顶点比基于经典 PCA 法向的更加锐利、清晰（图 8）。在尖锥上，经典 PCA 在锥顶处的法向结果不理想，部分点的法向未能算出，底部也有许多法向指向内侧；IWPCA 提高了顶部和底部法向的鲁棒性（图 9）。在扫描曲面上，改进的 MST 修正了朝向不一致的法向，绝大多数法向指向曲面的凸起一侧（图 11）。&lt;/p>
+&lt;p>IWPCA 的计算量大于经典 PCA，其运行时间包含了法向重定向过程。迭代 1 次时，它比 PCA 慢；迭代 3 次时，它比连续运行 3 次经典 PCA 略快。实验运行环境为 Windows 7（64 位）、Intel Core i7-5650U CPU（2.20 GHz）和 8 GB 内存。邻域大小 k 以及权重参数 σ&lt;sub>d&lt;/sub> 和 σ&lt;sub>n&lt;/sub> 不易确定，目前依经验选取；作者提出，今后可根据局部曲率、噪声分布和点密度来确定这些参数。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-results.webp" alt="四幅立方体曲面重建图。(a) 青色立方体，棱边柔和圆钝；(b) 橙色立方体，棱边更锐利；(c) 两个立方体以相同位姿叠放，橙色沿棱边和在各面上大片透出，一个顶点处画有红圈；(d) 叠放立方体其他顶点的四个特写。" loading="lazy">
+&lt;/a>&lt;figcaption>立方体的泊松重建：(a) 基于经典 PCA 法向；(b) 基于 IWPCA 法向；(c) 两者以相同位置和朝向叠放；(d) (c) 中其他顶点的视图。引自论文图 8。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-orientation.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-orientation.webp" alt="扫描曲面的四个视图，带有绿色和品红色法向线。上排中，同一块曲面上的法向指向两侧；下排中，各大块曲面主要呈现同一侧的颜色。" loading="lazy">
+&lt;/a>&lt;figcaption>扫描曲面的法向：(a, b) 重新定向前；(c, d) 用改进的 MST 方法重新定向后，绝大多数法向指向凸起一侧。引自论文图 11。&lt;/figcaption>
 &lt;/figure></description></item><item><title>Transformation of LEGO Models</title><link>https://willpan.xyz/zh/publications/pan-2018-transformation/</link><pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2018-transformation/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
 &lt;p>集装箱堆垛引出一个实际问题：如何高效地把集装箱从一个堆垛移到另一个堆垛？本文借助乐高研究一个与之有一定关联的问题：利用现有乐高模型上拆下的积木搭建一个新的乐高模型。把三维形状转换成乐高模型的算法已有很多，但用另一个模型的积木来搭建乐高模型，此前尚未见于公开文献。这一任务有两个相互制约的目标：每次拾放（pick-and-place，PnP）一块积木都计为一次移动成本；同时，源模型的积木应尽可能多地用到目标模型上。&lt;/p>
 &lt;p>物理约束使移动顺序变得关键。完全或部分压在其他积木下面的积木无法拾取，积木也不能放在悬空的位置。此外，位于顶面但四周被其他积木完全包围的积木，作者也视为不可移动，因为要取出它需要额外的拾放操作。&lt;/p>
