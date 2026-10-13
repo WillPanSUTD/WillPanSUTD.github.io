@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Registration | 潘威</title><link>https://willpan.xyz/zh/tags/registration/</link><atom:link href="https://willpan.xyz/zh/tags/registration/index.xml" rel="self" type="application/rss+xml"/><description>Registration</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>SuP: Sub-cloud Driven Point Cloud Registration</title><link>https://willpan.xyz/zh/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>点云配准的任务是求出一组旋转和平移，把同一场景的两帧三维扫描对齐。当两帧扫描共享大量几何结构时，现有方法已能实现高精度对齐。但在大规模建图、自主导航等应用中，两个视角往往只有一小部分场景重叠。一旦共享表面低于约 30%，无论是经典的 ICP 还是基于学习的方法，都难以建立可靠的对应关系，配准会出现收敛缓慢、错位甚至完全失败。&lt;/p>
+&lt;p>论文将这类失败归因于两帧之间“不重叠”的区域：这些区域在几何或语义上仍可能彼此相似，直接对两帧完整点云做匹配，就会产生大量错误对应，把少数正确对应淹没。早期工作尝试显式预测哪些点位于重叠区，但这种预测依赖一致的特征表示，在低重叠样本上效果明显下降。后续方法借助注意力机制，并引入几何编码、语义或颜色信息来增强特征，但随着重叠率降低，性能依然下滑。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" alt="上图：ColorPCR/GeoTransformer 对两帧扫描做匹配，相似结构之间出现大量红色错误匹配，配准失败。下图：SuP 的流程（划分、OPS、MPN、合并匹配），绿色为正确匹配，配准成功。" loading="lazy">
+&lt;/a>&lt;figcaption>上：重叠区之外的相似结构（红框）吸引了大量错误匹配（红线），掩盖了正确对应；直接匹配的基线方法（图中标注为 ColorPCR / GeoTr.）在这对扫描上配准失败（旋转误差 41.3°，平移误差 101.7 cm）。下：SuP 找出重叠率高、特征一致性强的子点云对，合并其中的匹配后完成配准（1.3°，1.8 cm）。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>SuP 换了一个角度看问题。两帧扫描整体上可能只有少量重叠，但若把每帧切成更小的块并两两配对，其中有一部分子点云对具有很高的重叠率。SuP 把这些高重叠的子点云对称为“锚点对”：先分两个阶段把它们找出来，再只在锚点对内部建立匹配。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/fung-2026-sup-sub-cloud-driven-point-cloud/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>提取整帧特征。&lt;/strong> KPConv 骨干网络在多个尺度上提取点特征，再由注意力层在帧内和两帧之间交换上下文信息。SuP 默认采用 ColorPCR 的颜色增强骨干网络和注意力模块。&lt;/li>
+&lt;li>&lt;strong>划分子点云。&lt;/strong> 每帧点云被划分为 k 个子点云：先用最远点采样选出分布均匀的中心点，再以各中心点为核心，在半径范围内收集近邻点，构成子点云。&lt;/li>
+&lt;li>&lt;strong>第一阶段：重叠引导的先验加权（OPS）。&lt;/strong> 对每一对源–目标子点云，SuP 只统计互为前 k 强的特征相关，以此度量两者点特征的相关程度，并保留得分最高的若干对作为候选。这一步是高效的初筛，用来排除不重叠的子点云对。&lt;/li>
+&lt;li>&lt;strong>第二阶段：多尺度后加权网络（MPN）。&lt;/strong> 先用加权 SVD 为每个候选对估计初步位姿并对齐，再由一个轻量的可学习网络在两个尺度上检查：对齐后彼此靠近的点，特征是否也相似。特征一致性权重最高的候选对成为锚点对。训练时，该网络以各候选对实际的对齐误差作为监督信号（对齐感知加权损失）。&lt;/li>
+&lt;li>&lt;strong>合并匹配。&lt;/strong> 将所有锚点对中的内点对应合并，在更稠密的点上细化，再交给标准估计器（RANSAC 或无需 RANSAC 的 LGR）求出最终的旋转和平移。&lt;/li>
+&lt;/ol>
+&lt;p>在论文的实验设置中，每帧点云划分为 6 个子点云，共 36 种组合；OPS 保留其中 24 对，再按特征一致性取前 8 对作为锚点对。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="网络结构图：特征提取、特征聚合、双阶段子点云锚点挖掘模块（划分、OPS、初步子点云匹配、MPN）以及合并匹配，并附各部分的细节面板。" loading="lazy">
+&lt;/a>&lt;figcaption>方法总览。多尺度特征（3.2 节）经注意力聚合（3.3 节）；双阶段子点云锚点挖掘模块（3.4 节）划分两帧点云，用 OPS 选出候选，初步对齐（PSM）后由 MPN 打分；合并匹配模块（3.5 节）把各锚点对的匹配合并，估计最终变换。论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">使用无需 RANSAC 的 LGR 估计器时，&lt;strong>在 Color3DMatch 和 Color3DLoMatch 上的配准召回率分别为 97.8% 和 90.2%&lt;/strong>，在采用 LGR 的对比方法中最高（表 2）。&lt;br>使用 RANSAC 时为 &lt;strong>98.1% 和 90.4%&lt;/strong>，且在 5000 到 250 个采样对应点的各档设置下配准召回率均为最高（表 1）。&lt;br>&lt;strong>位姿误差最低&lt;/strong>：Color3DMatch 上为 1.374° / 0.046 m，Color3DLoMatch 上为 2.493° / 0.074 m（表 3）。&lt;/aside>
+&lt;p>实验采用室内基准 3DMatch 的颜色增强版本：Color3DMatch 中点云对的重叠率高于 30%，Color3DLoMatch 是重叠率为 10%–30% 的更难子集。配准召回率指估计变换的 RMSE 小于 0.2 m 的点云对所占比例。SuP 默认采用 ColorPCR 的颜色增强骨干网络；与最强的基线 ColorPCR 本身相比，在 LGR 设置下，SuP 将 Color3DMatch 上的召回率从 96.5% 提升到 97.8%，将 Color3DLoMatch 上的召回率从 88.3% 提升到 90.2%。正确匹配的比例也随之提高：在 Color3DLoMatch 上采样 250 个对应点时，SuP 的内点率为 76.0%，ColorPCR 为 68.0%。&lt;/p>
+&lt;p>子点云策略也可以作为插件用于其他方法。接入 GeoTransformer 后，Color3DLoMatch 上的召回率从 74.0% 提升到 76.7%；接入 PEAL 后，从 81.2% 提升到 83.4%（表 4）。消融实验中，依次加入四个组件（OPS、特征一致性权重、MPN 和对齐感知加权损失），每一步都使两个基准上的召回率进一步提高（表 5）。子点云的大小同样重要：子点云过小可能因重叠不足而降低召回率，过大则会丢失局部细节，默认半径参数 τ = 0.35 取得了最佳平衡（表 6）。论文在局限性部分指出，若两帧扫描来自差异很大的传感器，特征可能出现细微不一致，从而影响 OPS 和 MPN；引入特征归一化或域自适应是后续可行的方向。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-3.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-3.webp" alt="三组低重叠扫描对（黄色与蓝色）：输入、真值、ColorPCR 与 SuP 的配准结果（标注 RMSE），以及两者的对应关系（绿色为正确、红色为错误，标注内点率）。" loading="lazy">
+&lt;/a>&lt;figcaption>三组重叠率为 14.5%–23.8% 的 3DLoMatch 扫描对：(a) 输入，(b) 真值，(c、d) ColorPCR 与 SuP 的配准结果，(e、f) 两者的对应关系（绿色正确，红色错误）。第一行中，ColorPCR 的匹配只有 18.8% 正确，配准 RMSE 为 2.939 m；SuP 的匹配有 51.0% 正确，RMSE 为 0.066 m。论文图 3。&lt;/figcaption>
+&lt;/figure></description></item><item><title>SemReg: Semantics-Constrained Point Cloud Registration</title><link>https://willpan.xyz/zh/publications/fung-2024-semreg/</link><pubDate>Sun, 01 Sep 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/fung-2024-semreg/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>点云配准的任务，是求出一组旋转和平移，把同一场景、部分重叠的两帧三维扫描对齐，进而拼接成完整的模型。近年的学习方法通常先用每个点周围的局部形状来描述该点，再通过交叉注意力让两帧点云交换信息，最后进行点匹配。然而，仅凭几何形状往往存在歧义：床和桌子的局部扫描在几何上可能十分相似。此外，交叉注意力会让一帧中的每个区域与另一帧中的所有区域发生交互，其中包括不太可能重叠的区域对，例如一帧里的椅子和另一帧里的桌子。这些冗余交互会导致错误匹配。&lt;/p>
+&lt;p>用 RGB-D 相机采集的室内扫描本身附带彩色图像，而二维图像上的语义理解远比三维几何上成熟。此前的跨模态方法 PCR-CG 已将图像颜色引入三维特征，但它只用到了颜色，并未利用图像中的语义信息，得到的特征仍不够一致。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-semreg/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2024-semreg/fig-problem.webp" alt="两组室内点云的点特征与匹配连线对比：左侧 PCR-CG 红线较多，右侧 SemReg 以绿线为主。" loading="lazy">
+&lt;/a>&lt;figcaption>PCR-CG（左）与 SemReg（右）的点特征（颜色由 t-SNE 投影得到）及匹配结果，绿线为正确匹配，红线为错误匹配。SemReg 的特征在同一物体内保持一致，大部分匹配正确。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>SemReg 是一个二维–三维跨模态网络。它保留常规的三维骨干网络来提取形状特征，同时从 RGB 图像中引入语义信息，并在三个环节加以利用：注意力计算、匹配阶段和训练损失。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/fung-2024-semreg/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/fung-2024-semreg/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>两帧扫描及其彩色图像。&lt;/strong> 输入是一对部分重叠的点云，各自带有对应的 RGB 图像。KPConv 骨干网络对每帧点云下采样，并提取局部形状特征。&lt;/li>
+&lt;li>&lt;strong>从图像中提取语义特征。&lt;/strong> 参数冻结的预训练 DINOv2 网络从 RGB 图像中提取特征；借助深度和相机参数，这些特征被投影到三维点上，并在自注意力中与形状特征融合。&lt;/li>
+&lt;li>&lt;strong>语义先验引导交叉注意力。&lt;/strong> 对源点云中的每个点，SemReg 找出目标点云中语义特征与之相近的点，并以这些点为中心、按三维欧氏距离构造高斯分布。这些高斯分布的混合即高斯混合语义先验（GMSP），用来对交叉注意力加权，使特征交互主要发生在语义相近的区域之间。&lt;/li>
+&lt;li>&lt;strong>在语义相近的区域内匹配。&lt;/strong> 语义约束匹配模块在语义先验表明两点分属无关区域时，将该候选点对的匹配分数置零。训练时，语义感知焦点损失只对语义相关的点对进行监督。&lt;/li>
+&lt;li>&lt;strong>由保留的匹配求解位姿。&lt;/strong> 最终的旋转和平移由 RANSAC 从对应关系中估计，并可进一步用 ICP 精化。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-semreg/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2024-semreg/fig-method.webp" alt="网络结构图：RGB 图像与点云 X、Y 依次经过 KPConv、两个 SGFI 模块和 SCM 模块，下方为 GMSP、SGFI、SCM 的细节。" loading="lazy">
+&lt;/a>&lt;figcaption>方法总览。KPConv 提取多层级形状特征；GMSP 将二维语义特征转化为先验 θ；两个语义引导特征交互（SGFI）模块在自注意力和交叉注意力中利用这些先验；语义约束匹配（SCM）模块输出最终的对应关系。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率分别为 94.7% 和 75.9%&lt;/strong>，在两者上均为所有对比方法中最高（表 1）。&lt;br>经 ICP 精化后提升至 &lt;strong>95.4% 和 77.4%&lt;/strong>（表 2）。&lt;br>将四个语义模块全部替换为常规模块后，召回率降至 &lt;strong>92.1% 和 66.5%&lt;/strong>（表 3）。&lt;/aside>
+&lt;p>实验使用室内 RGB-D 基准 3DMatch 及其低重叠子集 3DLoMatch（重叠率 10–30% 的扫描对）。配准召回率指估计变换误差（RMSE）小于 0.2 m 的扫描对所占比例。SemReg 在两个子集上均居首位，在 3DMatch 上领先 SIRA-PCR，在 3DLoMatch 上领先 GeoTransformer；在论文的 ICP 精化对比中，它相对次优方法的优势扩大到 1.5 和 2.9 个百分点。重叠越少，语义模块的作用越明显：在 3DLoMatch 上它们贡献了 9.4 个百分点的召回率，而在 3DMatch 上为 2.6 个百分点。在一个重叠率仅 12.53%、唯一共有物体是一把椅子的极端例子中，语义先验依然能在目标点云中找到这把椅子并成功配准，而 GeoTransformer 配准失败。&lt;/p>
+&lt;p>SemReg 在粗粒度层级上匹配，每对扫描建立 0.1K–1K 个对应关系，而 GeoTransformer 等稠密方法为 6K–7K 个。因此它的内点率低于部分对比方法，但配准召回率更高。室外 KITTI 数据集上的结果见补充材料。该方法依赖与扫描对齐的 RGB 图像，因此不能直接用于单独的点云；作者提出，未来可先由点云渲染出二维图像来解决这一问题。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-semreg/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2024-semreg/fig-results.webp" alt="三组室内扫描对（蓝色与黄色）：输入、真值、特征与对应关系可视化，以及 Lepard 与 SemReg 的配准结果。" loading="lazy">
+&lt;/a>&lt;figcaption>三组室内扫描对：(a) 输入，(b) 真值，(c) 特征与对应关系，(d) 配准估计，每组均对比 Lepard 与 SemReg。引自论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-semreg/fig-lowoverlap.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2024-semreg/fig-lowoverlap.webp" alt="低重叠示例：真值、带红色查询点的灰色源点云、椅子区域被标红的目标点云、错位的 GeoTransformer 结果和正确对齐的 SemReg 结果。" loading="lazy">
+&lt;/a>&lt;figcaption>重叠率仅 12.53% 的扫描对，两帧之间只共有一把椅子。给定源点云上的查询点（图 b 中的红点），语义先验在目标点云中标出了这把椅子（图 c 中的红色区域）。GeoTransformer 配准错位（d），SemReg 正确对齐（e）。引自论文图 6。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

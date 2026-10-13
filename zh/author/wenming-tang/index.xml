@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Wenming Tang | 潘威</title><link>https://willpan.xyz/zh/author/wenming-tang/</link><atom:link href="https://willpan.xyz/zh/author/wenming-tang/index.xml" rel="self" type="application/rss+xml"/><description>Wenming Tang</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>An Improved Graph Attention Network for Semantic Segmentation of Industrial Point Clouds in Automotive Battery Sealing Nail Defect Detection</title><link>https://willpan.xyz/zh/publications/pan-2026-industrial-point-cloud-segmentation/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2026-industrial-point-cloud-segmentation/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>密封钉用于封堵汽车动力电池的注液孔，通过激光焊接固定。焊接过程可能产生爆点、熔珠、针孔等缺陷，影响电池的安全性和耐久性。金属表面反光强、缺乏纹理，二维成像难以可靠检测：需要频繁重新调整打光，误检率也较高。因此，传统检测方案先用二维视觉定位缺陷，再用三维视觉进行测量。这种多阶段流程复杂、效率较低，误差还会在各阶段之间累积。&lt;/p>
+&lt;p>三维点云可以直接反映表面形貌，但许多先进的分割网络（如 Point Transformer 和 Swin3D）在很大程度上依赖 RGB-D 或强度信息；当只有几何数据可用时，其鲁棒性受到限制，而这正是反光工业零件上的常见情况。缺陷本身也难以学习：同一类缺陷的形状可能差异很大；一帧约 10 万个点的扫描中，缺陷点只有约 1000 个；而在缺陷边界附近，点的坐标与周围表面几乎没有差别。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/figure-code-1-graphical-abstract.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/figure-code-1-graphical-abstract.webp" alt="左：电池顶盖，密封钉处被圈出并放大。右：熔珠、针孔和翘曲三类缺陷，每类上方为实拍图像，下方为彩色编码的点云。" loading="lazy">
+&lt;/a>&lt;figcaption>电池顶盖上的密封钉（左），以及熔珠、针孔、翘曲三类缺陷的实拍图像（上）与点云（下）。引自论文图 8。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>LGASS（Local Graph Attention for Semantic Segmentation，局部图注意力语义分割）直接在三维点云上分割缺陷，在单一阶段内同时完成缺陷定位与几何量化。它只使用几何信息：网络输入是每个点的表面法向量，点的坐标则用于确定哪些点互为近邻。网络采用类 U-Net 的编码器–解码器结构，核心是两个新模块，一个用于注意力计算，一个用于池化。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2026-industrial-point-cloud-segmentation/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>扫描焊缝。&lt;/strong> 三维激光轮廓仪（OPT-LPC20，405 nm 蓝色激光线）扫描密封钉，横向分辨率约 0.05 mm。改进的 RANSAC 算法拟合密封钉与电池顶盖的参考平面，再以密封钉中心为圆心划定圆形区域，提取待检测的焊缝区域。&lt;/li>
+&lt;li>&lt;strong>关注法向量。&lt;/strong> 几乎所有缺陷区域都表现出明显的高度和法向量变化。在缺陷边界附近，相邻两点的坐标几乎相同，法向量却明显不同，因此相邻点之间的法向量差异是识别缺陷的关键指标。&lt;/li>
+&lt;li>&lt;strong>局部图注意力滤波器（LGAF）。&lt;/strong> 每个点与其 k 个最近邻相连。LGAF 根据点自身特征与其到各近邻的特征差之间的相关性，并结合基于空间距离的权重，计算注意力权重，再按这些权重聚合近邻特征。法向量差异越大，注意力权重越高，网络因而聚焦于缺陷边界。&lt;/li>
+&lt;li>&lt;strong>空间注意力图池化（SAG-Pooling）。&lt;/strong> 编码器下采样时，每个点的得分是学习得到的空间注意力权重与其相对近邻的法向量差异之积。只保留排名靠前的点，因此只有在空间上重要、几何上又有区分度的点（例如缺陷边缘上的点）才会被保留。&lt;/li>
+&lt;li>&lt;strong>逐点分类。&lt;/strong> 解码器由带位置编码的图卷积模块构成，逐层上采样回到完整点集，并通过跳跃连接融合编码器特征。网络为每个点分配六个类别之一：正常表面，或五类缺陷之一（爆点、凹坑、翘曲、熔珠、针孔）。训练时采用类别加权损失，提高少数缺陷类别的影响。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-crosssection.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-crosssection.webp" alt="缺陷截面的彩色点云剖面：虚线参考面上方有一处凸起，其顶部的法向量 N1 竖直向上，侧面的法向量 N2 倾斜，右侧标出高度差 Δh。" loading="lazy">
+&lt;/a>&lt;figcaption>一个缺陷样本的截面。凸起顶部的法向量 N₁ 竖直向上，侧面的法向量 N₂ 发生倾斜，Δh 为其相对周围表面的高度。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-method.webp" alt="网络结构图：上排为由 GCN、LGA Filter 和 SAG Pooling 模块组成的编码器，下排为由 GCN 和 Up-sampling 模块组成的解码器，右侧插图展示基于 KNN 插值和跳跃连接的上采样。" loading="lazy">
+&lt;/a>&lt;figcaption>LGASS 网络结构。编码器以 GCN 模块开头，随后堆叠 LGA Filter 模块与 SAG Pooling；解码器由 GCN 与上采样模块组成，每次上采样从 k 个最近邻插值特征，并加入跳跃连接（右侧插图）。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">在密封钉数据集上，&lt;strong>mIoU 达到 79.26%，总体精度（OA）达到 99.43%&lt;/strong>（五次运行的平均值），高于 PTv3（mIoU 75.13%）和 OA-CNN（74.04%）（表 4）。&lt;br>&lt;strong>针孔类 IoU 为 65.23%&lt;/strong>，对比方法最高为 60.04%（表 4）。&lt;br>与采用标准图卷积和池化的基线相比，LGAF 与 SAG-Pooling 共同带来 &lt;strong>2.59 个百分点的 mIoU 提升&lt;/strong>（表 5）。&lt;br>在 RTX 4070 GPU 上处理一个样本耗时 &lt;strong>220.9 ms&lt;/strong>（表 6）。&lt;/aside>
+&lt;p>作者为此构建了一个新数据集，采集自检测产线上的真实密封钉，缺陷均为自然产生：共 271 个正常样本和 658 个缺陷样本，涵盖五类缺陷（爆点 170、凹坑 112、翘曲 132、熔珠 102、针孔 142；表 1）。代码和数据集已在线公开。在这一仅用几何信息的设定下，LGASS 与 GACNet、PointNet、PointNet++、Point Transformer（PTv1 和 PTv3）以及 OA-CNN 进行了比较。在五个不同随机种子下，其 mIoU 保持在 78.97% 至 79.61% 之间，并在五类缺陷中的四类（凹坑、熔珠、翘曲、针孔）上取得了最高 IoU。&lt;/p>
+&lt;p>消融实验说明了性能提升的来源。用 LGAF 替换图卷积使 mIoU 提高 2.19 个百分点，单独使用 SAG-Pooling 提高 0.46 个百分点，两者结合提高 2.59 个百分点（表 5）。法向量是更好的输入：仅用法向量时 mIoU 为 79.23%，仅用坐标时为 76.94%，两者同时输入时为 78.31%（表 7）。类别加权损失提高了少数类别的 IoU，针孔提高 2.3 个百分点，熔珠提高 2.13 个百分点，mIoU 由 78.73% 提升至 79.26%（表 8）。推理时约占用 2.8 GB 显存。作者也指出，LGASS 在高度内凹的几何形状上可能表现欠佳，例如带有重叠缺陷的凹型密封钉，此时固定的 k 近邻图限制了长距离上下文建模；针孔等稀有类别的 IoU 也仍低于其他类别。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-results.webp" alt="三个密封钉点云样本的分割结果网格，灰色为表面，红色为缺陷点，五列依次为真值、GACNet、OA-CNN、PTv3 和本文方法。" loading="lazy">
+&lt;/a>&lt;figcaption>三个密封钉样本的分割结果，红色为缺陷点。各列依次为真值、GACNet、OA-CNN、PTv3 和 LGASS（“Ours”）。选自论文图 12 中六个示例中的三个。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-baseline.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-baseline.webp" alt="三处缺陷的局部特写，灰色点云表面上红色为缺陷点，上排为基线结果，下排为 LGASS 结果，黄色圆圈标出一处区域。" loading="lazy">
+&lt;/a>&lt;figcaption>基线（上）与 LGASS（下）在三处局部特写上的结果，红色为被分割为缺陷的点。基线以标准图卷积和池化代替 LGAF 与 SAG-Pooling。引自论文图 13。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

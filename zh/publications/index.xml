@@ -1,1 +1,279 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>论文 | 潘威</title><link>https://willpan.xyz/zh/publications/</link><atom:link href="https://willpan.xyz/zh/publications/index.xml" rel="self" type="application/rss+xml"/><description>论文</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>论文 | 潘威</title><link>https://willpan.xyz/zh/publications/</link><atom:link href="https://willpan.xyz/zh/publications/index.xml" rel="self" type="application/rss+xml"/><description>论文</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>An Improved Graph Attention Network for Semantic Segmentation of Industrial Point Clouds in Automotive Battery Sealing Nail Defect Detection</title><link>https://willpan.xyz/zh/publications/pan-2026-industrial-point-cloud-segmentation/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2026-industrial-point-cloud-segmentation/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>密封钉用于封堵汽车动力电池的注液孔，通过激光焊接固定。焊接过程可能产生爆点、熔珠、针孔等缺陷，影响电池的安全性和耐久性。金属表面反光强、缺乏纹理，二维成像难以可靠检测：需要频繁重新调整打光，误检率也较高。因此，传统检测方案先用二维视觉定位缺陷，再用三维视觉进行测量。这种多阶段流程复杂、效率较低，误差还会在各阶段之间累积。&lt;/p>
+&lt;p>三维点云可以直接反映表面形貌，但许多先进的分割网络（如 Point Transformer 和 Swin3D）在很大程度上依赖 RGB-D 或强度信息；当只有几何数据可用时，其鲁棒性受到限制，而这正是反光工业零件上的常见情况。缺陷本身也难以学习：同一类缺陷的形状可能差异很大；一帧约 10 万个点的扫描中，缺陷点只有约 1000 个；而在缺陷边界附近，点的坐标与周围表面几乎没有差别。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/figure-code-1-graphical-abstract.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/figure-code-1-graphical-abstract.webp" alt="左：电池顶盖，密封钉处被圈出并放大。右：熔珠、针孔和翘曲三类缺陷，每类上方为实拍图像，下方为彩色编码的点云。" loading="lazy">
+&lt;/a>&lt;figcaption>电池顶盖上的密封钉（左），以及熔珠、针孔、翘曲三类缺陷的实拍图像（上）与点云（下）。引自论文图 8。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>LGASS（Local Graph Attention for Semantic Segmentation，局部图注意力语义分割）直接在三维点云上分割缺陷，在单一阶段内同时完成缺陷定位与几何量化。它只使用几何信息：网络输入是每个点的表面法向量，点的坐标则用于确定哪些点互为近邻。网络采用类 U-Net 的编码器–解码器结构，核心是两个新模块，一个用于注意力计算，一个用于池化。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/pan-2026-industrial-point-cloud-segmentation/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>扫描焊缝。&lt;/strong> 三维激光轮廓仪（OPT-LPC20，405 nm 蓝色激光线）扫描密封钉，横向分辨率约 0.05 mm。改进的 RANSAC 算法拟合密封钉与电池顶盖的参考平面，再以密封钉中心为圆心划定圆形区域，提取待检测的焊缝区域。&lt;/li>
+&lt;li>&lt;strong>关注法向量。&lt;/strong> 几乎所有缺陷区域都表现出明显的高度和法向量变化。在缺陷边界附近，相邻两点的坐标几乎相同，法向量却明显不同，因此相邻点之间的法向量差异是识别缺陷的关键指标。&lt;/li>
+&lt;li>&lt;strong>局部图注意力滤波器（LGAF）。&lt;/strong> 每个点与其 k 个最近邻相连。LGAF 根据点自身特征与其到各近邻的特征差之间的相关性，并结合基于空间距离的权重，计算注意力权重，再按这些权重聚合近邻特征。法向量差异越大，注意力权重越高，网络因而聚焦于缺陷边界。&lt;/li>
+&lt;li>&lt;strong>空间注意力图池化（SAG-Pooling）。&lt;/strong> 编码器下采样时，每个点的得分是学习得到的空间注意力权重与其相对近邻的法向量差异之积。只保留排名靠前的点，因此只有在空间上重要、几何上又有区分度的点（例如缺陷边缘上的点）才会被保留。&lt;/li>
+&lt;li>&lt;strong>逐点分类。&lt;/strong> 解码器由带位置编码的图卷积模块构成，逐层上采样回到完整点集，并通过跳跃连接融合编码器特征。网络为每个点分配六个类别之一：正常表面，或五类缺陷之一（爆点、凹坑、翘曲、熔珠、针孔）。训练时采用类别加权损失，提高少数缺陷类别的影响。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-crosssection.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-crosssection.webp" alt="缺陷截面的彩色点云剖面：虚线参考面上方有一处凸起，其顶部的法向量 N1 竖直向上，侧面的法向量 N2 倾斜，右侧标出高度差 Δh。" loading="lazy">
+&lt;/a>&lt;figcaption>一个缺陷样本的截面。凸起顶部的法向量 N₁ 竖直向上，侧面的法向量 N₂ 发生倾斜，Δh 为其相对周围表面的高度。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-method.webp" alt="网络结构图：上排为由 GCN、LGA Filter 和 SAG Pooling 模块组成的编码器，下排为由 GCN 和 Up-sampling 模块组成的解码器，右侧插图展示基于 KNN 插值和跳跃连接的上采样。" loading="lazy">
+&lt;/a>&lt;figcaption>LGASS 网络结构。编码器以 GCN 模块开头，随后堆叠 LGA Filter 模块与 SAG Pooling；解码器由 GCN 与上采样模块组成，每次上采样从 k 个最近邻插值特征，并加入跳跃连接（右侧插图）。引自论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">在密封钉数据集上，&lt;strong>mIoU 达到 79.26%，总体精度（OA）达到 99.43%&lt;/strong>（五次运行的平均值），高于 PTv3（mIoU 75.13%）和 OA-CNN（74.04%）（表 4）。&lt;br>&lt;strong>针孔类 IoU 为 65.23%&lt;/strong>，对比方法最高为 60.04%（表 4）。&lt;br>与采用标准图卷积和池化的基线相比，LGAF 与 SAG-Pooling 共同带来 &lt;strong>2.59 个百分点的 mIoU 提升&lt;/strong>（表 5）。&lt;br>在 RTX 4070 GPU 上处理一个样本耗时 &lt;strong>220.9 ms&lt;/strong>（表 6）。&lt;/aside>
+&lt;p>作者为此构建了一个新数据集，采集自检测产线上的真实密封钉，缺陷均为自然产生：共 271 个正常样本和 658 个缺陷样本，涵盖五类缺陷（爆点 170、凹坑 112、翘曲 132、熔珠 102、针孔 142；表 1）。代码和数据集已在线公开。在这一仅用几何信息的设定下，LGASS 与 GACNet、PointNet、PointNet++、Point Transformer（PTv1 和 PTv3）以及 OA-CNN 进行了比较。在五个不同随机种子下，其 mIoU 保持在 78.97% 至 79.61% 之间，并在五类缺陷中的四类（凹坑、熔珠、翘曲、针孔）上取得了最高 IoU。&lt;/p>
+&lt;p>消融实验说明了性能提升的来源。用 LGAF 替换图卷积使 mIoU 提高 2.19 个百分点，单独使用 SAG-Pooling 提高 0.46 个百分点，两者结合提高 2.59 个百分点（表 5）。法向量是更好的输入：仅用法向量时 mIoU 为 79.23%，仅用坐标时为 76.94%，两者同时输入时为 78.31%（表 7）。类别加权损失提高了少数类别的 IoU，针孔提高 2.3 个百分点，熔珠提高 2.13 个百分点，mIoU 由 78.73% 提升至 79.26%（表 8）。推理时约占用 2.8 GB 显存。作者也指出，LGASS 在高度内凹的几何形状上可能表现欠佳，例如带有重叠缺陷的凹型密封钉，此时固定的 k 近邻图限制了长距离上下文建模；针孔等稀有类别的 IoU 也仍低于其他类别。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-results.webp" alt="三个密封钉点云样本的分割结果网格，灰色为表面，红色为缺陷点，五列依次为真值、GACNet、OA-CNN、PTv3 和本文方法。" loading="lazy">
+&lt;/a>&lt;figcaption>三个密封钉样本的分割结果，红色为缺陷点。各列依次为真值、GACNet、OA-CNN、PTv3 和 LGASS（“Ours”）。选自论文图 12 中六个示例中的三个。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-baseline.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-baseline.webp" alt="三处缺陷的局部特写，灰色点云表面上红色为缺陷点，上排为基线结果，下排为 LGASS 结果，黄色圆圈标出一处区域。" loading="lazy">
+&lt;/a>&lt;figcaption>基线（上）与 LGASS（下）在三处局部特写上的结果，红色为被分割为缺陷的点。基线以标准图卷积和池化代替 LGAF 与 SAG-Pooling。引自论文图 13。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Automatic geometric calibration and unwarping of rotating line-scan imaging systems using elliptical distortion of circular patterns</title><link>https://willpan.xyz/zh/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>线扫相机每次只采集一行，图像的第二个维度由运动提供。因此成像过程取决于运动方式，标定必须把这种运动描述清楚。现有的线扫相机标定方法大多假设物体沿直线平移通过传感器。然而许多检测系统采用旋转扫描，例如圆柱形工件检测、旋转表面轮廓测量，以及对旋转对称物体的全景成像。此时每条扫描线对应不同的转角，形成扇形扫描（极坐标）几何，使二维强度图像和三维高度轮廓同时发生畸变。针对旋转扫描系统的标定方法通常依赖已知的角运动、机械测量或旋转编码器，增加了系统的复杂度。&lt;/p>
+&lt;p>缺失的信息其实就藏在畸变之中。在旋转扫描下，标定板上的圆孔成像为椭圆，而椭圆的中心与长宽比在图像中的变化规律，恰好编码了旋转几何。已有工作虽然也使用圆形靶标和椭圆拟合，但通常把椭圆形变视为投影或失准带来的次要效应，而没有把它当作扫描几何的载体加以利用。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/fig-setup.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/fig-setup.webp" alt="线条示意图：线扫相机与三维线激光位于圆形旋转台上方。一块带圆孔的方形标定板偏心放置在旋转台上，图中标出了旋转中心。右侧为标定板的俯视图（圆孔网格），其下方为采集到的图像：一块弯曲的扇形区域，其中的圆孔已变成椭圆。" loading="lazy">
+&lt;/a>&lt;figcaption>系统配置：线扫相机安装在旋转台上方，一块带圆孔的方形标定板偏心放置在旋转台上。旋转过程中逐行扫描，得到扇形图像，其中的圆孔畸变为椭圆。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>该方法把图像视为极坐标数据：像素所在的列对应它到旋转中心的距离 r = x − x&lt;sub>c&lt;/sub>，所在的行对应转角 θ = k(y − y&lt;sub>c&lt;/sub>)，其中 k 为角采样率（单位为弧度/行）。旋转中心 (x&lt;sub>c&lt;/sub>, y&lt;sub>c&lt;/sub>) 和 k 均为未知量，三者都由一幅简单圆孔标定板图像中的椭圆估计得到，无需编码器、机械测量或辅助传感器。随后，同一个从极坐标到笛卡尔坐标的变换同时校正二维图像和三维高度图。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/fig-setup.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>扫描。&lt;/strong> 传感器保持静止，标定板随旋转台转动。每条扫描线在新的转角下构成图像的一行，因此行记录转角，列记录到旋转中心的距离。&lt;/li>
+&lt;li>&lt;strong>圆变椭圆。&lt;/strong> 在这种扇形扫描映射下，每个圆孔都成像为椭圆，其形状取决于所在位置。单个椭圆可能受噪声、局部遮挡或边缘定位误差的干扰，但所有椭圆整体上呈现稳定的变化趋势；该方法正是从这些整体趋势、而非某一个高精度测量中估计标定参数。&lt;/li>
+&lt;li>&lt;strong>对每个孔拟合椭圆。&lt;/strong> 先（手动或自动）定位圆孔区域，用自适应阈值分割，再沿图像梯度方向把边缘细化到亚像素精度。剔除离群边缘点后，用直接最小二乘法拟合椭圆，记录其中心和长宽比 ρ&lt;sub>i&lt;/sub> = r&lt;sub>x,i&lt;/sub> / r&lt;sub>y,i&lt;/sub>；残差过大或长宽比不合理的椭圆被剔除。&lt;/li>
+&lt;li>&lt;strong>回归求旋转中心和角采样率。&lt;/strong> 长宽比随椭圆中心的水平位置近似线性变化，ρ = a·c&lt;sub>x&lt;/sub> + b，因此直线过零的位置就是旋转中心 x&lt;sub>c&lt;/sub> = −b/a。由于斜率 a 的微小误差会使 x&lt;sub>c&lt;/sub> 明显偏移，直线采用稳健拟合：先用 RANSAC 剔除粗大离群点，再用基于残差的迭代最小二乘精化（ILS）舍去残差较大的测量并重新拟合，通常 2–3 次迭代即可收敛。对各椭圆中心的竖直位置再做一次线性回归，即得到角采样率 k。&lt;/li>
+&lt;li>&lt;strong>展开校正。&lt;/strong> 利用估计出的 x&lt;sub>c&lt;/sub>、y&lt;sub>c&lt;/sub> 和 k，把校正图像中的每个像素映射回原始图像，并通过双线性插值取值，椭圆随之恢复为圆。对于三维数据，每个高度值转换为点 X = r cos θ，Y = r sin θ，高度 Z 保持不变。激光轮廓仪的二维强度图像和三维高度图来自同一组测量，因此一个变换即可同时校正两者。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/fig-detection.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/fig-detection.webp" alt="金属板的原始扇形扫描图像，板上有多排深色圆孔：右侧的椭圆较扁，左侧的较高。每个孔都标有 #1 至 #56 的编号，并叠加了拟合椭圆轮廓和中心十字。" loading="lazy">
+&lt;/a>&lt;figcaption>原始扇形扫描图像上的自动椭圆检测：每个检测到的孔都有编号，并叠加了拟合椭圆及其中心。论文图 4b。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-4-regression.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-4-regression.webp" alt="散点图，标题为 Calibration Fit (Aspect Ratio vs Position)：纵轴为长宽比（0.60 至 3.53），横轴为位置 X（314 至 3177 px）。绿色内点沿上升的蓝色拟合直线分布，中部有两个偏离直线的红色离群点。" loading="lazy">
+&lt;/a>&lt;figcaption>标定拟合：各椭圆的长宽比与其水平位置的关系，绿色为内点，红色为离群点，蓝色为拟合直线。将直线外推到零即得到旋转中心。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>旋转中心 x&lt;sub>c&lt;/sub> = −516.76 px，长宽比回归的 R² = 0.998&lt;/strong>；&lt;strong>角采样率 k = 0.00402 rad/pixel&lt;/strong>，所有标定孔的角度残差均低于 0.12°（第 4.4 节）。&lt;br>&lt;strong>圆度误差 ε 由展开前的 0.21 ± 0.08 降至展开后的 0.02 ± 0.01&lt;/strong>，其中 ε = |r&lt;sub>x&lt;/sub> − r&lt;sub>y&lt;/sub>| / r&lt;sub>x&lt;/sub>，理想圆为 0（第 4.5 节）。&lt;br>&lt;strong>x&lt;sub>c&lt;/sub> 估计的标准差：ILS 为 0.5 px&lt;/strong>，RANSAC 为 1.4 px，普通最小二乘为 3.8 px（表 3）。&lt;/aside>
+&lt;p>所有实验均在真实系统上完成：一台工业激光三角测量轮廓仪（OPT Machine Vision LPF2-050，405 nm 蓝色激光，每条扫描线 3,200 个采样点）安装在可编程精密旋转台上方。轮廓仪保持静止，标定靶随旋转台匀速转动，二维强度图像和三维高度轮廓由同一组测量同时生成。三块材质不同（金属与陶瓷）、孔位布局各异的圆孔标定板，给出了一致的旋转中心和角采样参数估计。椭圆拟合的平均均方根代数距离误差为 0.42 像素。展开校正恢复了二维图像中的圆孔；同一变换也减小了三维重建表面的残余几何畸变，提高了其空间规则性。&lt;/p>
+&lt;p>参与回归的椭圆越多，估计越稳定。在 50 次随机重复实验中，x&lt;sub>c&lt;/sub> 的标准差在使用 5 个椭圆时为 2.1 px，10 个时降至 0.6 px，20 个时为 0.3 px；自动检测加 ILS 同样达到 0.3 px（表 1）。让椭圆在视场中分布得更广，比单纯增加数量更重要：论文建议使用约 8–30 个分布均匀的椭圆，覆盖视场的至少 30%–50%。在模拟的局部遮挡、椒盐噪声、散斑噪声和离焦模糊条件下，该方法同样保持稳定（图 10）。当扫描角度超过约 10° 时回归结果稳定，大多数实验中 R² &amp;gt; 0.99。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-5-2d-unwarping.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-5-2d-unwarping.webp" alt="左右两幅灰度图像。左图为展开前：金属板上的深色圆孔在左侧被拉成瘦高的椭圆，越往右越接近圆形，并有一条弯曲的深色边缘。右图为展开后：黑色背景上的楔形图像，其中的孔呈圆形，排列成规则网格。" loading="lazy">
+&lt;/a>&lt;figcaption>扇形扫描图像的二维展开：展开前（左）与展开后（右）。椭圆恢复为圆孔。论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-6-3d-height-map.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-6-3d-height-map.webp" alt="四幅图。上排：一块带 7×7 孔阵的标定板的二维线扫图像和紫色三维高度图，二者都弯成扇形。下排：展开后的二维图像和校正后的粉色三维高度图，标定板呈方形，孔阵笔直规整。" loading="lazy">
+&lt;/a>&lt;figcaption>同一校正应用于三维数据。左列为二维线扫图像，右列为重建的三维高度图；上排为校正前，下排为校正后。论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;p>作者也说明了该方法的局限。模型假设旋转轴垂直于成像平面，且扫描线经过标定圆盘的中心；若存在转轴倾斜、摆动或扫描线横向偏移，则需要引入额外参数。扫描角度过小时，椭圆接近圆形，x&lt;sub>c&lt;/sub> 和 k 难以观测。镜头畸变较强时应先做去畸变处理，标定板翘曲或不平整也会使椭圆中心产生偏差。对于三维数据，该校正只针对扫描几何引起的畸变，并未对激光平面标定或焦距变化建模。&lt;/p></description></item><item><title>Depth-adaptive calibration of line-laser 3D measurement systems using rational polynomial mapping and depth-independent misalignment compensation</title><link>https://willpan.xyz/zh/publications/cao-2026-depth-adaptive-calibration-of-line-laser/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/cao-2026-depth-adaptive-calibration-of-line-laser/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>线激光轮廓仪通过三角测量获取表面形貌：相机观察物体上的激光光条，把每个光条像素 (u, v) 转换为激光平面内的物理坐标 (X, Z)。再在运动平台扫描工件的过程中逐帧拼接这些轮廓，得到完整的三维点云。因此测量精度取决于标定，而在整个工作景深内，有两类不同的误差会降低精度。&lt;/p>
+&lt;p>第一类是内部误差。传统标定建立在单平面单应性之上，即严格线性的像素—物理坐标映射。在实际系统中，升降台的轻微倾斜、靶标的局部不平整、径向与切向镜头畸变以及光条中心提取噪声，都会使观测偏离理想透视模型，纯单应性无法表示这种非线性偏差。第二类是外部误差。若传感器与运动轴没有对准，拼接点云就会带有系统性的剪切畸变，原本正交的矩形变成平行四边形。这种剪切无法通过调整内参或畸变系数消除，而为每个深度单独设置补偿参数又会使参数数量成倍增加。现有流程通常只处理内部映射或外部安装几何中的一项，很少对二者在整个景深内的联合影响建模。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-problem.webp" alt="两幅灰度棋盘格扫描图，其中 4×4 的格子用红线勾出。左图标注 Proper installation：勾出的格子构成规则的方形网格。右图标注 Tilted installation：勾出的区域发生畸变，水平线倾斜，角点不再是直角。" loading="lazy">
+&lt;/a>&lt;figcaption>正常安装（左）与倾斜安装（右）下扫描的棋盘格。安装倾斜使重建出的网格变成平行四边形。论文图 2(b)。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>该方法把两类误差放在两个独立阶段中处理。内部阶段是一次性的出厂标定，确定每帧轮廓内的像素—物理坐标映射；外部阶段是现场补偿，消除拼接点云中的安装剪切。两个阶段由一个自动化、运动触发的流程串联起来，无需人工多姿态摆放靶标。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/cao-2026-depth-adaptive-calibration-of-line-laser/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>覆盖整个深度范围采样。&lt;/strong> 相机和线激光器安装在精密 Z 轴位移台上，位移台按预设位置依次移动。在每个高度，系统采集一组激光开/关图像对，得到干净的光条中心线。实验中共采样 Z&lt;sub>1&lt;/sub>–Z&lt;sub>6&lt;/sub> 六个深度，间隔 30 mm，覆盖 150 mm 范围；其中五个深度用于拟合，Z&lt;sub>3&lt;/sub> 留作测试。&lt;/li>
+&lt;li>&lt;strong>拟合一个有理多项式映射。&lt;/strong> 模型保留透视（单应性）主干，并在高度方向叠加二元三次残差。合并为单一比值后，它以三次分子和共用的线性分母把 (u, v) 分别映射到 X 和 Z，共 22 个系数。交叉相乘后问题变为线性，所有训练深度的对应点组成一个超定方程组，用最小二乘求解。&lt;/li>
+&lt;li>&lt;strong>剪切建模。&lt;/strong> 安装误差被分解为三个旋转：横滚角 α、俯仰角 β 和偏航角 γ。存在偏航角 γ 时，扫描步长 Δy 会使点在横向偏移 Δx = Δy tan γ，矩形因此变成平行四边形。在所测试的推扫配置中，俯仰使激光平面绕其自身轴向旋转，不产生面内剪切，因此取 β = 0。&lt;/li>
+&lt;li>&lt;strong>测量 α 和 γ。&lt;/strong> 对空载平台的扫描结果做 RANSAC 直线拟合，得到参考线 L。横滚角由名义高度为 H、宽度为 W 的标准高度块求得：α = arctan((H′ − H) / W)，其中 H′ 为其上表面到 L 的实测平均高度。偏航角由棋盘格求得：要求校正后格子的相邻边相互垂直，可得到关于 sin γ 的二次方程。对每个内部 2 × 2 角点单元分别求解，取中位数作为结果。&lt;/li>
+&lt;li>&lt;strong>一次逆旋转，适用于所有深度。&lt;/strong> 每个点都按 Z–Y–X 顺序经过逆旋转 R&lt;sub>x&lt;/sub>(α) R&lt;sub>y&lt;/sub>(β) R&lt;sub>z&lt;/sub>(γ)；当 β = 0 时简化为 R&lt;sub>x&lt;/sub>(α) R&lt;sub>z&lt;/sub>(γ)。该校正与深度无关，因此只需在 Z&lt;sub>3&lt;/sub> 估计一次角度，即可在整个测量体积内复用。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-method.webp" alt="两行流程图。Stage 1（出厂标定）：Z 轴位移台上的相机和激光器、多个 Z 位置的棋盘格图像堆栈、激光开/关图像、(u, v) 特征提取、X 和 Z 的有理多项式公式，以及标注 22 RPC 的方框。Stage 2（现场补偿）：扫描棋盘格靶标、将角点映射到彩色深度图、标有 α、β、γ 的偏转角示意、包含 R x、R y、R z 的坐标校正公式，以及校正前后的棋盘格图像。" loading="lazy">
+&lt;/a>&lt;figcaption>端到端流程。第一阶段（出厂标定）：在 Z 轴位移台上进行多深度采集，获取激光开/关图像对，提取特征并拟合 22 个 RPC 系数。第二阶段（现场补偿）：把扫描得到的棋盘格映射到深度图，计算偏转角，再用逆旋转校正坐标。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在留作测试的深度 Z&lt;sub>3&lt;/sub> 上，X、Z 方向平均绝对误差较 HALCON 基线分别降低 17.5% 和 11.8%&lt;/strong>：8.745 对 10.600 µm，3.820 对 4.332 µm（表 5）。&lt;br>&lt;strong>倾斜安装下 25° 标准角度块的角度误差：0.7591° → 0.0387°&lt;/strong>（深度均值），降低 94.90%（表 7）。&lt;br>&lt;strong>倾斜安装下棋盘格正交误差：10.007° → 0.309°&lt;/strong>（深度均值），降低 96.92%（表 8）。&lt;/aside>
+&lt;p>所有实验均使用一台商用线激光轮廓仪（OPT-LPF2-006-01），配合可编程 Z 轴位移台和推扫平台。真值来自经过认证的标准件：带 49 × 49 点阵（间距 1 mm）的网格畸变靶标、25 mm 方格的金属棋盘格、25° 标准角度块和高度块。在内部阶段，HALCON 基线与所提映射使用相同的图像堆栈、相同的光条中心提取器和相同的训练/测试深度划分。除平均绝对误差降低外，所提映射还使 X、Z 方向的重复性分别提升 33.8% 和 70.0%。提升最大的是 Z 方向重复性，它对高度方向的非线性最敏感，而三次残差正是为吸收这种非线性而设计的。残差阶数实验支持选择三次：二次残差欠拟合；四次残差的训练误差最低，但其测试误差升至 X 方向 12.155 µm、Z 方向 5.130 µm，而三次残差为 8.745 µm 和 3.820 µm（表 11）。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-internal.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-internal.webp" alt="两幅柱状图。左图（越低越好）：灰色为 HALCON 基线，蓝色为所提方法，R X 为 7.18 对 4.75，R Z 为 0.82 对 0.25，MAE X 为 10.60 对 8.74，MAE Z 为 4.33 对 3.82，单位为微米。右图（越高越好）：相对提升分别为 33.8%、70.0%、17.5% 和 11.8%。" loading="lazy">
+&lt;/a>&lt;figcaption>测试深度 Z&lt;sub>3&lt;/sub> 上的内部标定精度：(a) HALCON 基线与所提 RPC 映射的重复性 R 和平均绝对误差，单位 µm；(b) 所提映射的相对提升。论文图 8。&lt;/figcaption>
+&lt;/figure>
+&lt;p>在外部阶段，传感器被有意倾斜安装（横滚角 α ≈ 5°，偏航角 γ ≈ 10°），并在全部六个深度上按三种状态测量：正常安装、倾斜未补偿、倾斜并补偿，每种状态重复 10 次。与正常安装相比，倾斜使角度块误差放大 18.84 倍，正交误差放大 31.87 倍。使用在 Z&lt;sub>3&lt;/sub> 估计后固定的角度进行补偿后，两项误差都回到正常安装水平（分别为其 0.96 倍和 0.98 倍）。逐深度的误差降幅在角度任务中保持在 94.69%–95.04%，在正交任务中保持在 96.87%–96.97%，同一补偿器无需重新调参即可适用于每个深度。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-orthogonality.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-orthogonality.webp" alt="左图：Z1 至 Z6 各深度正交误差的对数坐标折线图。红色的倾斜未补偿曲线保持在 10° 附近；灰色虚线的正常安装曲线与蓝色的倾斜补偿曲线在 0.3° 附近重合。右图：各深度误差降幅柱状图，介于 96.87% 与 96.97% 之间，虚线表示均值 96.92%。" loading="lazy">
+&lt;/a>&lt;figcaption>Z&lt;sub>1&lt;/sub>–Z&lt;sub>6&lt;/sub> 各深度的棋盘格正交误差：(a) 三种安装状态（对数坐标），补偿后的曲线与正常安装参考曲线重合；(b) 各深度的误差降幅。论文图 12。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-clouds.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-clouds.webp" alt="六幅按高度着色的棋盘格高度图，棋盘格上放着一根细长的红色条块，排成两行三列，列标为 Z1、Z2、Z3。上行标注 Uncompensated，下行标注 Compensated。" loading="lazy">
+&lt;/a>&lt;figcaption>棋盘格加角度块场景在 Z&lt;sub>1&lt;/sub>–Z&lt;sub>3&lt;/sub> 深度处的拼接点云，上行未补偿，下行已补偿。未补偿时，网格被剪切成非正交的平行四边形；补偿后恢复为正交网格。红色物体为 25° 标准角度块。裁剪自论文图 14（原图包含全部六个深度）。&lt;/figcaption>
+&lt;/figure>
+&lt;p>两个阶段缺一不可。关闭外部补偿器时，映射误差与完整流程相当，但角度误差和正交误差仍停留在未补偿水平。采用 HALCON 映射加外部补偿器时，几何误差降至 0.0506° 和 0.519°，但仍高于完整流程的 0.0387° 和 0.309°，且映射误差回到基线水平（表 10）。补偿器在超出厂商名义 5° 安装公差时依然有效：在深度 Z&lt;sub>3&lt;/sub>、偏航角约 10° 的条件下把横滚角逐步增大到 20°，校正后的角度误差保持在 0.037°–0.101°，正交误差保持在 0.16°–0.59°（表 9）。一次完整标定中的数值计算约需 2.3 s，约 11 分钟的总耗时主要花在物理扫描上（表 12）。&lt;/p>
+&lt;p>作者将上述结果的适用范围限定在所测试的单台设备及其工作距离范围内。在第二台相机上的验证、更多标准角度，以及独立重新安装后所估计角度的重复性，留待后续工作。&lt;/p></description></item><item><title>SuP: Sub-cloud Driven Point Cloud Registration</title><link>https://willpan.xyz/zh/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>点云配准的任务是求出一组旋转和平移，把同一场景的两帧三维扫描对齐。当两帧扫描共享大量几何结构时，现有方法已能实现高精度对齐。但在大规模建图、自主导航等应用中，两个视角往往只有一小部分场景重叠。一旦共享表面低于约 30%，无论是经典的 ICP 还是基于学习的方法，都难以建立可靠的对应关系，配准会出现收敛缓慢、错位甚至完全失败。&lt;/p>
+&lt;p>论文将这类失败归因于两帧之间“不重叠”的区域：这些区域在几何或语义上仍可能彼此相似，直接对两帧完整点云做匹配，就会产生大量错误对应，把少数正确对应淹没。早期工作尝试显式预测哪些点位于重叠区，但这种预测依赖一致的特征表示，在低重叠样本上效果明显下降。后续方法借助注意力机制，并引入几何编码、语义或颜色信息来增强特征，但随着重叠率降低，性能依然下滑。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" alt="上图：ColorPCR/GeoTransformer 对两帧扫描做匹配，相似结构之间出现大量红色错误匹配，配准失败。下图：SuP 的流程（划分、OPS、MPN、合并匹配），绿色为正确匹配，配准成功。" loading="lazy">
+&lt;/a>&lt;figcaption>上：重叠区之外的相似结构（红框）吸引了大量错误匹配（红线），掩盖了正确对应；直接匹配的基线方法（图中标注为 ColorPCR / GeoTr.）在这对扫描上配准失败（旋转误差 41.3°，平移误差 101.7 cm）。下：SuP 找出重叠率高、特征一致性强的子点云对，合并其中的匹配后完成配准（1.3°，1.8 cm）。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>SuP 换了一个角度看问题。两帧扫描整体上可能只有少量重叠，但若把每帧切成更小的块并两两配对，其中有一部分子点云对具有很高的重叠率。SuP 把这些高重叠的子点云对称为“锚点对”：先分两个阶段把它们找出来，再只在锚点对内部建立匹配。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/fung-2026-sup-sub-cloud-driven-point-cloud/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>提取整帧特征。&lt;/strong> KPConv 骨干网络在多个尺度上提取点特征，再由注意力层在帧内和两帧之间交换上下文信息。SuP 默认采用 ColorPCR 的颜色增强骨干网络和注意力模块。&lt;/li>
+&lt;li>&lt;strong>划分子点云。&lt;/strong> 每帧点云被划分为 k 个子点云：先用最远点采样选出分布均匀的中心点，再以各中心点为核心，在半径范围内收集近邻点，构成子点云。&lt;/li>
+&lt;li>&lt;strong>第一阶段：重叠引导的先验加权（OPS）。&lt;/strong> 对每一对源–目标子点云，SuP 只统计互为前 k 强的特征相关，以此度量两者点特征的相关程度，并保留得分最高的若干对作为候选。这一步是高效的初筛，用来排除不重叠的子点云对。&lt;/li>
+&lt;li>&lt;strong>第二阶段：多尺度后加权网络（MPN）。&lt;/strong> 先用加权 SVD 为每个候选对估计初步位姿并对齐，再由一个轻量的可学习网络在两个尺度上检查：对齐后彼此靠近的点，特征是否也相似。特征一致性权重最高的候选对成为锚点对。训练时，该网络以各候选对实际的对齐误差作为监督信号（对齐感知加权损失）。&lt;/li>
+&lt;li>&lt;strong>合并匹配。&lt;/strong> 将所有锚点对中的内点对应合并，在更稠密的点上细化，再交给标准估计器（RANSAC 或无需 RANSAC 的 LGR）求出最终的旋转和平移。&lt;/li>
+&lt;/ol>
+&lt;p>在论文的实验设置中，每帧点云划分为 6 个子点云，共 36 种组合；OPS 保留其中 24 对，再按特征一致性取前 8 对作为锚点对。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="网络结构图：特征提取、特征聚合、双阶段子点云锚点挖掘模块（划分、OPS、初步子点云匹配、MPN）以及合并匹配，并附各部分的细节面板。" loading="lazy">
+&lt;/a>&lt;figcaption>方法总览。多尺度特征（3.2 节）经注意力聚合（3.3 节）；双阶段子点云锚点挖掘模块（3.4 节）划分两帧点云，用 OPS 选出候选，初步对齐（PSM）后由 MPN 打分；合并匹配模块（3.5 节）把各锚点对的匹配合并，估计最终变换。论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">使用无需 RANSAC 的 LGR 估计器时，&lt;strong>在 Color3DMatch 和 Color3DLoMatch 上的配准召回率分别为 97.8% 和 90.2%&lt;/strong>，在采用 LGR 的对比方法中最高（表 2）。&lt;br>使用 RANSAC 时为 &lt;strong>98.1% 和 90.4%&lt;/strong>，且在 5000 到 250 个采样对应点的各档设置下配准召回率均为最高（表 1）。&lt;br>&lt;strong>位姿误差最低&lt;/strong>：Color3DMatch 上为 1.374° / 0.046 m，Color3DLoMatch 上为 2.493° / 0.074 m（表 3）。&lt;/aside>
+&lt;p>实验采用室内基准 3DMatch 的颜色增强版本：Color3DMatch 中点云对的重叠率高于 30%，Color3DLoMatch 是重叠率为 10%–30% 的更难子集。配准召回率指估计变换的 RMSE 小于 0.2 m 的点云对所占比例。SuP 默认采用 ColorPCR 的颜色增强骨干网络；与最强的基线 ColorPCR 本身相比，在 LGR 设置下，SuP 将 Color3DMatch 上的召回率从 96.5% 提升到 97.8%，将 Color3DLoMatch 上的召回率从 88.3% 提升到 90.2%。正确匹配的比例也随之提高：在 Color3DLoMatch 上采样 250 个对应点时，SuP 的内点率为 76.0%，ColorPCR 为 68.0%。&lt;/p>
+&lt;p>子点云策略也可以作为插件用于其他方法。接入 GeoTransformer 后，Color3DLoMatch 上的召回率从 74.0% 提升到 76.7%；接入 PEAL 后，从 81.2% 提升到 83.4%（表 4）。消融实验中，依次加入四个组件（OPS、特征一致性权重、MPN 和对齐感知加权损失），每一步都使两个基准上的召回率进一步提高（表 5）。子点云的大小同样重要：子点云过小可能因重叠不足而降低召回率，过大则会丢失局部细节，默认半径参数 τ = 0.35 取得了最佳平衡（表 6）。论文在局限性部分指出，若两帧扫描来自差异很大的传感器，特征可能出现细微不一致，从而影响 OPS 和 MPN；引入特征归一化或域自适应是后续可行的方向。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-3.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-3.webp" alt="三组低重叠扫描对（黄色与蓝色）：输入、真值、ColorPCR 与 SuP 的配准结果（标注 RMSE），以及两者的对应关系（绿色为正确、红色为错误，标注内点率）。" loading="lazy">
+&lt;/a>&lt;figcaption>三组重叠率为 14.5%–23.8% 的 3DLoMatch 扫描对：(a) 输入，(b) 真值，(c、d) ColorPCR 与 SuP 的配准结果，(e、f) 两者的对应关系（绿色正确，红色错误）。第一行中，ColorPCR 的匹配只有 18.8% 正确，配准 RMSE 为 2.939 m；SuP 的匹配有 51.0% 正确，RMSE 为 0.066 m。论文图 3。&lt;/figcaption>
+&lt;/figure></description></item><item><title>SemReg: Semantics-Constrained Point Cloud Registration</title><link>https://willpan.xyz/zh/publications/fung-2024-semreg/</link><pubDate>Sun, 01 Sep 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/fung-2024-semreg/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>点云配准的任务，是求出一组旋转和平移，把同一场景、部分重叠的两帧三维扫描对齐，进而拼接成完整的模型。近年的学习方法通常先用每个点周围的局部形状来描述该点，再通过交叉注意力让两帧点云交换信息，最后进行点匹配。然而，仅凭几何形状往往存在歧义：床和桌子的局部扫描在几何上可能十分相似。此外，交叉注意力会让一帧中的每个区域与另一帧中的所有区域发生交互，其中包括不太可能重叠的区域对，例如一帧里的椅子和另一帧里的桌子。这些冗余交互会导致错误匹配。&lt;/p>
+&lt;p>用 RGB-D 相机采集的室内扫描本身附带彩色图像，而二维图像上的语义理解远比三维几何上成熟。此前的跨模态方法 PCR-CG 已将图像颜色引入三维特征，但它只用到了颜色，并未利用图像中的语义信息，得到的特征仍不够一致。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-semreg/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2024-semreg/fig-problem.webp" alt="两组室内点云的点特征与匹配连线对比：左侧 PCR-CG 红线较多，右侧 SemReg 以绿线为主。" loading="lazy">
+&lt;/a>&lt;figcaption>PCR-CG（左）与 SemReg（右）的点特征（颜色由 t-SNE 投影得到）及匹配结果，绿线为正确匹配，红线为错误匹配。SemReg 的特征在同一物体内保持一致，大部分匹配正确。引自论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>SemReg 是一个二维–三维跨模态网络。它保留常规的三维骨干网络来提取形状特征，同时从 RGB 图像中引入语义信息，并在三个环节加以利用：注意力计算、匹配阶段和训练损失。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/fung-2024-semreg/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/fung-2024-semreg/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>两帧扫描及其彩色图像。&lt;/strong> 输入是一对部分重叠的点云，各自带有对应的 RGB 图像。KPConv 骨干网络对每帧点云下采样，并提取局部形状特征。&lt;/li>
+&lt;li>&lt;strong>从图像中提取语义特征。&lt;/strong> 参数冻结的预训练 DINOv2 网络从 RGB 图像中提取特征；借助深度和相机参数，这些特征被投影到三维点上，并在自注意力中与形状特征融合。&lt;/li>
+&lt;li>&lt;strong>语义先验引导交叉注意力。&lt;/strong> 对源点云中的每个点，SemReg 找出目标点云中语义特征与之相近的点，并以这些点为中心、按三维欧氏距离构造高斯分布。这些高斯分布的混合即高斯混合语义先验（GMSP），用来对交叉注意力加权，使特征交互主要发生在语义相近的区域之间。&lt;/li>
+&lt;li>&lt;strong>在语义相近的区域内匹配。&lt;/strong> 语义约束匹配模块在语义先验表明两点分属无关区域时，将该候选点对的匹配分数置零。训练时，语义感知焦点损失只对语义相关的点对进行监督。&lt;/li>
+&lt;li>&lt;strong>由保留的匹配求解位姿。&lt;/strong> 最终的旋转和平移由 RANSAC 从对应关系中估计，并可进一步用 ICP 精化。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-semreg/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2024-semreg/fig-method.webp" alt="网络结构图：RGB 图像与点云 X、Y 依次经过 KPConv、两个 SGFI 模块和 SCM 模块，下方为 GMSP、SGFI、SCM 的细节。" loading="lazy">
+&lt;/a>&lt;figcaption>方法总览。KPConv 提取多层级形状特征；GMSP 将二维语义特征转化为先验 θ；两个语义引导特征交互（SGFI）模块在自注意力和交叉注意力中利用这些先验；语义约束匹配（SCM）模块输出最终的对应关系。引自论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率分别为 94.7% 和 75.9%&lt;/strong>，在两者上均为所有对比方法中最高（表 1）。&lt;br>经 ICP 精化后提升至 &lt;strong>95.4% 和 77.4%&lt;/strong>（表 2）。&lt;br>将四个语义模块全部替换为常规模块后，召回率降至 &lt;strong>92.1% 和 66.5%&lt;/strong>（表 3）。&lt;/aside>
+&lt;p>实验使用室内 RGB-D 基准 3DMatch 及其低重叠子集 3DLoMatch（重叠率 10–30% 的扫描对）。配准召回率指估计变换误差（RMSE）小于 0.2 m 的扫描对所占比例。SemReg 在两个子集上均居首位，在 3DMatch 上领先 SIRA-PCR，在 3DLoMatch 上领先 GeoTransformer；在论文的 ICP 精化对比中，它相对次优方法的优势扩大到 1.5 和 2.9 个百分点。重叠越少，语义模块的作用越明显：在 3DLoMatch 上它们贡献了 9.4 个百分点的召回率，而在 3DMatch 上为 2.6 个百分点。在一个重叠率仅 12.53%、唯一共有物体是一把椅子的极端例子中，语义先验依然能在目标点云中找到这把椅子并成功配准，而 GeoTransformer 配准失败。&lt;/p>
+&lt;p>SemReg 在粗粒度层级上匹配，每对扫描建立 0.1K–1K 个对应关系，而 GeoTransformer 等稠密方法为 6K–7K 个。因此它的内点率低于部分对比方法，但配准召回率更高。室外 KITTI 数据集上的结果见补充材料。该方法依赖与扫描对齐的 RGB 图像，因此不能直接用于单独的点云；作者提出，未来可先由点云渲染出二维图像来解决这一问题。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-semreg/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2024-semreg/fig-results.webp" alt="三组室内扫描对（蓝色与黄色）：输入、真值、特征与对应关系可视化，以及 Lepard 与 SemReg 的配准结果。" loading="lazy">
+&lt;/a>&lt;figcaption>三组室内扫描对：(a) 输入，(b) 真值，(c) 特征与对应关系，(d) 配准估计，每组均对比 Lepard 与 SemReg。引自论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-semreg/fig-lowoverlap.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2024-semreg/fig-lowoverlap.webp" alt="低重叠示例：真值、带红色查询点的灰色源点云、椅子区域被标红的目标点云、错位的 GeoTransformer 结果和正确对齐的 SemReg 结果。" loading="lazy">
+&lt;/a>&lt;figcaption>重叠率仅 12.53% 的扫描对，两帧之间只共有一把椅子。给定源点云上的查询点（图 b 中的红点），语义先验在目标点云中标出了这把椅子（图 c 中的红色区域）。GeoTransformer 配准错位（d），SemReg 正确对齐（e）。引自论文图 6。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Generative deep-learning-embedded asynchronous structured light for three-dimensional imaging</title><link>https://willpan.xyz/zh/publications/lu-2024-generative-asl/</link><pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2024-generative-asl/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>结构光三维测量向物体投射一系列条纹图像，再从另一视角拍摄。物体表面会使条纹发生弯曲，每个像素处的条纹相位编码了深度信息。条纹投影轮廓术（FPP）是这类技术中最常用的方法之一，它要求相机在某一幅图案单独显示期间完成拍摄，因此投影仪与相机之间必须同步，通常依靠硬件触发信号实现。&lt;/p>
+&lt;p>同步在工程上是一种负担。硬件触发电路只见于昂贵的工业设备，而低成本的消费级设备往往没有相应接口，尽管如今智能手机、平板和笔记本电脑的相机已具备很高的分辨率和帧率。软件同步需要在两幅图案之间等待比曝光时间更长的间隔，帧率因此降低，而且并不总能稳定工作。信号线还限制了相机与投影仪之间的距离，并容易受到电磁干扰。然而，如果投影仪和相机各自独立运行，投影仪就可能在相机曝光中途切换图案，拍到的图像便是相邻两幅图案的混合，即&lt;em>混叠条纹图&lt;/em>（aliased fringe pattern，AFP）。直接从这类图像计算相位会导致重建误差。已有的非同步结构光研究使用的是简单的二值（黑白）图案，或只处理了异步问题的其他方面；据作者所知，此前尚无针对广泛使用的正弦条纹进行异步采集的研究。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-problem.webp" alt="两幅示意图。(a) 投影仪与相机之间由红色同步信号线相连，投影仪与相机的时序色块一一对齐。(b) 信号线被打叉，相机色块跨越两种投影颜色，采集到的图案出现混叠。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 同步采集：信号线连接投影仪与相机，相机的每次曝光只看到一幅图案（每个色块一种颜色）。(b) 异步采集：没有信号连接时，曝光会跨越图案切换时刻，采集到的图像混入相邻图案。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>混叠本身的形式很简单。AFP 中每个像素的值，是曝光期间两幅图案各自贡献的累加，两者所占比例取决于投影仪切换图案的时刻（式 5）。混叠不会移动像素，在每个位置都以相同方式发生，这一性质正适合用卷积网络来处理。但切换时刻未知，且很难测量，因此从一幅图像恢复出两幅图像是一个病态的“一对多”问题。论文将其视为图像生成问题：由生成式网络学习生成两幅干净的条纹图，之后即可直接沿用标准的相移重建方法。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2024-generative-asl/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>同步采集（参照）。&lt;/strong> 每次曝光恰好只看到一幅投影图案，因此每张图像只包含一幅干净的条纹图。&lt;/li>
+&lt;li>&lt;strong>异步采集。&lt;/strong> 投影仪和相机各以恒定速度工作，且相机速度更快，以保证每幅图案都能被拍到。若图案切换发生在曝光期间，就会得到一幅对相邻两幅图案积分而成的 AFP。论文处理的是两幅图案混叠的情形。&lt;/li>
+&lt;li>&lt;strong>用 APSNet 分离。&lt;/strong> APSNet（混叠条纹图分离网络）是基于 U-Net 的编码器–解码器：编码端由四个带最大池化的模块组成，解码端通过上采样和跳跃连接逐步恢复到原始分辨率。它把一幅 AFP 映射为混叠前的两幅图案。训练时，APSNet 作为条件生成对抗网络（GAN）中的生成器：判别器将生成的图案对与真实图案对进行比较，另有均方误差和结构相似性两项损失，使生成图案在统计上接近投影图案。三项损失权重相等时，训练过程最为平稳（图 8）。&lt;/li>
+&lt;li>&lt;strong>求相位。&lt;/strong> 由三幅 AFP，APSNet 得到四幅相继的条纹图，相邻两幅相差四分之一周期。经典的四步相移算法由此求出包裹相位，再加上条纹级次（2π 的整数倍）完成相位展开，得到连续相位图。&lt;/li>
+&lt;li>&lt;strong>三维形貌。&lt;/strong> 利用成熟的 FPP 重建模型，由连续相位计算出物体的三维形貌。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-method.webp" alt="流程图：三幅观测到的混叠条纹图，APSNet 的 U-Net 结构图，四幅推断出的无混叠图案，四步相移得到的包裹相位与展开相位，以及按深度着色的三维形貌。" loading="lazy">
+&lt;/a>&lt;figcaption>三维成像流程：三幅观测到的 AFP 经 APSNet 分离，得到四幅推断出的无混叠图案，再经四步相移求出包裹相位 φw 和连续相位 φ，最终重建出形貌。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;p>训练数据来自真实系统：一台工业相机（2048 × 1536 像素）、一台 DLP 投影仪（1280 × 1024）和一块自研微控制器：投影仪投射条纹后向微控制器发出信号，后者按设定时长 Δt 延迟触发相机。Δt = 0 时，系统采集到的是普通的无混叠条纹。源图案为五组 256 × 256 的正弦条纹，周期数分别为 50、60、70、80、90，每组包含四个相移（0、0.5π、π、1.5π），采集时延迟从 1 ms 到 10 ms，以 1 ms 递增。由此得到 1500 幅 AFP，每幅都与其两幅源图案配对，其中 1125 幅用于训练，375 幅用于测试。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-separation.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-separation.webp" alt="左侧为雕像的两幅源条纹图，中间为异步系统产生的混叠图像，右侧为 APSNet 分离出的两幅图像，最右侧为两幅深蓝色的差值图。" loading="lazy">
+&lt;/a>&lt;figcaption>分离一幅 AFP。(a、b) 同步采集记录的两幅源图案；(c) 异步系统记录的 AFP；(d、e) APSNet 从 (c) 中分离出的两幅图案；(f、g) 二者与源图案的绝对差，数值很小且随机分布。论文图 9。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>与同步重建结果的偏差不超过 0.008 mm&lt;/strong>：沿雕像的一条深度剖面，标准差为 0.003 mm；而直接用 AFP 计算的深度误差在 −5.000 到 3.600 mm 之间，标准差为 1.713 mm（图 13）。&lt;br>沿一条采样线，&lt;strong>包裹相位与同步结果的最大差值为 0.035 rad&lt;/strong>（图 11）。&lt;br>&lt;strong>螺旋桨和 3D 打印螺栓的绝对误差均小于 0.006 mm&lt;/strong>，这两个物体表面曲率大，此前的验证中未曾出现（标准差分别为 0.002 mm 和 0.001 mm；图 16）。&lt;/aside>
+&lt;p>测试对象包括雕像、汽车模型和球体，网络在训练和验证中都没有见过它们。所有对比都以同步图案的重建结果为基准。直接用 AFP 重建会丢失大量形状信息，而用 APSNet 分离出的图案重建的形状与基准非常接近（图 12）。论文总结指出，相比直接使用混叠条纹，重建精度提高了三个数量级。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-results.webp" alt="雕像的三个按深度着色的三维点云：同步图案得到的完整点云，混叠图案得到的稀疏条带状点云，以及 APSNet 图案得到的、与第一个一致的完整点云。" loading="lazy">
+&lt;/a>&lt;figcaption>雕像的重建结果：(a) 由同步图案重建，作为基准；(b) 直接由 AFP 重建；(c) 由 APSNet 分离出的图案重建。(a) 中的虚线为图 13 所用的剖面位置。论文图 12。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-errors.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-errors.webp" alt="上排为沿虚线的三条深度剖面；下排为两幅误差曲线，左图误差达数毫米，标准差 1.713 mm，右图误差仅为千分之几毫米，标准差 0.003 mm。" loading="lazy">
+&lt;/a>&lt;figcaption>(a–c) 三种重建结果沿虚线的深度；(d、e) (b) 和 (c) 相对于 (a) 的误差。请注意两者误差刻度相差悬殊：(d) 以毫米计，(e) 只有千分之几毫米。论文图 13。&lt;/figcaption>
+&lt;/figure>
+&lt;p>网络只用正弦条纹训练，却无需额外调整，也能分离投射到球体、汽车模型和一尊雕像上的二值混叠图案（图 14）。对于由螺旋桨样件、3D 打印螺栓和雕像组成、颜色和反射材质各不相同的多物体场景，该方法同样适用（图 15）。该方法假设每张图像只混入两幅图案。若投影速度远高于相机帧率，一次曝光内会混入两幅以上的图案；作者将这种更复杂的混叠列为方法的局限，也是后续研究的方向。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-objects.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-objects.webp" alt="五个测试对象（两尊雕像、球体、汽车模型和第三尊雕像）及其混叠条纹图，下面三行分别为由同步、异步和 APSNet 图案得到的重建结果。" loading="lazy">
+&lt;/a>&lt;figcaption>未参与训练的测试对象（首行，附其 AFP），分别由同步图案（第二行）、原始 AFP（第三行）和 APSNet 分离出的图案（末行）重建。左侧两尊雕像使用正弦条纹；球体、汽车模型和第三尊雕像使用二值条纹。论文图 14。&lt;/figcaption>
+&lt;/figure></description></item><item><title>Deep learning-enabled 3D multimodal fusion of cone-beam CT and intraoral mesh scans for clinically applicable tooth-bone reconstruction</title><link>https://willpan.xyz/zh/publications/liu-2023-tooth-bone/</link><pubDate>Fri, 01 Sep 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/liu-2023-tooth-bone/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>正畸治疗和种植手术需要在牙齿及其周围骨组织的三维模型上进行规划。这类模型的数据来自两种扫描，而每一种都只能看到一部分。锥形束 CT（CBCT）是一种 X 线扫描，能显示颌骨内完整的牙齿，包括牙冠和牙根。但 CBCT 的测量值最多可比实际值小 6.9%，具体取决于分辨率；而且由于牙釉质密度高，加之修复体、种植体和正畸矫治器的影响，CBCT 往往无法准确呈现咬合面。口内扫描仪（IOS）向牙列投射光线，以表面网格的形式记录数字印模。其收缩率可低至 0.9%，是三维数字化模态中精度最高的一种，也能准确记录咬合关系和牙列位置，但它只包含牙冠和牙龈，看不到龈下的任何结构。&lt;/p>
+&lt;p>将两者结合，才能得到临床所需的模型：精确的牙冠、位置正确的牙根，以及周围的牙槽骨。手工融合十分耗时。两种扫描都要先完成分割，而不同患者的解剖形态差异很大，使分割并不容易。CBCT 通常同时包含上下颌，且常处于牙齿相互接触的咬合状态，而口内扫描则分别记录上颌和下颌。即使借助交互式软件和半自动工具，经验丰富的专家处理一位患者也至少需要五小时，而全自动、可用于临床的方案此前尚未出现。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/liu-2023-tooth-bone/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/liu-2023-tooth-bone/fig-problem.webp" alt="两个灰色的颌骨与牙列 CBCT 三维重建。左图为咬合状态，上下牙列相互接触；右图为轻微张口，上下牙列之间可见间隙。" loading="lazy">
+&lt;/a>&lt;figcaption>CBCT 扫描记录的是患者扫描时的咬合状态：(a) 闭口咬合，上颌与下颌之间存在接触；(b) 开口状态。牙齿相互接触时，上下两排牙连在一起，难以拆分上下颌，也就难以与分开记录的上、下颌口内扫描相匹配。论文图 5A。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>深度牙科多模态融合（Deep Dental Multimodal Fusion，DDMF）是一套全自动流程，包含三个模块：分割 CBCT、分割口内扫描、融合两者。融合模型的牙冠来自口内扫描，牙根和牙槽骨来自 CBCT。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/liu-2023-tooth-bone/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/liu-2023-tooth-bone/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>分割 CBCT。&lt;/strong> TSTNet 是基于 Swin Transformer 的网络，将每张二维 CBCT 切片的每个像素标为牙齿、牙槽骨或背景，再由分割结果重建出牙齿和牙槽骨的三维网格。训练时，每次扫描的 300–600 张切片中只需标注约 20 张。额外的训练分支“牙齿误差校准”（TEC）用于纠正牙齿与牙槽骨交界处易出错的像素；推理时该分支被移除，不增加推理时间。&lt;/li>
+&lt;li>&lt;strong>分割口内扫描。&lt;/strong> IOSNet 将口扫网格的每个面片标为牙龈或 32 颗牙齿之一，并按 FDI 牙位编号。两项新的训练损失有助于提升分割效果：质心损失使每颗牙的预测中心保持准确，避免把两颗牙识别为一颗（或把一颗识别为两颗）；边界损失则使牙–牙、牙–龈边界更加清晰。随后分离牙龈，得到带编号的牙冠。&lt;/li>
+&lt;li>&lt;strong>在 CBCT 中分离上下颌。&lt;/strong> 点曲率特征定义为某一顶点的表面法向与其相邻顶点法向之间夹角的平均值，可标出牙齿相接处的边界。去除曲率最高的顶点后，各颗牙齿即被分开；再将去除的顶点合并回去，并把牙齿归入上颌和下颌。&lt;/li>
+&lt;li>&lt;strong>配准。&lt;/strong> 上、下颌的口扫牙冠分别与对应的 CBCT 颌骨分两步对齐：先用基于 FPFH 特征的 RANSAC 做全局配准，得到粗略的初始对齐；再在三个尺度上做点到面 ICP 精细调整。&lt;/li>
+&lt;li>&lt;strong>替换牙冠并融合。&lt;/strong> 删去 CBCT 中与口扫牙冠距离很近的牙冠点，以口扫的点取而代之，再经泊松重建得到一个完整网格。FDI 牙位编号来自口内扫描，因此无需在 CBCT 切片上做逐颗牙的实例级标注，融合模型中的每颗牙也都能被单独识别。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/liu-2023-tooth-bone/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/liu-2023-tooth-bone/fig-method.webp" alt="三栏流程图。第一步：CBCT 切片经 TSTNet 得到牙齿和牙槽骨预测。第二步：口扫网格经 IOSNet 得到着色的牙齿，并分离牙龈。第三步：重建网格，按曲率拆分，与口扫牙齿配准，替换牙冠，并展示融合结果。" loading="lazy">
+&lt;/a>&lt;figcaption>DDMF 流程：用 TSTNet 分割 CBCT（第一步），用 IOSNet 分割口内扫描（第二步），再通过基于曲率的分割、配准和牙冠替换完成多模态融合（第三步）。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/liu-2023-tooth-bone/fig-halfjaw.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/liu-2023-tooth-bone/fig-halfjaw.webp" alt="左图为上下颌牙齿相互接触的 CBCT 模型，局部区域以方框标出；下方依次为曲率着色图、阈值处理后的局部和分割后的局部。右图为分离后的同一副牙列，上下颌沿虚线分开。" loading="lazy">
+&lt;/a>&lt;figcaption>分离上下颌。在 CBCT 网格上计算点曲率，通过阈值去除高曲率顶点，分割出各颗牙齿，再合并并用 RANSAC 将其归入上颌和下颌。论文图 5C。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>融合模型与专家制作的金标准之间的平均表面距离为 0.17 mm&lt;/strong>，统计范围为 50 例中的 1,003 颗牙（倒角距离 0.20 mm，豪斯多夫距离 0.37 mm；表 3）。&lt;br>&lt;strong>每位患者用时 20–25 分钟&lt;/strong>，而人工专家需要 300–400 分钟（表 6）。&lt;br>&lt;strong>94% 的 CBCT 网格被正确分离为上颌和下颌&lt;/strong>，基于高斯曲率的方法为 42%，DBSCAN 为 24%；测试共 50 位患者，其中 31 位处于牙齿紧密接触的闭口咬合状态（表 5）。&lt;/aside>
+&lt;p>研究使用了大规模真实临床数据：503 位同时拥有 CBCT 和口内扫描的患者，另有 28,559 例口内扫描，于 2018 年至 2021 年间采集自中国 25 个省份的医院和诊所。作为金标准的融合模型由人类专家组成的委员会制作，并已在临床实践中成功使用。各类牙齿的误差都很小且较为一致；第一、第二磨牙的误差略大，主要因为其体积较大。由于 CBCT 的分辨率在 0.125 到 0.5 mm 之间，一到两个像素的误差对许多临床应用而言是可以接受的，这一点经人类专家和临床适用性测试验证。在 20 个病例上，DDMF 的误差也低于单独用 CBCT 重建的结果（图 4C–E）。由于此前没有针对这一任务的系统性方案，论文未与其他融合方法比较。&lt;/p>
+&lt;p>两个分割模块均优于对比网络。在 5 折交叉验证中（每折 50 位测试患者），TSTNet 的 Dice 系数达到 93.99%，高于 UNet、UNet++、标准 Swin Transformer 及其他基线（表 1）。IOSNet（用 28,000 例扫描训练）在下颌扫描上的平均交并比（mIoU）为 93.70%，在上颌扫描上为 95.70%，分别比最强基线 DCNet 高 1.77 和 3.52 个百分点（表 2）。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/liu-2023-tooth-bone/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/liu-2023-tooth-bone/fig-results.webp" alt="两个病例，每例三列：仅用 CBCT（灰色）、DDMF 和金标准（不同牙齿以不同颜色显示）。各行依次为重建的牙列、放大的牙齿边界、带牙槽骨的牙列、放大的牙–骨区域和单颗牙。每列上方标有 ASSD 数值。" loading="lazy">
+&lt;/a>&lt;figcaption>论文四个病例中的两个，每例比较仅用 CBCT 的重建、DDMF 融合结果和金标准，每列上方给出其与金标准的平均对称表面距离（ASSD）。第 (a)–(d) 行分别为牙列、放大的牙–牙边界、带牙槽骨的牙列以及放大的牙–骨区域。放大图显示，CBCT 重建中相邻牙齿粘连在一起，而融合结果与金标准几乎一致。第 (e) 行将随机选取的融合牙齿与金标准叠放，浅粉色区域表示极小的表面偏差。论文图 4A（病例 1 和 2）。&lt;/figcaption>
+&lt;/figure>
+&lt;p>该框架已集成到辅助正畸治疗规划的临床软件中。作者也指出了其局限：上下颌分离和配准步骤在 6%–10% 的病例中可能失败，需要人工修正；对于极其复杂的病例，例如存在金属伪影或接受过根管治疗的患者，分割仍可能出错。该方法目前主要从算法角度进行了评估，作者呼吁开展严格的多中心临床试验。&lt;/p></description></item></channel></rss>

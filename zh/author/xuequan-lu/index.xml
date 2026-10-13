@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Xuequan Lu | 潘威</title><link>https://willpan.xyz/zh/author/xuequan-lu/</link><atom:link href="https://willpan.xyz/zh/author/xuequan-lu/index.xml" rel="self" type="application/rss+xml"/><description>Xuequan Lu</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>SuP: Sub-cloud Driven Point Cloud Registration</title><link>https://willpan.xyz/zh/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/fung-2026-sup-sub-cloud-driven-point-cloud/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>点云配准的任务是求出一组旋转和平移，把同一场景的两帧三维扫描对齐。当两帧扫描共享大量几何结构时，现有方法已能实现高精度对齐。但在大规模建图、自主导航等应用中，两个视角往往只有一小部分场景重叠。一旦共享表面低于约 30%，无论是经典的 ICP 还是基于学习的方法，都难以建立可靠的对应关系，配准会出现收敛缓慢、错位甚至完全失败。&lt;/p>
+&lt;p>论文将这类失败归因于两帧之间“不重叠”的区域：这些区域在几何或语义上仍可能彼此相似，直接对两帧完整点云做匹配，就会产生大量错误对应，把少数正确对应淹没。早期工作尝试显式预测哪些点位于重叠区，但这种预测依赖一致的特征表示，在低重叠样本上效果明显下降。后续方法借助注意力机制，并引入几何编码、语义或颜色信息来增强特征，但随着重叠率降低，性能依然下滑。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" alt="上图：ColorPCR/GeoTransformer 对两帧扫描做匹配，相似结构之间出现大量红色错误匹配，配准失败。下图：SuP 的流程（划分、OPS、MPN、合并匹配），绿色为正确匹配，配准成功。" loading="lazy">
+&lt;/a>&lt;figcaption>上：重叠区之外的相似结构（红框）吸引了大量错误匹配（红线），掩盖了正确对应；直接匹配的基线方法（图中标注为 ColorPCR / GeoTr.）在这对扫描上配准失败（旋转误差 41.3°，平移误差 101.7 cm）。下：SuP 找出重叠率高、特征一致性强的子点云对，合并其中的匹配后完成配准（1.3°，1.8 cm）。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>SuP 换了一个角度看问题。两帧扫描整体上可能只有少量重叠，但若把每帧切成更小的块并两两配对，其中有一部分子点云对具有很高的重叠率。SuP 把这些高重叠的子点云对称为“锚点对”：先分两个阶段把它们找出来，再只在锚点对内部建立匹配。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/fung-2026-sup-sub-cloud-driven-point-cloud/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>提取整帧特征。&lt;/strong> KPConv 骨干网络在多个尺度上提取点特征，再由注意力层在帧内和两帧之间交换上下文信息。SuP 默认采用 ColorPCR 的颜色增强骨干网络和注意力模块。&lt;/li>
+&lt;li>&lt;strong>划分子点云。&lt;/strong> 每帧点云被划分为 k 个子点云：先用最远点采样选出分布均匀的中心点，再以各中心点为核心，在半径范围内收集近邻点，构成子点云。&lt;/li>
+&lt;li>&lt;strong>第一阶段：重叠引导的先验加权（OPS）。&lt;/strong> 对每一对源–目标子点云，SuP 只统计互为前 k 强的特征相关，以此度量两者点特征的相关程度，并保留得分最高的若干对作为候选。这一步是高效的初筛，用来排除不重叠的子点云对。&lt;/li>
+&lt;li>&lt;strong>第二阶段：多尺度后加权网络（MPN）。&lt;/strong> 先用加权 SVD 为每个候选对估计初步位姿并对齐，再由一个轻量的可学习网络在两个尺度上检查：对齐后彼此靠近的点，特征是否也相似。特征一致性权重最高的候选对成为锚点对。训练时，该网络以各候选对实际的对齐误差作为监督信号（对齐感知加权损失）。&lt;/li>
+&lt;li>&lt;strong>合并匹配。&lt;/strong> 将所有锚点对中的内点对应合并，在更稠密的点上细化，再交给标准估计器（RANSAC 或无需 RANSAC 的 LGR）求出最终的旋转和平移。&lt;/li>
+&lt;/ol>
+&lt;p>在论文的实验设置中，每帧点云划分为 6 个子点云，共 36 种组合；OPS 保留其中 24 对，再按特征一致性取前 8 对作为锚点对。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="网络结构图：特征提取、特征聚合、双阶段子点云锚点挖掘模块（划分、OPS、初步子点云匹配、MPN）以及合并匹配，并附各部分的细节面板。" loading="lazy">
+&lt;/a>&lt;figcaption>方法总览。多尺度特征（3.2 节）经注意力聚合（3.3 节）；双阶段子点云锚点挖掘模块（3.4 节）划分两帧点云，用 OPS 选出候选，初步对齐（PSM）后由 MPN 打分；合并匹配模块（3.5 节）把各锚点对的匹配合并，估计最终变换。论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">使用无需 RANSAC 的 LGR 估计器时，&lt;strong>在 Color3DMatch 和 Color3DLoMatch 上的配准召回率分别为 97.8% 和 90.2%&lt;/strong>，在采用 LGR 的对比方法中最高（表 2）。&lt;br>使用 RANSAC 时为 &lt;strong>98.1% 和 90.4%&lt;/strong>，且在 5000 到 250 个采样对应点的各档设置下配准召回率均为最高（表 1）。&lt;br>&lt;strong>位姿误差最低&lt;/strong>：Color3DMatch 上为 1.374° / 0.046 m，Color3DLoMatch 上为 2.493° / 0.074 m（表 3）。&lt;/aside>
+&lt;p>实验采用室内基准 3DMatch 的颜色增强版本：Color3DMatch 中点云对的重叠率高于 30%，Color3DLoMatch 是重叠率为 10%–30% 的更难子集。配准召回率指估计变换的 RMSE 小于 0.2 m 的点云对所占比例。SuP 默认采用 ColorPCR 的颜色增强骨干网络；与最强的基线 ColorPCR 本身相比，在 LGR 设置下，SuP 将 Color3DMatch 上的召回率从 96.5% 提升到 97.8%，将 Color3DLoMatch 上的召回率从 88.3% 提升到 90.2%。正确匹配的比例也随之提高：在 Color3DLoMatch 上采样 250 个对应点时，SuP 的内点率为 76.0%，ColorPCR 为 68.0%。&lt;/p>
+&lt;p>子点云策略也可以作为插件用于其他方法。接入 GeoTransformer 后，Color3DLoMatch 上的召回率从 74.0% 提升到 76.7%；接入 PEAL 后，从 81.2% 提升到 83.4%（表 4）。消融实验中，依次加入四个组件（OPS、特征一致性权重、MPN 和对齐感知加权损失），每一步都使两个基准上的召回率进一步提高（表 5）。子点云的大小同样重要：子点云过小可能因重叠不足而降低召回率，过大则会丢失局部细节，默认半径参数 τ = 0.35 取得了最佳平衡（表 6）。论文在局限性部分指出，若两帧扫描来自差异很大的传感器，特征可能出现细微不一致，从而影响 OPS 和 MPN；引入特征归一化或域自适应是后续可行的方向。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-3.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-3.webp" alt="三组低重叠扫描对（黄色与蓝色）：输入、真值、ColorPCR 与 SuP 的配准结果（标注 RMSE），以及两者的对应关系（绿色为正确、红色为错误，标注内点率）。" loading="lazy">
+&lt;/a>&lt;figcaption>三组重叠率为 14.5%–23.8% 的 3DLoMatch 扫描对：(a) 输入，(b) 真值，(c、d) ColorPCR 与 SuP 的配准结果，(e、f) 两者的对应关系（绿色正确，红色错误）。第一行中，ColorPCR 的匹配只有 18.8% 正确，配准 RMSE 为 2.939 m；SuP 的匹配有 51.0% 正确，RMSE 为 0.066 m。论文图 3。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

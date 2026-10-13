@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Calibration | 潘威</title><link>https://willpan.xyz/zh/tags/calibration/</link><atom:link href="https://willpan.xyz/zh/tags/calibration/index.xml" rel="self" type="application/rss+xml"/><description>Calibration</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Depth-adaptive calibration of line-laser 3D measurement systems using rational polynomial mapping and depth-independent misalignment compensation</title><link>https://willpan.xyz/zh/publications/cao-2026-depth-adaptive-calibration-of-line-laser/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/cao-2026-depth-adaptive-calibration-of-line-laser/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>线激光轮廓仪通过三角测量获取表面形貌：相机观察物体上的激光光条，把每个光条像素 (u, v) 转换为激光平面内的物理坐标 (X, Z)。再在运动平台扫描工件的过程中逐帧拼接这些轮廓，得到完整的三维点云。因此测量精度取决于标定，而在整个工作景深内，有两类不同的误差会降低精度。&lt;/p>
+&lt;p>第一类是内部误差。传统标定建立在单平面单应性之上，即严格线性的像素—物理坐标映射。在实际系统中，升降台的轻微倾斜、靶标的局部不平整、径向与切向镜头畸变以及光条中心提取噪声，都会使观测偏离理想透视模型，纯单应性无法表示这种非线性偏差。第二类是外部误差。若传感器与运动轴没有对准，拼接点云就会带有系统性的剪切畸变，原本正交的矩形变成平行四边形。这种剪切无法通过调整内参或畸变系数消除，而为每个深度单独设置补偿参数又会使参数数量成倍增加。现有流程通常只处理内部映射或外部安装几何中的一项，很少对二者在整个景深内的联合影响建模。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-problem.webp" alt="两幅灰度棋盘格扫描图，其中 4×4 的格子用红线勾出。左图标注 Proper installation：勾出的格子构成规则的方形网格。右图标注 Tilted installation：勾出的区域发生畸变，水平线倾斜，角点不再是直角。" loading="lazy">
+&lt;/a>&lt;figcaption>正常安装（左）与倾斜安装（右）下扫描的棋盘格。安装倾斜使重建出的网格变成平行四边形。论文图 2(b)。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>该方法把两类误差放在两个独立阶段中处理。内部阶段是一次性的出厂标定，确定每帧轮廓内的像素—物理坐标映射；外部阶段是现场补偿，消除拼接点云中的安装剪切。两个阶段由一个自动化、运动触发的流程串联起来，无需人工多姿态摆放靶标。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/cao-2026-depth-adaptive-calibration-of-line-laser/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>覆盖整个深度范围采样。&lt;/strong> 相机和线激光器安装在精密 Z 轴位移台上，位移台按预设位置依次移动。在每个高度，系统采集一组激光开/关图像对，得到干净的光条中心线。实验中共采样 Z&lt;sub>1&lt;/sub>–Z&lt;sub>6&lt;/sub> 六个深度，间隔 30 mm，覆盖 150 mm 范围；其中五个深度用于拟合，Z&lt;sub>3&lt;/sub> 留作测试。&lt;/li>
+&lt;li>&lt;strong>拟合一个有理多项式映射。&lt;/strong> 模型保留透视（单应性）主干，并在高度方向叠加二元三次残差。合并为单一比值后，它以三次分子和共用的线性分母把 (u, v) 分别映射到 X 和 Z，共 22 个系数。交叉相乘后问题变为线性，所有训练深度的对应点组成一个超定方程组，用最小二乘求解。&lt;/li>
+&lt;li>&lt;strong>剪切建模。&lt;/strong> 安装误差被分解为三个旋转：横滚角 α、俯仰角 β 和偏航角 γ。存在偏航角 γ 时，扫描步长 Δy 会使点在横向偏移 Δx = Δy tan γ，矩形因此变成平行四边形。在所测试的推扫配置中，俯仰使激光平面绕其自身轴向旋转，不产生面内剪切，因此取 β = 0。&lt;/li>
+&lt;li>&lt;strong>测量 α 和 γ。&lt;/strong> 对空载平台的扫描结果做 RANSAC 直线拟合，得到参考线 L。横滚角由名义高度为 H、宽度为 W 的标准高度块求得：α = arctan((H′ − H) / W)，其中 H′ 为其上表面到 L 的实测平均高度。偏航角由棋盘格求得：要求校正后格子的相邻边相互垂直，可得到关于 sin γ 的二次方程。对每个内部 2 × 2 角点单元分别求解，取中位数作为结果。&lt;/li>
+&lt;li>&lt;strong>一次逆旋转，适用于所有深度。&lt;/strong> 每个点都按 Z–Y–X 顺序经过逆旋转 R&lt;sub>x&lt;/sub>(α) R&lt;sub>y&lt;/sub>(β) R&lt;sub>z&lt;/sub>(γ)；当 β = 0 时简化为 R&lt;sub>x&lt;/sub>(α) R&lt;sub>z&lt;/sub>(γ)。该校正与深度无关，因此只需在 Z&lt;sub>3&lt;/sub> 估计一次角度，即可在整个测量体积内复用。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-method.webp" alt="两行流程图。Stage 1（出厂标定）：Z 轴位移台上的相机和激光器、多个 Z 位置的棋盘格图像堆栈、激光开/关图像、(u, v) 特征提取、X 和 Z 的有理多项式公式，以及标注 22 RPC 的方框。Stage 2（现场补偿）：扫描棋盘格靶标、将角点映射到彩色深度图、标有 α、β、γ 的偏转角示意、包含 R x、R y、R z 的坐标校正公式，以及校正前后的棋盘格图像。" loading="lazy">
+&lt;/a>&lt;figcaption>端到端流程。第一阶段（出厂标定）：在 Z 轴位移台上进行多深度采集，获取激光开/关图像对，提取特征并拟合 22 个 RPC 系数。第二阶段（现场补偿）：把扫描得到的棋盘格映射到深度图，计算偏转角，再用逆旋转校正坐标。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在留作测试的深度 Z&lt;sub>3&lt;/sub> 上，X、Z 方向平均绝对误差较 HALCON 基线分别降低 17.5% 和 11.8%&lt;/strong>：8.745 对 10.600 µm，3.820 对 4.332 µm（表 5）。&lt;br>&lt;strong>倾斜安装下 25° 标准角度块的角度误差：0.7591° → 0.0387°&lt;/strong>（深度均值），降低 94.90%（表 7）。&lt;br>&lt;strong>倾斜安装下棋盘格正交误差：10.007° → 0.309°&lt;/strong>（深度均值），降低 96.92%（表 8）。&lt;/aside>
+&lt;p>所有实验均使用一台商用线激光轮廓仪（OPT-LPF2-006-01），配合可编程 Z 轴位移台和推扫平台。真值来自经过认证的标准件：带 49 × 49 点阵（间距 1 mm）的网格畸变靶标、25 mm 方格的金属棋盘格、25° 标准角度块和高度块。在内部阶段，HALCON 基线与所提映射使用相同的图像堆栈、相同的光条中心提取器和相同的训练/测试深度划分。除平均绝对误差降低外，所提映射还使 X、Z 方向的重复性分别提升 33.8% 和 70.0%。提升最大的是 Z 方向重复性，它对高度方向的非线性最敏感，而三次残差正是为吸收这种非线性而设计的。残差阶数实验支持选择三次：二次残差欠拟合；四次残差的训练误差最低，但其测试误差升至 X 方向 12.155 µm、Z 方向 5.130 µm，而三次残差为 8.745 µm 和 3.820 µm（表 11）。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-internal.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-internal.webp" alt="两幅柱状图。左图（越低越好）：灰色为 HALCON 基线，蓝色为所提方法，R X 为 7.18 对 4.75，R Z 为 0.82 对 0.25，MAE X 为 10.60 对 8.74，MAE Z 为 4.33 对 3.82，单位为微米。右图（越高越好）：相对提升分别为 33.8%、70.0%、17.5% 和 11.8%。" loading="lazy">
+&lt;/a>&lt;figcaption>测试深度 Z&lt;sub>3&lt;/sub> 上的内部标定精度：(a) HALCON 基线与所提 RPC 映射的重复性 R 和平均绝对误差，单位 µm；(b) 所提映射的相对提升。论文图 8。&lt;/figcaption>
+&lt;/figure>
+&lt;p>在外部阶段，传感器被有意倾斜安装（横滚角 α ≈ 5°，偏航角 γ ≈ 10°），并在全部六个深度上按三种状态测量：正常安装、倾斜未补偿、倾斜并补偿，每种状态重复 10 次。与正常安装相比，倾斜使角度块误差放大 18.84 倍，正交误差放大 31.87 倍。使用在 Z&lt;sub>3&lt;/sub> 估计后固定的角度进行补偿后，两项误差都回到正常安装水平（分别为其 0.96 倍和 0.98 倍）。逐深度的误差降幅在角度任务中保持在 94.69%–95.04%，在正交任务中保持在 96.87%–96.97%，同一补偿器无需重新调参即可适用于每个深度。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-orthogonality.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-orthogonality.webp" alt="左图：Z1 至 Z6 各深度正交误差的对数坐标折线图。红色的倾斜未补偿曲线保持在 10° 附近；灰色虚线的正常安装曲线与蓝色的倾斜补偿曲线在 0.3° 附近重合。右图：各深度误差降幅柱状图，介于 96.87% 与 96.97% 之间，虚线表示均值 96.92%。" loading="lazy">
+&lt;/a>&lt;figcaption>Z&lt;sub>1&lt;/sub>–Z&lt;sub>6&lt;/sub> 各深度的棋盘格正交误差：(a) 三种安装状态（对数坐标），补偿后的曲线与正常安装参考曲线重合；(b) 各深度的误差降幅。论文图 12。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-clouds.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-clouds.webp" alt="六幅按高度着色的棋盘格高度图，棋盘格上放着一根细长的红色条块，排成两行三列，列标为 Z1、Z2、Z3。上行标注 Uncompensated，下行标注 Compensated。" loading="lazy">
+&lt;/a>&lt;figcaption>棋盘格加角度块场景在 Z&lt;sub>1&lt;/sub>–Z&lt;sub>3&lt;/sub> 深度处的拼接点云，上行未补偿，下行已补偿。未补偿时，网格被剪切成非正交的平行四边形；补偿后恢复为正交网格。红色物体为 25° 标准角度块。裁剪自论文图 14（原图包含全部六个深度）。&lt;/figcaption>
+&lt;/figure>
+&lt;p>两个阶段缺一不可。关闭外部补偿器时，映射误差与完整流程相当，但角度误差和正交误差仍停留在未补偿水平。采用 HALCON 映射加外部补偿器时，几何误差降至 0.0506° 和 0.519°，但仍高于完整流程的 0.0387° 和 0.309°，且映射误差回到基线水平（表 10）。补偿器在超出厂商名义 5° 安装公差时依然有效：在深度 Z&lt;sub>3&lt;/sub>、偏航角约 10° 的条件下把横滚角逐步增大到 20°，校正后的角度误差保持在 0.037°–0.101°，正交误差保持在 0.16°–0.59°（表 9）。一次完整标定中的数值计算约需 2.3 s，约 11 分钟的总耗时主要花在物理扫描上（表 12）。&lt;/p>
+&lt;p>作者将上述结果的适用范围限定在所测试的单台设备及其工作距离范围内。在第二台相机上的验证、更多标准角度，以及独立重新安装后所估计角度的重复性，留待后续工作。&lt;/p></description></item></channel></rss>

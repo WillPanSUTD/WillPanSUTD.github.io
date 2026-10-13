@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Z Su | 潘威</title><link>https://willpan.xyz/zh/author/z-su/</link><atom:link href="https://willpan.xyz/zh/author/z-su/index.xml" rel="self" type="application/rss+xml"/><description>Z Su</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Mon, 01 Jan 2024 00:00:00 +0000</lastBuildDate><item><title>Generative deep-learning-embedded asynchronous structured light for three-dimensional imaging</title><link>https://willpan.xyz/zh/publications/lu-2024-generative-asl/</link><pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2024-generative-asl/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>结构光三维测量向物体投射一系列条纹图像，再从另一视角拍摄。物体表面会使条纹发生弯曲，每个像素处的条纹相位编码了深度信息。条纹投影轮廓术（FPP）是这类技术中最常用的方法之一，它要求相机在某一幅图案单独显示期间完成拍摄，因此投影仪与相机之间必须同步，通常依靠硬件触发信号实现。&lt;/p>
+&lt;p>同步在工程上是一种负担。硬件触发电路只见于昂贵的工业设备，而低成本的消费级设备往往没有相应接口，尽管如今智能手机、平板和笔记本电脑的相机已具备很高的分辨率和帧率。软件同步需要在两幅图案之间等待比曝光时间更长的间隔，帧率因此降低，而且并不总能稳定工作。信号线还限制了相机与投影仪之间的距离，并容易受到电磁干扰。然而，如果投影仪和相机各自独立运行，投影仪就可能在相机曝光中途切换图案，拍到的图像便是相邻两幅图案的混合，即&lt;em>混叠条纹图&lt;/em>（aliased fringe pattern，AFP）。直接从这类图像计算相位会导致重建误差。已有的非同步结构光研究使用的是简单的二值（黑白）图案，或只处理了异步问题的其他方面；据作者所知，此前尚无针对广泛使用的正弦条纹进行异步采集的研究。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-problem.webp" alt="两幅示意图。(a) 投影仪与相机之间由红色同步信号线相连，投影仪与相机的时序色块一一对齐。(b) 信号线被打叉，相机色块跨越两种投影颜色，采集到的图案出现混叠。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 同步采集：信号线连接投影仪与相机，相机的每次曝光只看到一幅图案（每个色块一种颜色）。(b) 异步采集：没有信号连接时，曝光会跨越图案切换时刻，采集到的图像混入相邻图案。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>混叠本身的形式很简单。AFP 中每个像素的值，是曝光期间两幅图案各自贡献的累加，两者所占比例取决于投影仪切换图案的时刻（式 5）。混叠不会移动像素，在每个位置都以相同方式发生，这一性质正适合用卷积网络来处理。但切换时刻未知，且很难测量，因此从一幅图像恢复出两幅图像是一个病态的“一对多”问题。论文将其视为图像生成问题：由生成式网络学习生成两幅干净的条纹图，之后即可直接沿用标准的相移重建方法。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/lu-2024-generative-asl/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>同步采集（参照）。&lt;/strong> 每次曝光恰好只看到一幅投影图案，因此每张图像只包含一幅干净的条纹图。&lt;/li>
+&lt;li>&lt;strong>异步采集。&lt;/strong> 投影仪和相机各以恒定速度工作，且相机速度更快，以保证每幅图案都能被拍到。若图案切换发生在曝光期间，就会得到一幅对相邻两幅图案积分而成的 AFP。论文处理的是两幅图案混叠的情形。&lt;/li>
+&lt;li>&lt;strong>用 APSNet 分离。&lt;/strong> APSNet（混叠条纹图分离网络）是基于 U-Net 的编码器–解码器：编码端由四个带最大池化的模块组成，解码端通过上采样和跳跃连接逐步恢复到原始分辨率。它把一幅 AFP 映射为混叠前的两幅图案。训练时，APSNet 作为条件生成对抗网络（GAN）中的生成器：判别器将生成的图案对与真实图案对进行比较，另有均方误差和结构相似性两项损失，使生成图案在统计上接近投影图案。三项损失权重相等时，训练过程最为平稳（图 8）。&lt;/li>
+&lt;li>&lt;strong>求相位。&lt;/strong> 由三幅 AFP，APSNet 得到四幅相继的条纹图，相邻两幅相差四分之一周期。经典的四步相移算法由此求出包裹相位，再加上条纹级次（2π 的整数倍）完成相位展开，得到连续相位图。&lt;/li>
+&lt;li>&lt;strong>三维形貌。&lt;/strong> 利用成熟的 FPP 重建模型，由连续相位计算出物体的三维形貌。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-method.webp" alt="流程图：三幅观测到的混叠条纹图，APSNet 的 U-Net 结构图，四幅推断出的无混叠图案，四步相移得到的包裹相位与展开相位，以及按深度着色的三维形貌。" loading="lazy">
+&lt;/a>&lt;figcaption>三维成像流程：三幅观测到的 AFP 经 APSNet 分离，得到四幅推断出的无混叠图案，再经四步相移求出包裹相位 φw 和连续相位 φ，最终重建出形貌。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;p>训练数据来自真实系统：一台工业相机（2048 × 1536 像素）、一台 DLP 投影仪（1280 × 1024）和一块自研微控制器：投影仪投射条纹后向微控制器发出信号，后者按设定时长 Δt 延迟触发相机。Δt = 0 时，系统采集到的是普通的无混叠条纹。源图案为五组 256 × 256 的正弦条纹，周期数分别为 50、60、70、80、90，每组包含四个相移（0、0.5π、π、1.5π），采集时延迟从 1 ms 到 10 ms，以 1 ms 递增。由此得到 1500 幅 AFP，每幅都与其两幅源图案配对，其中 1125 幅用于训练，375 幅用于测试。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-separation.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-separation.webp" alt="左侧为雕像的两幅源条纹图，中间为异步系统产生的混叠图像，右侧为 APSNet 分离出的两幅图像，最右侧为两幅深蓝色的差值图。" loading="lazy">
+&lt;/a>&lt;figcaption>分离一幅 AFP。(a、b) 同步采集记录的两幅源图案；(c) 异步系统记录的 AFP；(d、e) APSNet 从 (c) 中分离出的两幅图案；(f、g) 二者与源图案的绝对差，数值很小且随机分布。论文图 9。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>与同步重建结果的偏差不超过 0.008 mm&lt;/strong>：沿雕像的一条深度剖面，标准差为 0.003 mm；而直接用 AFP 计算的深度误差在 −5.000 到 3.600 mm 之间，标准差为 1.713 mm（图 13）。&lt;br>沿一条采样线，&lt;strong>包裹相位与同步结果的最大差值为 0.035 rad&lt;/strong>（图 11）。&lt;br>&lt;strong>螺旋桨和 3D 打印螺栓的绝对误差均小于 0.006 mm&lt;/strong>，这两个物体表面曲率大，此前的验证中未曾出现（标准差分别为 0.002 mm 和 0.001 mm；图 16）。&lt;/aside>
+&lt;p>测试对象包括雕像、汽车模型和球体，网络在训练和验证中都没有见过它们。所有对比都以同步图案的重建结果为基准。直接用 AFP 重建会丢失大量形状信息，而用 APSNet 分离出的图案重建的形状与基准非常接近（图 12）。论文总结指出，相比直接使用混叠条纹，重建精度提高了三个数量级。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-results.webp" alt="雕像的三个按深度着色的三维点云：同步图案得到的完整点云，混叠图案得到的稀疏条带状点云，以及 APSNet 图案得到的、与第一个一致的完整点云。" loading="lazy">
+&lt;/a>&lt;figcaption>雕像的重建结果：(a) 由同步图案重建，作为基准；(b) 直接由 AFP 重建；(c) 由 APSNet 分离出的图案重建。(a) 中的虚线为图 13 所用的剖面位置。论文图 12。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-errors.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-errors.webp" alt="上排为沿虚线的三条深度剖面；下排为两幅误差曲线，左图误差达数毫米，标准差 1.713 mm，右图误差仅为千分之几毫米，标准差 0.003 mm。" loading="lazy">
+&lt;/a>&lt;figcaption>(a–c) 三种重建结果沿虚线的深度；(d、e) (b) 和 (c) 相对于 (a) 的误差。请注意两者误差刻度相差悬殊：(d) 以毫米计，(e) 只有千分之几毫米。论文图 13。&lt;/figcaption>
+&lt;/figure>
+&lt;p>网络只用正弦条纹训练，却无需额外调整，也能分离投射到球体、汽车模型和一尊雕像上的二值混叠图案（图 14）。对于由螺旋桨样件、3D 打印螺栓和雕像组成、颜色和反射材质各不相同的多物体场景，该方法同样适用（图 15）。该方法假设每张图像只混入两幅图案。若投影速度远高于相机帧率，一次曝光内会混入两幅以上的图案；作者将这种更复杂的混叠列为方法的局限，也是后续研究的方向。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-objects.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-objects.webp" alt="五个测试对象（两尊雕像、球体、汽车模型和第三尊雕像）及其混叠条纹图，下面三行分别为由同步、异步和 APSNet 图案得到的重建结果。" loading="lazy">
+&lt;/a>&lt;figcaption>未参与训练的测试对象（首行，附其 AFP），分别由同步图案（第二行）、原始 AFP（第三行）和 APSNet 分离出的图案（末行）重建。左侧两尊雕像使用正弦条纹；球体、汽车模型和第三尊雕像使用二值条纹。论文图 14。&lt;/figcaption>
+&lt;/figure></description></item></channel></rss>

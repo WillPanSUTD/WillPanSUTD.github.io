@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Daquan Feng | 潘威</title><link>https://willpan.xyz/zh/author/daquan-feng/</link><atom:link href="https://willpan.xyz/zh/author/daquan-feng/index.xml" rel="self" type="application/rss+xml"/><description>Daquan Feng</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Automatic geometric calibration and unwarping of rotating line-scan imaging systems using elliptical distortion of circular patterns</title><link>https://willpan.xyz/zh/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>线扫相机每次只采集一行，图像的第二个维度由运动提供。因此成像过程取决于运动方式，标定必须把这种运动描述清楚。现有的线扫相机标定方法大多假设物体沿直线平移通过传感器。然而许多检测系统采用旋转扫描，例如圆柱形工件检测、旋转表面轮廓测量，以及对旋转对称物体的全景成像。此时每条扫描线对应不同的转角，形成扇形扫描（极坐标）几何，使二维强度图像和三维高度轮廓同时发生畸变。针对旋转扫描系统的标定方法通常依赖已知的角运动、机械测量或旋转编码器，增加了系统的复杂度。&lt;/p>
+&lt;p>缺失的信息其实就藏在畸变之中。在旋转扫描下，标定板上的圆孔成像为椭圆，而椭圆的中心与长宽比在图像中的变化规律，恰好编码了旋转几何。已有工作虽然也使用圆形靶标和椭圆拟合，但通常把椭圆形变视为投影或失准带来的次要效应，而没有把它当作扫描几何的载体加以利用。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/fig-setup.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/fig-setup.webp" alt="线条示意图：线扫相机与三维线激光位于圆形旋转台上方。一块带圆孔的方形标定板偏心放置在旋转台上，图中标出了旋转中心。右侧为标定板的俯视图（圆孔网格），其下方为采集到的图像：一块弯曲的扇形区域，其中的圆孔已变成椭圆。" loading="lazy">
+&lt;/a>&lt;figcaption>系统配置：线扫相机安装在旋转台上方，一块带圆孔的方形标定板偏心放置在旋转台上。旋转过程中逐行扫描，得到扇形图像，其中的圆孔畸变为椭圆。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>该方法把图像视为极坐标数据：像素所在的列对应它到旋转中心的距离 r = x − x&lt;sub>c&lt;/sub>，所在的行对应转角 θ = k(y − y&lt;sub>c&lt;/sub>)，其中 k 为角采样率（单位为弧度/行）。旋转中心 (x&lt;sub>c&lt;/sub>, y&lt;sub>c&lt;/sub>) 和 k 均为未知量，三者都由一幅简单圆孔标定板图像中的椭圆估计得到，无需编码器、机械测量或辅助传感器。随后，同一个从极坐标到笛卡尔坐标的变换同时校正二维图像和三维高度图。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/fig-setup.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>扫描。&lt;/strong> 传感器保持静止，标定板随旋转台转动。每条扫描线在新的转角下构成图像的一行，因此行记录转角，列记录到旋转中心的距离。&lt;/li>
+&lt;li>&lt;strong>圆变椭圆。&lt;/strong> 在这种扇形扫描映射下，每个圆孔都成像为椭圆，其形状取决于所在位置。单个椭圆可能受噪声、局部遮挡或边缘定位误差的干扰，但所有椭圆整体上呈现稳定的变化趋势；该方法正是从这些整体趋势、而非某一个高精度测量中估计标定参数。&lt;/li>
+&lt;li>&lt;strong>对每个孔拟合椭圆。&lt;/strong> 先（手动或自动）定位圆孔区域，用自适应阈值分割，再沿图像梯度方向把边缘细化到亚像素精度。剔除离群边缘点后，用直接最小二乘法拟合椭圆，记录其中心和长宽比 ρ&lt;sub>i&lt;/sub> = r&lt;sub>x,i&lt;/sub> / r&lt;sub>y,i&lt;/sub>；残差过大或长宽比不合理的椭圆被剔除。&lt;/li>
+&lt;li>&lt;strong>回归求旋转中心和角采样率。&lt;/strong> 长宽比随椭圆中心的水平位置近似线性变化，ρ = a·c&lt;sub>x&lt;/sub> + b，因此直线过零的位置就是旋转中心 x&lt;sub>c&lt;/sub> = −b/a。由于斜率 a 的微小误差会使 x&lt;sub>c&lt;/sub> 明显偏移，直线采用稳健拟合：先用 RANSAC 剔除粗大离群点，再用基于残差的迭代最小二乘精化（ILS）舍去残差较大的测量并重新拟合，通常 2–3 次迭代即可收敛。对各椭圆中心的竖直位置再做一次线性回归，即得到角采样率 k。&lt;/li>
+&lt;li>&lt;strong>展开校正。&lt;/strong> 利用估计出的 x&lt;sub>c&lt;/sub>、y&lt;sub>c&lt;/sub> 和 k，把校正图像中的每个像素映射回原始图像，并通过双线性插值取值，椭圆随之恢复为圆。对于三维数据，每个高度值转换为点 X = r cos θ，Y = r sin θ，高度 Z 保持不变。激光轮廓仪的二维强度图像和三维高度图来自同一组测量，因此一个变换即可同时校正两者。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/fig-detection.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/fig-detection.webp" alt="金属板的原始扇形扫描图像，板上有多排深色圆孔：右侧的椭圆较扁，左侧的较高。每个孔都标有 #1 至 #56 的编号，并叠加了拟合椭圆轮廓和中心十字。" loading="lazy">
+&lt;/a>&lt;figcaption>原始扇形扫描图像上的自动椭圆检测：每个检测到的孔都有编号，并叠加了拟合椭圆及其中心。论文图 4b。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-4-regression.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-4-regression.webp" alt="散点图，标题为 Calibration Fit (Aspect Ratio vs Position)：纵轴为长宽比（0.60 至 3.53），横轴为位置 X（314 至 3177 px）。绿色内点沿上升的蓝色拟合直线分布，中部有两个偏离直线的红色离群点。" loading="lazy">
+&lt;/a>&lt;figcaption>标定拟合：各椭圆的长宽比与其水平位置的关系，绿色为内点，红色为离群点，蓝色为拟合直线。将直线外推到零即得到旋转中心。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>旋转中心 x&lt;sub>c&lt;/sub> = −516.76 px，长宽比回归的 R² = 0.998&lt;/strong>；&lt;strong>角采样率 k = 0.00402 rad/pixel&lt;/strong>，所有标定孔的角度残差均低于 0.12°（第 4.4 节）。&lt;br>&lt;strong>圆度误差 ε 由展开前的 0.21 ± 0.08 降至展开后的 0.02 ± 0.01&lt;/strong>，其中 ε = |r&lt;sub>x&lt;/sub> − r&lt;sub>y&lt;/sub>| / r&lt;sub>x&lt;/sub>，理想圆为 0（第 4.5 节）。&lt;br>&lt;strong>x&lt;sub>c&lt;/sub> 估计的标准差：ILS 为 0.5 px&lt;/strong>，RANSAC 为 1.4 px，普通最小二乘为 3.8 px（表 3）。&lt;/aside>
+&lt;p>所有实验均在真实系统上完成：一台工业激光三角测量轮廓仪（OPT Machine Vision LPF2-050，405 nm 蓝色激光，每条扫描线 3,200 个采样点）安装在可编程精密旋转台上方。轮廓仪保持静止，标定靶随旋转台匀速转动，二维强度图像和三维高度轮廓由同一组测量同时生成。三块材质不同（金属与陶瓷）、孔位布局各异的圆孔标定板，给出了一致的旋转中心和角采样参数估计。椭圆拟合的平均均方根代数距离误差为 0.42 像素。展开校正恢复了二维图像中的圆孔；同一变换也减小了三维重建表面的残余几何畸变，提高了其空间规则性。&lt;/p>
+&lt;p>参与回归的椭圆越多，估计越稳定。在 50 次随机重复实验中，x&lt;sub>c&lt;/sub> 的标准差在使用 5 个椭圆时为 2.1 px，10 个时降至 0.6 px，20 个时为 0.3 px；自动检测加 ILS 同样达到 0.3 px（表 1）。让椭圆在视场中分布得更广，比单纯增加数量更重要：论文建议使用约 8–30 个分布均匀的椭圆，覆盖视场的至少 30%–50%。在模拟的局部遮挡、椒盐噪声、散斑噪声和离焦模糊条件下，该方法同样保持稳定（图 10）。当扫描角度超过约 10° 时回归结果稳定，大多数实验中 R² &amp;gt; 0.99。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-5-2d-unwarping.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-5-2d-unwarping.webp" alt="左右两幅灰度图像。左图为展开前：金属板上的深色圆孔在左侧被拉成瘦高的椭圆，越往右越接近圆形，并有一条弯曲的深色边缘。右图为展开后：黑色背景上的楔形图像，其中的孔呈圆形，排列成规则网格。" loading="lazy">
+&lt;/a>&lt;figcaption>扇形扫描图像的二维展开：展开前（左）与展开后（右）。椭圆恢复为圆孔。论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-6-3d-height-map.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-automatic-geometric-calibration-and-unwarping-of/figure-overleaf-6-3d-height-map.webp" alt="四幅图。上排：一块带 7×7 孔阵的标定板的二维线扫图像和紫色三维高度图，二者都弯成扇形。下排：展开后的二维图像和校正后的粉色三维高度图，标定板呈方形，孔阵笔直规整。" loading="lazy">
+&lt;/a>&lt;figcaption>同一校正应用于三维数据。左列为二维线扫图像，右列为重建的三维高度图；上排为校正前，下排为校正后。论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;p>作者也说明了该方法的局限。模型假设旋转轴垂直于成像平面，且扫描线经过标定圆盘的中心；若存在转轴倾斜、摆动或扫描线横向偏移，则需要引入额外参数。扫描角度过小时，椭圆接近圆形，x&lt;sub>c&lt;/sub> 和 k 难以观测。镜头畸变较强时应先做去畸变处理，标定板翘曲或不平整也会使椭圆中心产生偏差。对于三维数据，该校正只针对扫描几何引起的畸变，并未对激光平面标定或焦距变化建模。&lt;/p></description></item><item><title>Depth-adaptive calibration of line-laser 3D measurement systems using rational polynomial mapping and depth-independent misalignment compensation</title><link>https://willpan.xyz/zh/publications/cao-2026-depth-adaptive-calibration-of-line-laser/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/cao-2026-depth-adaptive-calibration-of-line-laser/</guid><description>&lt;h2 id="问题">问题&lt;/h2>
+&lt;p>线激光轮廓仪通过三角测量获取表面形貌：相机观察物体上的激光光条，把每个光条像素 (u, v) 转换为激光平面内的物理坐标 (X, Z)。再在运动平台扫描工件的过程中逐帧拼接这些轮廓，得到完整的三维点云。因此测量精度取决于标定，而在整个工作景深内，有两类不同的误差会降低精度。&lt;/p>
+&lt;p>第一类是内部误差。传统标定建立在单平面单应性之上，即严格线性的像素—物理坐标映射。在实际系统中，升降台的轻微倾斜、靶标的局部不平整、径向与切向镜头畸变以及光条中心提取噪声，都会使观测偏离理想透视模型，纯单应性无法表示这种非线性偏差。第二类是外部误差。若传感器与运动轴没有对准，拼接点云就会带有系统性的剪切畸变，原本正交的矩形变成平行四边形。这种剪切无法通过调整内参或畸变系数消除，而为每个深度单独设置补偿参数又会使参数数量成倍增加。现有流程通常只处理内部映射或外部安装几何中的一项，很少对二者在整个景深内的联合影响建模。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-problem.webp" alt="两幅灰度棋盘格扫描图，其中 4×4 的格子用红线勾出。左图标注 Proper installation：勾出的格子构成规则的方形网格。右图标注 Tilted installation：勾出的区域发生畸变，水平线倾斜，角点不再是直角。" loading="lazy">
+&lt;/a>&lt;figcaption>正常安装（左）与倾斜安装（右）下扫描的棋盘格。安装倾斜使重建出的网格变成平行四边形。论文图 2(b)。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="方法">方法&lt;/h2>
+&lt;p>该方法把两类误差放在两个独立阶段中处理。内部阶段是一次性的出厂标定，确定每帧轮廓内的像素—物理坐标映射；外部阶段是现场补偿，消除拼接点云中的安装剪切。两个阶段由一个自动化、运动触发的流程串联起来，无需人工多姿态摆放靶标。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/cao-2026-depth-adaptive-calibration-of-line-laser/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-method.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>覆盖整个深度范围采样。&lt;/strong> 相机和线激光器安装在精密 Z 轴位移台上，位移台按预设位置依次移动。在每个高度，系统采集一组激光开/关图像对，得到干净的光条中心线。实验中共采样 Z&lt;sub>1&lt;/sub>–Z&lt;sub>6&lt;/sub> 六个深度，间隔 30 mm，覆盖 150 mm 范围；其中五个深度用于拟合，Z&lt;sub>3&lt;/sub> 留作测试。&lt;/li>
+&lt;li>&lt;strong>拟合一个有理多项式映射。&lt;/strong> 模型保留透视（单应性）主干，并在高度方向叠加二元三次残差。合并为单一比值后，它以三次分子和共用的线性分母把 (u, v) 分别映射到 X 和 Z，共 22 个系数。交叉相乘后问题变为线性，所有训练深度的对应点组成一个超定方程组，用最小二乘求解。&lt;/li>
+&lt;li>&lt;strong>剪切建模。&lt;/strong> 安装误差被分解为三个旋转：横滚角 α、俯仰角 β 和偏航角 γ。存在偏航角 γ 时，扫描步长 Δy 会使点在横向偏移 Δx = Δy tan γ，矩形因此变成平行四边形。在所测试的推扫配置中，俯仰使激光平面绕其自身轴向旋转，不产生面内剪切，因此取 β = 0。&lt;/li>
+&lt;li>&lt;strong>测量 α 和 γ。&lt;/strong> 对空载平台的扫描结果做 RANSAC 直线拟合，得到参考线 L。横滚角由名义高度为 H、宽度为 W 的标准高度块求得：α = arctan((H′ − H) / W)，其中 H′ 为其上表面到 L 的实测平均高度。偏航角由棋盘格求得：要求校正后格子的相邻边相互垂直，可得到关于 sin γ 的二次方程。对每个内部 2 × 2 角点单元分别求解，取中位数作为结果。&lt;/li>
+&lt;li>&lt;strong>一次逆旋转，适用于所有深度。&lt;/strong> 每个点都按 Z–Y–X 顺序经过逆旋转 R&lt;sub>x&lt;/sub>(α) R&lt;sub>y&lt;/sub>(β) R&lt;sub>z&lt;/sub>(γ)；当 β = 0 时简化为 R&lt;sub>x&lt;/sub>(α) R&lt;sub>z&lt;/sub>(γ)。该校正与深度无关，因此只需在 Z&lt;sub>3&lt;/sub> 估计一次角度，即可在整个测量体积内复用。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-method.webp" alt="两行流程图。Stage 1（出厂标定）：Z 轴位移台上的相机和激光器、多个 Z 位置的棋盘格图像堆栈、激光开/关图像、(u, v) 特征提取、X 和 Z 的有理多项式公式，以及标注 22 RPC 的方框。Stage 2（现场补偿）：扫描棋盘格靶标、将角点映射到彩色深度图、标有 α、β、γ 的偏转角示意、包含 R x、R y、R z 的坐标校正公式，以及校正前后的棋盘格图像。" loading="lazy">
+&lt;/a>&lt;figcaption>端到端流程。第一阶段（出厂标定）：在 Z 轴位移台上进行多深度采集，获取激光开/关图像对，提取特征并拟合 22 个 RPC 系数。第二阶段（现场补偿）：把扫描得到的棋盘格映射到深度图，计算偏转角，再用逆旋转校正坐标。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="结果">结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在留作测试的深度 Z&lt;sub>3&lt;/sub> 上，X、Z 方向平均绝对误差较 HALCON 基线分别降低 17.5% 和 11.8%&lt;/strong>：8.745 对 10.600 µm，3.820 对 4.332 µm（表 5）。&lt;br>&lt;strong>倾斜安装下 25° 标准角度块的角度误差：0.7591° → 0.0387°&lt;/strong>（深度均值），降低 94.90%（表 7）。&lt;br>&lt;strong>倾斜安装下棋盘格正交误差：10.007° → 0.309°&lt;/strong>（深度均值），降低 96.92%（表 8）。&lt;/aside>
+&lt;p>所有实验均使用一台商用线激光轮廓仪（OPT-LPF2-006-01），配合可编程 Z 轴位移台和推扫平台。真值来自经过认证的标准件：带 49 × 49 点阵（间距 1 mm）的网格畸变靶标、25 mm 方格的金属棋盘格、25° 标准角度块和高度块。在内部阶段，HALCON 基线与所提映射使用相同的图像堆栈、相同的光条中心提取器和相同的训练/测试深度划分。除平均绝对误差降低外，所提映射还使 X、Z 方向的重复性分别提升 33.8% 和 70.0%。提升最大的是 Z 方向重复性，它对高度方向的非线性最敏感，而三次残差正是为吸收这种非线性而设计的。残差阶数实验支持选择三次：二次残差欠拟合；四次残差的训练误差最低，但其测试误差升至 X 方向 12.155 µm、Z 方向 5.130 µm，而三次残差为 8.745 µm 和 3.820 µm（表 11）。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-internal.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-internal.webp" alt="两幅柱状图。左图（越低越好）：灰色为 HALCON 基线，蓝色为所提方法，R X 为 7.18 对 4.75，R Z 为 0.82 对 0.25，MAE X 为 10.60 对 8.74，MAE Z 为 4.33 对 3.82，单位为微米。右图（越高越好）：相对提升分别为 33.8%、70.0%、17.5% 和 11.8%。" loading="lazy">
+&lt;/a>&lt;figcaption>测试深度 Z&lt;sub>3&lt;/sub> 上的内部标定精度：(a) HALCON 基线与所提 RPC 映射的重复性 R 和平均绝对误差，单位 µm；(b) 所提映射的相对提升。论文图 8。&lt;/figcaption>
+&lt;/figure>
+&lt;p>在外部阶段，传感器被有意倾斜安装（横滚角 α ≈ 5°，偏航角 γ ≈ 10°），并在全部六个深度上按三种状态测量：正常安装、倾斜未补偿、倾斜并补偿，每种状态重复 10 次。与正常安装相比，倾斜使角度块误差放大 18.84 倍，正交误差放大 31.87 倍。使用在 Z&lt;sub>3&lt;/sub> 估计后固定的角度进行补偿后，两项误差都回到正常安装水平（分别为其 0.96 倍和 0.98 倍）。逐深度的误差降幅在角度任务中保持在 94.69%–95.04%，在正交任务中保持在 96.87%–96.97%，同一补偿器无需重新调参即可适用于每个深度。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-orthogonality.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-orthogonality.webp" alt="左图：Z1 至 Z6 各深度正交误差的对数坐标折线图。红色的倾斜未补偿曲线保持在 10° 附近；灰色虚线的正常安装曲线与蓝色的倾斜补偿曲线在 0.3° 附近重合。右图：各深度误差降幅柱状图，介于 96.87% 与 96.97% 之间，虚线表示均值 96.92%。" loading="lazy">
+&lt;/a>&lt;figcaption>Z&lt;sub>1&lt;/sub>–Z&lt;sub>6&lt;/sub> 各深度的棋盘格正交误差：(a) 三种安装状态（对数坐标），补偿后的曲线与正常安装参考曲线重合；(b) 各深度的误差降幅。论文图 12。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-clouds.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-clouds.webp" alt="六幅按高度着色的棋盘格高度图，棋盘格上放着一根细长的红色条块，排成两行三列，列标为 Z1、Z2、Z3。上行标注 Uncompensated，下行标注 Compensated。" loading="lazy">
+&lt;/a>&lt;figcaption>棋盘格加角度块场景在 Z&lt;sub>1&lt;/sub>–Z&lt;sub>3&lt;/sub> 深度处的拼接点云，上行未补偿，下行已补偿。未补偿时，网格被剪切成非正交的平行四边形；补偿后恢复为正交网格。红色物体为 25° 标准角度块。裁剪自论文图 14（原图包含全部六个深度）。&lt;/figcaption>
+&lt;/figure>
+&lt;p>两个阶段缺一不可。关闭外部补偿器时，映射误差与完整流程相当，但角度误差和正交误差仍停留在未补偿水平。采用 HALCON 映射加外部补偿器时，几何误差降至 0.0506° 和 0.519°，但仍高于完整流程的 0.0387° 和 0.309°，且映射误差回到基线水平（表 10）。补偿器在超出厂商名义 5° 安装公差时依然有效：在深度 Z&lt;sub>3&lt;/sub>、偏航角约 10° 的条件下把横滚角逐步增大到 20°，校正后的角度误差保持在 0.037°–0.101°，正交误差保持在 0.16°–0.59°（表 9）。一次完整标定中的数值计算约需 2.3 s，约 11 分钟的总耗时主要花在物理扫描上（表 12）。&lt;/p>
+&lt;p>作者将上述结果的适用范围限定在所测试的单台设备及其工作距离范围内。在第二台相机上的验证、更多标准角度，以及独立重新安装后所估计角度的重复性，留待后续工作。&lt;/p></description></item></channel></rss>
