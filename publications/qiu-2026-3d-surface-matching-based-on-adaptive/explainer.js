@@ -1,34 +1,39 @@
-// Schematic of the pipeline named in the abstract: model point cloud -> depth map -> curvature map ->
-// adaptive-threshold iterative segmentation keeps high-curvature points -> integral-volume-descriptor
-// coarse matching in the scene point cloud -> ICP fine matching. The workpiece shape is a generic stand-in.
+// Schematic of the pipeline in the paper (Fig. 1): model point cloud -> depth map -> curvature map ->
+// adaptive threshold beta = mu + K*sigma, K adjusted by 1% per iteration until the high-curvature share is
+// within the target range -> IVD correspondences -> SVD coarse pose -> ICP fine matching.
+// The workpiece shape is a generic stand-in.
 export default function mount(el, { kit, lang }) {
   const L = kit.pick({
     en: {
       steps: [
-        "The model point cloud of the workpiece is converted into a depth map, and a surface curvature map is calculated from it.",
-        "An adaptive threshold iterative segmentation removes redundant points and keeps the geometrically significant high-curvature points as the reduced model point cloud.",
-        "Coarse matching based on an integral volume descriptor finds the approximate pose of the target within the scene point cloud.",
-        "From that approximate pose, the iterative closest point (ICP) algorithm performs the fine surface matching.",
+        "The model point cloud is converted into a depth map. For every pixel, the average curvature of a quadratic surface fitted to its neighbourhood becomes the value of the curvature map.",
+        "A histogram of the curvature values gives a target share of high-curvature points (upper percentile). The threshold is β = mean + K × standard deviation; K is raised or lowered by 1% per iteration until the share falls inside the target range. The points above it are kept.",
+        "For each point, the integral volume descriptor (IVD) is the volume of a sphere around it that lies inside the surface. Model and scene points with similar IVD and position form preliminary correspondences.",
+        "Singular value decomposition (SVD) of the covariance of the corresponding points gives the approximate pose of the target in the scene point cloud.",
+        "Starting from that pose, ICP iteratively minimises the squared distances to the scene until the objective barely changes, giving the fine surface matching.",
       ],
       cloud: "Model point cloud", depth: "Depth map", curv: "Curvature map",
-      thr: "Adaptive threshold", iter: "iterative segmentation", kept: "Feature points kept",
+      thr: "Adaptive threshold", iter: "K changes by 1% per iteration", kept: "Feature points kept",
       axis: "curvature", removed: "redundant", low: "low", high: "high",
       model: "Model features", scene: "Scene point cloud",
-      coarse: "Coarse matching", desc: "integral volume descriptor", approx: "approximate pose",
+      ivdT: "Integral volume descriptor", ivdV: "volume inside the surface", corr: "similar IVD = correspondence", sphere: "sphere radius r",
+      coarse: "Coarse matching", desc: "SVD of the point pairs", approx: "approximate pose",
       fine: "Fine matching: ICP", done: "aligned",
     },
     zh: {
       steps: [
-        "将工件的模型点云转换为深度图，并据此计算曲面曲率图。",
-        "自适应阈值迭代分割剔除冗余点，保留几何意义显著的高曲率点作为精简后的模型点云。",
-        "基于积分体积描述子的粗匹配在场景点云中找到目标的大致位姿。",
-        "以该大致位姿为起点，迭代最近点（ICP）算法完成曲面精匹配。",
+        "将模型点云转换为深度图；对每个像素，用邻域拟合二次曲面得到的平均曲率作为曲率图的像素值。",
+        "对曲率值做直方图，据此设定高曲率点所占的目标比例（上分位）。阈值为 β = 均值 + K × 标准差；每次迭代将 K 增大或减小 1%，直到高曲率比例落入目标范围，保留高于阈值的点。",
+        "对每个点，积分体积描述子（IVD）是以该点为球心的球体落在曲面内部的体积；IVD 与位置相近的模型点和场景点构成初步对应关系。",
+        "对对应点的协方差做奇异值分解（SVD），得到目标在场景点云中的大致位姿。",
+        "以该位姿为起点，ICP 迭代最小化与场景点的距离平方，直到目标函数变化很小，完成曲面精匹配。",
       ],
       cloud: "模型点云", depth: "深度图", curv: "曲率图",
-      thr: "自适应阈值", iter: "迭代分割", kept: "保留的特征点",
+      thr: "自适应阈值", iter: "每次迭代 K 变化 1%", kept: "保留的特征点",
       axis: "曲率", removed: "冗余", low: "低", high: "高",
       model: "模型特征点", scene: "场景点云",
-      coarse: "粗匹配", desc: "积分体积描述子", approx: "大致位姿",
+      ivdT: "积分体积描述子", ivdV: "曲面内部的体积", corr: "IVD 相近即为对应", sphere: "球半径 r",
+      coarse: "粗匹配", desc: "对应点对的 SVD", approx: "大致位姿",
       fine: "精匹配：ICP", done: "已对齐",
     },
   }, lang);
@@ -166,7 +171,7 @@ export default function mount(el, { kit, lang }) {
 
         // Histogram of curvature values with an iterating threshold
         title(g, PX[1], L.thr);
-        text(g, PX[1], 120, L.iter, { size: 15, fill: body });
+        text(g, PX[1], 120, "β = μ + Kσ", { size: 17, fill: body, weight: 600 });
         const bins = [0, 1, 2, 3].map((v) => part.filter((p) => Math.min(p.c, 3) === v).length);
         const bx0 = PX[1] - 58, bw = 26, base = 262;
         const sc = (n) => Math.sqrt(n) * 7.5;
@@ -181,9 +186,10 @@ export default function mount(el, { kit, lang }) {
           if (v > Tu + 0.01) line(g, [xT(v), 138], [xT(v), base], { stroke: mute, dash: "3 4", w: 1.2, opacity: 0.8 });
         }
         line(g, [xT(Tu), 134], [xT(Tu), base + 4], { stroke: ink, w: 2 });
-        text(g, xT(Tu) + 14, 150, "T", { size: 17, italic: true, anchor: "start", weight: 600 });
-        text(g, PX[1] + 30, 314, `${L.axis} →`, { size: 15, fill: body });
-        text(g, bx0 + bw / 2, 288, L.removed, { size: 15, fill: body, opacity: e });
+        text(g, xT(Tu) + 14, 150, "β", { size: 17, italic: true, anchor: "start", weight: 600 });
+        text(g, PX[1] + 46, 282, `${L.axis} →`, { size: 15, fill: body });
+        text(g, PX[1], 318, L.iter, { size: 15, fill: body });
+        text(g, bx0 + bw / 2 - 6, 288, L.removed, { size: 15, fill: body, opacity: e });
 
         // Retained feature points
         title(g, PX[2], L.kept);
@@ -199,6 +205,46 @@ export default function mount(el, { kit, lang }) {
       }
 
       if (i === 2) {
+        // Cross-section: surface profile, sphere of radius r at P, voxels inside both
+        const surf = (x) => 252 - 44 * Math.exp(-(((x - 170) / 58) ** 2));
+        const PXc = 170, PYc = surf(170), R = 64;
+        text(g, 170, 98, L.ivdT, { weight: 600 });
+        const pts = [];
+        for (let x = 40; x <= 300; x += 4) pts.push(`${x},${surf(x)}`);
+        kit.svg("polygon", { points: `40,282 ${pts.join(" ")} 300,282`, fill: mute, opacity: 0.3 }, g);
+        for (let gx = 110; gx < 230; gx += 8) {
+          for (let gy = 146; gy < 280; gy += 8) {
+            const cx = gx + 4, cy = gy + 4;
+            if ([gx, gx + 8].every((vx) => [gy, gy + 8].every((vy) => Math.hypot(vx - PXc, vy - PYc) < R)) && cy > surf(cx)) {
+              kit.svg("rect", { x: gx, y: gy, width: 8, height: 8, fill: accent, opacity: 0.55 * e, stroke: bg, "stroke-width": 0.5 }, g);
+            }
+          }
+        }
+        kit.svg("polyline", { points: pts.join(" "), fill: "none", stroke: body, "stroke-width": 1.8 }, g);
+        kit.svg("circle", { cx: PXc, cy: PYc, r: R * e, fill: "none", stroke: ink, "stroke-width": 1.6, "stroke-dasharray": "5 4" }, g);
+        kit.svg("circle", { cx: PXc, cy: PYc, r: 4, fill: ink }, g);
+        text(g, PXc - 12, PYc - 12, "P", { size: 17, italic: true, weight: 600 });
+        line(g, [PXc, PYc], [PXc + R * 0.8 * e, PYc - R * 0.6 * e], { stroke: ink, w: 1.2 });
+        text(g, PXc + R * 0.8 + 10, PYc - R * 0.6 - 6, L.sphere, { size: 14, anchor: "start", opacity: e });
+        text(g, 170, 316, L.ivdV, { size: 15, fill: body, opacity: e });
+
+        // Correspondences between model feature points and scene points
+        text(g, 392, 98, L.model, { weight: 600, size: 16 });
+        text(g, 548, 98, L.scene, { weight: 600, size: 16 });
+        const MP = { cx: 392, cy: 200, s: 5.2, a: 0 }, SP = { cx: 548, cy: 214, s: 5.2, a: 28 };
+        for (const p of part) {
+          const [x, y] = place(p, SP);
+          kit.svg("circle", { cx: x, cy: y, r: 1.7, fill: mute, opacity: 0.7 }, g);
+        }
+        keep.forEach((p, k) => {
+          const [x, y] = place(p, MP);
+          if (k % 4 === 0) line(g, [x, y], place(p, SP), { stroke: accent, w: 1, opacity: 0.55 * e });
+          kit.svg("circle", { cx: x, cy: y, r: 2.4, fill: accent }, g);
+        });
+        text(g, 470, 316, L.corr, { size: 15, fill: body, opacity: e });
+      }
+
+      if (i === 3) {
         text(g, 110, 98, L.model, { weight: 600, opacity: 1 - e });
         text(g, 469, 92, L.scene, { weight: 600 });
         drawScene(g);
@@ -218,7 +264,7 @@ export default function mount(el, { kit, lang }) {
         }
       }
 
-      if (i === 3) {
+      if (i === 4) {
         text(g, 469, 92, L.scene, { weight: 600 });
         drawScene(g);
         const P = lerp(COARSE, FINE, e);

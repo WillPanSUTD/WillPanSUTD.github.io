@@ -1,17 +1,47 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Yunzhi Zhang | 潘威</title><link>https://willpan.xyz/zh/author/yunzhi-zhang/</link><atom:link href="https://willpan.xyz/zh/author/yunzhi-zhang/index.xml" rel="self" type="application/rss+xml"/><description>Yunzhi Zhang</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>3D Surface Matching Based on Adaptive Threshold and Curvature Map</title><link>https://willpan.xyz/zh/publications/qiu-2026-3d-surface-matching-based-on-adaptive/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/qiu-2026-3d-surface-matching-based-on-adaptive/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
-&lt;p>在工业缺陷检测和机器人分拣场景中，三维扫描仪的采集范围有限，每次扫描只能得到单一视角下的单幅点云或深度图。这使曲面匹配面临困难：特征点稀疏、冗余数据过多、重叠率低。&lt;/p>
+&lt;p>在工业缺陷检测和机器人分拣中，三维扫描仪的采集范围有限，每次扫描只能得到单一视角下的单幅点云或深度图，只覆盖工件的一部分表面。把工件模型与这样的扫描数据匹配并不容易：特征点稀疏，冗余数据多，重叠率低。&lt;/p>
+&lt;p>据作者分析，常用方法各有短板。ICP（迭代最近点）在初始位姿良好时对齐精度很高，但对初值敏感，几何结构不完整或有歧义时容易陷入局部极小。基于 RANSAC 的方法难以分割相邻或连续的曲面。积分体积描述子（IVD）能提高粗匹配对噪声的鲁棒性，但在稠密或有噪声的点云上计算量增长很快。基于学习的配准通常需要大规模标注数据和大量计算，在不同工业场景之间泛化也较弱。本文因此提出一种几何方法：只保留真正重要的点，让 IVD 和 ICP 处理的数据更少。&lt;/p>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
-&lt;p>该方法将三维工件模型与场景点云进行匹配。它先用自适应阈值把模型精简为高曲率特征域，再分粗、精两个阶段完成匹配。&lt;/p>
-&lt;div class="explainer" data-explainer="/publications/qiu-2026-3d-surface-matching-based-on-adaptive/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;/div>
+&lt;p>该方法面向曲率变化明显的工件。它先通过自行确定的阈值把模型点云精简为高曲率点，再分两个阶段匹配：用 IVD 对应关系得到粗位姿，再用 ICP 得到精位姿。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/qiu-2026-3d-surface-matching-based-on-adaptive/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
-&lt;li>&lt;strong>深度图与曲率图。&lt;/strong> 将模型点云转换为深度图，并据此计算曲面曲率图。&lt;/li>
-&lt;li>&lt;strong>自适应阈值分割。&lt;/strong> 自适应阈值迭代分割算法剔除冗余点，保留几何意义显著的高曲率特征点作为精简后的模型点云。&lt;/li>
-&lt;li>&lt;strong>粗匹配。&lt;/strong> 基于积分体积描述子的粗匹配算法在场景点云中确定目标点云的大致位姿；据作者介绍，这提高了粗匹配的精度和鲁棒性，并降低了 ICP 迭代对初始位姿的依赖。&lt;/li>
-&lt;li>&lt;strong>精匹配。&lt;/strong> 最后由迭代最近点（ICP）算法完成曲面精匹配。&lt;/li>
+&lt;li>&lt;strong>深度图与曲率图。&lt;/strong> 将模型点云转换为深度图；对每个像素，用邻域拟合的二次曲面求出平均曲率，作为曲面曲率图的像素值。&lt;/li>
+&lt;li>&lt;strong>自适应阈值迭代。&lt;/strong> 根据曲率值的直方图（组距由 Scott 规则确定）设定高曲率点所占的目标比例，即高于某个上分位的点。阈值为 β = μ + Kσ，其中 μ、σ 为曲率图的均值和标准差。若高于阈值的点比例过大，就把 K 增大 1%；过小则减小 1%。如此重复，直到比例落入目标附近的容差范围。最终阈值以上的点即为用于匹配的模型点云。&lt;/li>
+&lt;li>&lt;strong>IVD 对应关系。&lt;/strong> 一个点的 IVD 是以它为球心的球与曲面内部相交的体积，通过体素占据网格与球形网格的卷积计算，避免了微分类特征对噪声的敏感。IVD 与位置相近的模型点和场景点构成初步的点对。&lt;/li>
+&lt;li>&lt;strong>SVD 求粗位姿。&lt;/strong> 去除两组点的质心后，对点对的协方差矩阵做 SVD 分解，得到目标在场景中的大致位姿。&lt;/li>
+&lt;li>&lt;strong>ICP 精匹配。&lt;/strong> 按粗位姿变换模型，再由 ICP 最小化与场景点的距离平方，目标函数变化小于设定值时停止。&lt;/li>
 &lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-method.webp" alt="三行流程图：数据准备将模型点云转为深度图和曲率图并预处理场景点云；特征区域计算采用自适应高曲率阈值迭代；基于 IVD 的匹配依次进行 SVD 粗匹配和 ICP 精匹配，并给出匹配结果。" loading="lazy">
+&lt;/a>&lt;figcaption>方法流程图：由模型点云得到曲率图，经自适应阈值迭代保留高曲率特征区域，再在场景中进行基于 IVD 的粗匹配（SVD）和 ICP 精匹配。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-threshold.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-threshold.webp" alt="曲率直方图，上分位的红色尾部为高曲率特征区域；右侧一列特征点层从上到下由过少到过多，箭头向中间一层收敛。" loading="lazy">
+&lt;/a>&lt;figcaption>自适应阈值迭代：曲率直方图的红色尾部是高曲率特征区域，调整阈值，直到特征点数量既不过少也不过多。论文图 2。&lt;/figcaption>
+&lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">与传统曲面匹配算法和人工调整阈值的方法相比，该方法&lt;strong>匹配精度更高&lt;/strong>，能够准确对齐目标工件，不出现错位或位置偏差。&lt;br>在模拟的中低噪声环境下，该方法&lt;strong>仍能正确匹配&lt;/strong>。&lt;/aside>
-&lt;p>&lt;em>本页内容依据论文摘要整理，全文见出版方页面：&lt;a href="https://doi.org/10.1109/ICIGP68997.2026.11619834">doi.org/10.1109/ICIGP68997.2026.11619834&lt;/a>。&lt;/em>&lt;/p></description></item><item><title>An Improved Graph Attention Network for Semantic Segmentation of Industrial Point Clouds in Automotive Battery Sealing Nail Defect Detection</title><link>https://willpan.xyz/zh/publications/pan-2026-industrial-point-cloud-segmentation/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2026-industrial-point-cloud-segmentation/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>在两个工件上，均取得所比较方法中最低的 RMSE：工件 1 为 0.681，工件 2 为 0.405&lt;/strong>，不做特征筛选的 IVD-SVD+ICP 分别为 1.194 和 0.521（表 III）。&lt;br>阈值随模型自适应确定，无需人工调参：三个模型收敛后的 K 分别为 0.405、0.605 和 0.368（表 II）。&lt;br>&lt;strong>加入高斯噪声（标准差 0.1、0.3、0.5）后，RMSE 在每一种情况下都低于 IVD-SVD+ICP&lt;/strong>，例如工件 1 在标准差 0.3 时为 0.826，对比 1.01（表 IV）。&lt;/aside>
+&lt;p>实验使用结构光相机采集的两种工件的点云（论文图 4）。工件 1 用正、反两个模型匹配，场景点云有 149,469 个点；工件 2 用一个模型（表 I）。精度用匹配点之间的 RMSE 衡量，场景中有多个目标时取所有结果的平均值。&lt;/p>
+&lt;p>分割时取曲率值最高的 20%（80% 分位）作为目标。分割后的点云比原始点云稀疏得多，但边缘和其他几何意义显著的点仍然保留。表 II 给出了收敛参数：三个模型分别迭代 502、904 和 622 次，最终保留 3,671、3,369 和 4,860 个特征点。&lt;/p>
+&lt;p>匹配实验比较了 IVD-SVD+ICP、同一流程但用三个固定 K 值（0.3、0.6、0.9）手工设定阈值的方法，以及所提方法。所提方法在两个工件上的 RMSE 都最低。工件 2 上差距很小：K = 0.3 为 0.406，所提方法为 0.405。固定 K 的结果也说明了 K 的选择对工件 1 影响很大：RMSE 在 0.752 到 0.991 之间，而自适应阈值无需这样的调参。运行时间（表 III）处于同一量级：所提方法为 543 ms 和 337 ms，IVD-SVD+ICP 为 532 ms 和 489 ms，工件 2 上部分固定 K 的方案更快。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-data.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-data.webp" alt="测试工件的点云：一个红色模型和一个蓝色模型，旁边是由绿色带孔方形板组成的场景；另有一个红色圆盘模型和绿色圆盘场景。" loading="lazy">
+&lt;/a>&lt;figcaption>测试数据。工件 1：红色和蓝色的模型点云（反面和正面）与包含多个工件的绿色场景；工件 2：红色圆盘模型与绿色场景。论文图 4。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-segmentation.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-segmentation.webp" alt="两个工件各三列：彩色编码的深度图、曲率图，以及勾勒出边缘和孔洞的稀疏红色分割点云。" loading="lazy">
+&lt;/a>&lt;figcaption>两个工件的深度图、曲率图和分割后的模型点云。分割后的点云保留了边缘和孔洞。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;p>为检验抗噪性，作者在点云中加入标准差为 0.1、0.3 和 0.5 的高斯噪声，分别模拟低、中、高噪声，并与 IVD-SVD+ICP 比较。所提方法的 RMSE 随噪声增大而上升，但在全部六种情况下都更低：工件 1 为 0.748、0.826 和 0.978（对比 0.811、1.01 和 1.121），工件 2 为 0.417、0.497 和 0.557（对比 0.656、0.667 和 0.728）（表 IV 和表 V）。在低、中噪声下，匹配结果没有位置偏差。作者指出，该方法在高噪声点云上仍有局限，后续工作包括进一步优化特征提取、用更多数据验证跨场景适应性，以及分析异质点云匹配中的数据误差。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-noise.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/qiu-2026-3d-surface-matching-based-on-adaptive/fig-noise.webp" alt="三列对应噪声标准差 0.1、0.3、0.5，三行依次为匹配前的场景、IVD-SVD&amp;#43;ICP 的结果和所提方法的结果，以叠加的绿、红、蓝点云显示。" loading="lazy">
+&lt;/a>&lt;figcaption>工件 1 在三种噪声水平下的匹配结果：匹配前（上）、IVD-SVD+ICP（中）和所提方法（下）。论文图 7。&lt;/figcaption>
+&lt;/figure></description></item><item><title>An Improved Graph Attention Network for Semantic Segmentation of Industrial Point Clouds in Automotive Battery Sealing Nail Defect Detection</title><link>https://willpan.xyz/zh/publications/pan-2026-industrial-point-cloud-segmentation/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2026-industrial-point-cloud-segmentation/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
 &lt;p>密封钉用于封堵汽车动力电池的注液孔，通过激光焊接固定。焊接过程可能产生爆点、熔珠、针孔等缺陷，影响电池的安全性和耐久性。金属表面反光强、缺乏纹理，二维成像难以可靠检测：需要频繁重新调整打光，误检率也较高。因此，传统检测方案先用二维视觉定位缺陷，再用三维视觉进行测量。这种多阶段流程复杂、效率较低，误差还会在各阶段之间累积。&lt;/p>
 &lt;p>三维点云可以直接反映表面形貌，但许多先进的分割网络（如 Point Transformer 和 Swin3D）在很大程度上依赖 RGB-D 或强度信息；当只有几何数据可用时，其鲁棒性受到限制，而这正是反光工业零件上的常见情况。缺陷本身也难以学习：同一类缺陷的形状可能差异很大；一帧约 10 万个点的扫描中，缺陷点只有约 1000 个；而在缺陷边界附近，点的坐标与周围表面几乎没有差别。&lt;/p>
 &lt;figure class="rfig">
