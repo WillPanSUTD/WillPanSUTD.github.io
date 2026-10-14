@@ -12,7 +12,7 @@
 &lt;ol>
 &lt;li>&lt;strong>一个采集周期。&lt;/strong> 投影仪依次显示三类图案：模拟四象限照明、供 PS 使用的二值图案，以及供 PMD 使用的水平（fringe-x）和竖直（fringe-y）正弦条纹。相机每个周期采集 12 幅图像。&lt;/li>
 &lt;li>&lt;strong>PMD 分支。&lt;/strong> 每个像素有四幅相移条纹图像：其均值为平均强度 A，由条纹调制计算镜面反射分量 S，漫反射分量为 D = A − S，光泽度为 S / A。多频相位展开得到绝对相位，其在 x、y 方向的导数构成相位梯度幅值 P。&lt;/li>
-&lt;li>&lt;strong>PS 分支。&lt;/strong> 四幅二值图案图像以 PMD 得到的反射分量图为先验，构成“图像数 × 像素数”的强度矩阵。对其做奇异值分解得到表面法向，再由法向计算表面梯度和平均曲率 H，计算过程采用 CUDA 加速。&lt;/li>
+&lt;li>&lt;strong>PS 分支。&lt;/strong> 四幅二值图案图像以 PMD 得到的镜面与漫反射分量图作为先验信息，构成“图像数 × 像素数”的强度矩阵。对其做奇异值分解得到表面法向，再由法向计算表面梯度和平均曲率 H，计算过程采用 CUDA 加速。&lt;/li>
 &lt;li>&lt;strong>按反射特性计算权重。&lt;/strong> 每个像素的权重为 w&lt;sub>PMD&lt;/sub> = S / (S + D)，w&lt;sub>PS&lt;/sub> = D / (S + D)。高光像素更依赖 PMD，偏漫反射的像素更依赖 PS，两者之间平滑过渡。&lt;/li>
 &lt;li>&lt;strong>融合。&lt;/strong> 结果为 R = w&lt;sub>PMD&lt;/sub>·P + w&lt;sub>PS&lt;/sub>·H。在条纹可靠的区域以 PMD 为主，在需要保留漫反射细节的区域以 PS 为主。&lt;/li>
 &lt;/ol>
@@ -22,8 +22,8 @@
 &lt;/a>&lt;figcaption>FPD 框架：图案投射、图像采集、PMD 特征提取（平均强度、漫反射、光泽度、镜面反射图及相位梯度）、PS 曲率图、自适应权重计算与自适应融合。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>高光标志上的划痕：&lt;/strong> PS 平均曲率图未能呈现，PMD 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>标志以外的指纹脏污：&lt;/strong> PMD 相位梯度图未能重建，PS 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>Smart3 缺陷检测：&lt;/strong> 基于 PS 的检测在强镜面反射区域失效，基于 PMD 的检测在反射较弱的区域失效，FPD 结果则能同时支持两类缺陷的检测（图 7）。&lt;/aside>
-&lt;p>测试对象是同时具有漫反射和镜面反射的 iPhone 后盖。实验平台由投影仪、相机和安装结构组成，每个周期采集二值、fringe-x 和 fringe-y 三类图案共 12 幅图像，处理所用电脑配备 Intel Core i5-13500 CPU 和 NVIDIA GeForce RTX 3060 GPU。对比在同一次采集得到的三幅重建图之间进行：PS 平均曲率图、PMD 相位梯度图和 FPD 融合结果；作者认为 FPD 对两类特征的重建都更完整、更一致。随后，在 OPT Machine Vision 的商用检测软件 Smart3 中分别对三幅图做缺陷检测：一是划痕检测，二是基于高斯线提取的指纹/脏污检测。FPD 也已集成到商用缺陷检测软件中。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>高光标志上的划痕：&lt;/strong> PS 平均曲率图未能呈现，PMD 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>标志以外的指纹脏污：&lt;/strong> PMD 相位梯度图未能重建，PS 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>Smart3（商用检测软件）缺陷检测：&lt;/strong> 基于 PS 的检测在强镜面反射区域失效，基于 PMD 的检测在反射较弱的区域失效，FPD 结果则能同时支持两类缺陷的检测（图 7）。&lt;/aside>
+&lt;p>测试对象是同时具有漫反射和镜面反射的 iPhone 后盖。实验平台由投影仪、相机和安装结构组成，每个周期采集二值、fringe-x 和 fringe-y 三类图案共 12 幅图像，处理所用电脑配备 Intel Core i5-13500 CPU 和 NVIDIA GeForce RTX 3060 GPU。对比在同一次采集得到的三幅重建图之间进行：PS 平均曲率图、PMD 相位梯度图和 FPD 融合结果；作者认为 FPD 对两类特征的重建都更完整、更一致。随后，在 OPT Machine Vision 的商用检测软件 Smart3 中分别对三幅图做缺陷检测：一是划痕检测，二是基于线特征提取的脏污检测。FPD 也已集成到商用缺陷检测软件中。&lt;/p>
 &lt;p>作者将集成系统的标定以及复杂表面的高度测量列为未来工作。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-results.webp" target="_blank" rel="noopener">

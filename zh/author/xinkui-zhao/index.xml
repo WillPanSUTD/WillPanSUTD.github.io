@@ -11,7 +11,7 @@
 &lt;div class="explainer" data-explainer="/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>对每个 NeRF 采样。&lt;/strong> DeSC 取 NeRF 占据栅格中非空体素的中心点，保留密度大于阈值 σt 的点。KP-FCNN 对该点云做分层下采样，同时提取多层级几何特征。&lt;/li>
-&lt;li>&lt;strong>在稀疏点周围查询嵌入。&lt;/strong> 对每个稀疏点，取半径 τ 内的 k 个最近稠密点组成局部块。块内每个点向 NeRF 查询与视角无关的嵌入，并通过正弦编码融入该点的颜色和密度，使特征带上两个 NeRF 共有的光度信息。&lt;/li>
+&lt;li>&lt;strong>在稀疏点周围查询嵌入。&lt;/strong> 对每个稀疏点（最粗一级下采样中的点），取半径 τ 内、相邻较稠密一级中最近的 k 个稠密点组成局部块。块内每个点向 NeRF 查询与视角无关的嵌入，并通过正弦编码融入该点的颜色和密度，使特征带上两个 NeRF 共有的光度信息。&lt;/li>
 &lt;li>&lt;strong>用纹理感知图卷积聚合。&lt;/strong> 在每个局部块上运行图卷积，其边权突出距离近而特征差异大的点对，从而捕捉局部高频纹理。输出再与几何特征融合，得到深度语义描述子。&lt;/li>
 &lt;li>&lt;strong>引入上下文并匹配。&lt;/strong> 几何自注意力和交叉注意力让每个点云从自身和另一个点云中获取上下文信息。基于得到的特征选出粗对应关系，再在稠密点上用最优传输层细化。&lt;/li>
 &lt;li>&lt;strong>求解位姿。&lt;/strong> 剔除外点后，用 SVD 求出对齐两个 NeRF 的旋转和平移。训练时，密度感知光度一致性损失还要求匹配的局部块具有相近的密度加权颜色。&lt;/li>
@@ -22,9 +22,9 @@
 &lt;/a>&lt;figcaption>方法总览。每个深度语义聚合模块将 KP-FCNN 几何特征与经局部图网络聚合的 NeRF 嵌入相结合；Transformer、点匹配、外点剔除和 SVD 给出最终的对齐结果。引自论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>在 Objaverse 上的配准召回率为 97.7%&lt;/strong>，VF-NeRF 为 92.1%，SIRA-PCR 为 94.5%；旋转误差为 2.57°（表 I）。&lt;br>&lt;strong>在 30% 重叠率下，DTU、LLFF 和 Mip-NeRF360 上的配准召回率分别为 90.6%、91.0% 和 88.1%&lt;/strong>，VF-NeRF 分别为 86.6%、88.5% 和 84.8%（表 III–V）。&lt;br>去掉全部所提模块后，Objaverse 上的召回率降至 &lt;strong>93.2%&lt;/strong>，旋转误差升至 &lt;strong>9.19°&lt;/strong>（表 VI）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>在 Objaverse 上的配准召回率（RMSE 小于 0.2 m 的样本对所占比例）为 97.7%&lt;/strong>，NeRF 方法 VF-NeRF 为 92.1%，点云配准方法 SIRA-PCR 为 94.5%；旋转误差为 2.57°（表 I）。&lt;br>&lt;strong>在 30% 重叠率下，DTU、LLFF 和 Mip-NeRF360 上的配准召回率分别为 90.6%、91.0% 和 88.1%&lt;/strong>，VF-NeRF 分别为 86.6%、88.5% 和 84.8%（表 III–V）。&lt;br>去掉全部所提模块后，Objaverse 上的召回率降至 &lt;strong>93.2%&lt;/strong>，旋转误差升至 &lt;strong>9.19°&lt;/strong>（表 VI）。&lt;/aside>
 &lt;p>物体级基准基于 Objaverse 构建：每个物体渲染 120 张图像并分成两组，每组施加一个随机变换，再分别训练独立的 NeRF；测试使用训练中未见过的 44 个物体。配准召回率统计估计变换的 RMSE 小于 0.2 m 的样本对所占比例。对比方法包括 NeRF 配准方法 DReg-NeRF 和 VF-NeRF，以及八种在 NeRF 采样点上运行的点云配准方法。加入幅度为场景尺寸 10% 的均匀噪声后，DeSC 的召回率仍为 95.74%（表 II）。&lt;/p>
-&lt;p>在真实场景数据集 DTU、LLFF 和 Mip-NeRF360 上，每个场景被划分为重叠率 30%、50% 和 80% 的图像子集。DeSC 在全部九种设置下的配准召回率均为最高，且在 30% 重叠率时优势最大；不过在部分设置下，VF-NeRF 的旋转误差略低。消融实验中，依次加入深度语义聚合、光度编码、纹理感知边权和光度一致性损失，Objaverse 上的召回率逐步提升：93.2%、93.9%、95.1%、96.9%、97.7%。&lt;/p>
+&lt;p>在真实场景数据集 DTU、LLFF 和 Mip-NeRF360 上，每个场景被划分为重叠率 30%、50% 和 80% 的图像子集。DeSC 在全部九种设置下的配准召回率均为最高，且在 30% 重叠率时优势最大；不过在部分设置下，VF-NeRF 的旋转误差略低。消融实验中，依次加入深度语义聚合、光度编码、纹理感知边权和光度一致性损失，Objaverse 上的召回率逐步提升：未加入任何模块时为 93.2%，随后依次为 93.9%、95.1%、96.9% 和 97.7%。&lt;/p>
 &lt;p>作者指出了两点局限。DeSC 依赖 NeRF 的隐式嵌入，因此不能直接用于 3D Gaussian Splatting、体素网格或基于哈希的方法等显式表示。对于形状和纹理都高度对称的物体（例如交通锥），提取的特征同样呈对称分布，可能导致错误匹配，即便渲染出的对齐结果看起来合理。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2025-desc-learning-deep-semantic-descriptor-for/fig-objaverse.webp" target="_blank" rel="noopener">

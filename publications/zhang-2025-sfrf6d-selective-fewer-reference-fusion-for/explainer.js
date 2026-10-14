@@ -11,7 +11,7 @@ export default function mount(el, { kit, lang }) {
         "Coarse 3D shape: the reference view closest to the query is the anchor, and its depth map gives a first partial point cloud. The other views are moved into the same world frame with their known poses (R·p + t) and fill in the rest; the shape is then scaled into [−1, 1].",
         "Coarse alignment: the centre of the point cloud and its principal axes (PCA) give an initial position and rotation. Rotation and scale are then adjusted to maximise IoU for the alignment, giving a coarse pose.",
         "Geometry-guided sparse attention: reference points are rendered at the coarse pose. Normalised direction vectors between reference and query points build a top-K mask, so attention keeps likely matches and drops occluded or mismatched points.",
-        "Pose selection: refined pose hypotheses are rendered and compared with the query. A self-attention module scores the comparison vectors of all hypotheses together, and top-K filtering picks the final 6D pose.",
+        "Refine and select: scale and pose are refined. Each pose hypothesis is rendered and compared with the query. A self-attention module scores the comparison vectors of all hypotheses together, and top-K filtering picks the final 6D pose.",
       ],
       refs: "4 references · known poses", query: "query RGB-D", occl: "occluder", nocad: "no CAD model",
       anchor: "anchor (closest view)", others: "other views: R·p + t", norm: "scaled to [−1, 1]",
@@ -26,7 +26,7 @@ export default function mount(el, { kit, lang }) {
         "粗略三维形状：选取与查询视角最接近的参考图像作为锚点，由其深度图得到初始的局部点云；其余视角利用已知位姿（R·p + t）变换到同一世界坐标系中补全形状，随后将物体缩放到 [−1, 1] 范围内。",
         "粗对齐：由点云中心和主成分分析（PCA）得到的主轴给出初始位置和旋转；再以最大化对齐的 IoU 为目标调整旋转和尺度，得到粗略位姿。",
         "几何引导的稀疏注意力：在粗略位姿下渲染参考点。参考点与查询点之间的归一化方向向量构成 Top-K 掩码，注意力只保留可能的匹配，被遮挡或无法匹配的点被剔除。",
-        "位姿选择：渲染精化后的各个位姿假设并与查询图像比较；自注意力模块综合所有假设的比较向量给出评分，再经 Top-K 筛选得到最终的 6D 位姿。",
+        "精化与选择：先精化尺度和位姿；渲染每个位姿假设并与查询图像比较；自注意力模块综合所有假设的比较向量给出评分，再经 Top-K 筛选得到最终的 6D 位姿。",
       ],
       refs: "4 张参考图 · 已知位姿", query: "查询 RGB-D", occl: "遮挡物", nocad: "无需 CAD 模型",
       anchor: "锚点（最近视角）", others: "其余视角：R·p + t", norm: "缩放到 [−1, 1]",
@@ -185,6 +185,7 @@ export default function mount(el, { kit, lang }) {
         const C = { cx: 150, cy: 186, s: 84, a: 0 };
         cloud.forEach((p) => dot(g, place(C, p), 2.6, body, 0.6));
         dot(g, [C.cx, C.cy], 5, accent);
+        kit.svg("rect", { x: C.cx - 14 - (lang === "zh" ? 36 : 56), y: C.cy + 8, width: lang === "zh" ? 38 : 58, height: 20, fill: bg, "fill-opacity": 0.9 }, g);
         text(g, C.cx - 14, C.cy + 22, L.centre, { size: 15, anchor: "end", fill: accent, weight: 600 });
         const ax = kit.easeOut(seg01(t, 0, 0.5));
         arrow(g, [C.cx, C.cy], [C.cx + 100 * ax, C.cy], { stroke: accent, w: 2.2 });

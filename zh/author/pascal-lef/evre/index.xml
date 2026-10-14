@@ -2,7 +2,7 @@
 &lt;p>灰度图像能降低计算复杂度、存储和传输开销，因而应用广泛。但在许多应用中，后续仍需要找回原始颜色，这就要求转换可逆：灰度图像本身必须携带足够的颜色信息，以便恢复出 RGB 图像。&lt;/p>
 &lt;p>直方图平移、小波包数据隐藏等传统可逆灰度化方法，把颜色线索嵌入亮度通道，通常需要附加变换域约束或多个辅助通道，增加了计算量和内存开销。深度学习方法的重建保真度较高，但推理延迟大、模型体积大、可解释性有限，并且强烈依赖训练数据。&lt;/p>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
-&lt;p>该方法无需训练。每个 RGB 像素先转换到 HSV 颜色空间，把色度部分（色调 H、饱和度 S）与亮度部分（明度 V）分开；三个分量分别量化为 a、b、c 位（a + b + c = 16），并依次写入一个 16 位灰度像素的各个位域。解码时用移位和掩码把各字段读回。整个流程只用到量化和位运算，除量化误差外完全可逆。&lt;/p>
+&lt;p>该方法无需训练。每个 RGB 像素先转换到 HSV 颜色空间，把色度部分（色调 H、饱和度 S）与亮度部分（明度 V）分开；三个分量分别量化为 a、b、c 位（a + b + c = 16），并按 H、S、V 从高位到低位的顺序写入一个 16 位灰度像素的各个位域。解码时用移位和掩码把各字段读回。整个流程只用到量化和位运算，除量化误差外完全可逆。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/wang-2025-a-reversible-grayscale-method-based-on/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/wang-2025-a-reversible-grayscale-method-based-on/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>归一化。&lt;/strong> 将 8 位 RGB 像素的三个通道除以 255，映射到 [0, 1]。&lt;/li>
@@ -18,7 +18,7 @@
 &lt;/figure>
 &lt;p>(a, b, c) 的取值决定了精度在各通道之间如何分配。人眼对色调变化较为敏感，作者建议 a ≥ 5（32 个色调等级），以免出现明显色偏；c ≥ 6（64 个明度等级）可避免条带伪影；对颜色较少的图像，b 可以适当减小。由于色调是环形量，非线性量化可减小 0°/360° 附近的误差，Floyd–Steinberg 误差扩散则把剩余的量化误差在空间上分散开。&lt;/p>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>在 Kodak 上，方案 1 每幅图像编码 3.71 ms、解码 7.01 ms&lt;/strong>，而 IDN 为 175.30 / 125.24 ms，CNN-based 方法为 2486.75 / 2453.82 ms（表 II）。&lt;br>&lt;strong>方案 1 在 Kodak 上 PSNR 为 34.80 dB，SSIM 为 0.9726&lt;/strong>（表 II）。&lt;br>&lt;strong>方案 1 在 Urban100 / BSD500 / McMaster 上 PSNR 分别为 34.06 / 34.48 / 32.20 dB&lt;/strong>，编码和解码时间在 2.80–3.82 ms 之间（表 III）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>在 Kodak 上，方案 1 每幅图像编码 3.71 ms、解码 7.01 ms&lt;/strong>，而 IDN 为 175.30 / 125.24 ms，CNN-based 方法为 2486.75 / 2453.82 ms（表 II）。&lt;br>&lt;strong>方案 1 在 Kodak 上 PSNR 为 34.80 dB，SSIM 为 0.9726&lt;/strong>；越高越好，其中 PSNR 低于 IDN（42.16 dB）和 CNN-based 方法（37.40 dB）（表 II）。&lt;br>&lt;strong>方案 1 在 Urban100 / BSD500 / McMaster 上 PSNR 分别为 34.06 / 34.48 / 32.20 dB&lt;/strong>，编码和解码时间在 2.80–3.82 ms 之间（表 III）。&lt;/aside>
 &lt;p>实验在四个数据集上进行：Kodak PhotoCD（24 幅图像）、Urban100（100 幅城市场景）、BSD500（500 幅自然风景）和 McMaster（18 幅图像）。对比对象为两种基于学习的可逆灰度化方法 IDN 和 CNN-based 方法，评价指标包括 MAE、PSNR、SSIM、FSIM 和 LPIPS，计时平台为 AMD Ryzen 9 7945HX 与 NVIDIA GeForce RTX 4060。四种比特分配方案中，方案 1 (6, 4, 6) 的综合表现最均衡；方案 2 (5, 5, 6) 在 Kodak 上的 SSIM 为四者最高（0.9779）；方案 4 (6, 5, 5) 速度最快，编码 3.21 ms、解码 4.49 ms。在 Kodak 上，16 位文件也略小：方案 1 为 633.20 KB，IDN 为 721.47 KB，CNN-based 方法为 660.87 KB（表 II）。&lt;/p>
 &lt;p>速度优势是以保真度为代价的。在 Kodak 上，IDN 的 PSNR 为 42.16 dB，CNN-based 方法为 37.40 dB，而本方法为 34.80 dB；作者也指出，近期一种可逆数据隐藏方法报告的 PSNR 达到 43.69 dB。作者将本方法定位为面向边缘计算和嵌入式系统等资源受限场景的轻量、可解释方案，并计划通过自适应分配算法和可逆压缩来缩小质量差距，通过 FPGA/ASIC 实现进一步降低延迟。&lt;/p>
 &lt;figure class="rfig">

@@ -12,9 +12,9 @@
 &lt;ol>
 &lt;li>&lt;strong>双采样。&lt;/strong> 投影仪按正常速率投射 N 幅相移条纹图，在每个投影周期内触发相机两次。因此每幅投射条纹都对应运动物体的两张图像。&lt;/li>
 &lt;li>&lt;strong>混合相移。&lt;/strong> 同一幅投射条纹下拍摄的两张图像之间，只存在物体运动引起的相移；不同投射条纹下拍摄的图像，既有运动引起的相移，又有 PSP 的传统相移。对于三张图像 I&lt;sub>1&lt;/sub>、I&lt;sub>2&lt;/sub>、I&lt;sub>3&lt;/sub>，相移量为 δ&lt;sub>1&lt;/sub> = δ&lt;sub>2&lt;/sub> = 0，δ&lt;sub>3&lt;/sub> = 2π/N。&lt;/li>
-&lt;li>&lt;strong>包含运动的条纹模型。&lt;/strong> 物体运动跟踪算法计算描述物体运动的旋转平移矩阵，由此得到图像之间的坐标变换关系 (f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>)。每张图像表示为 I&lt;sub>n&lt;/sub> = a + B cos h&lt;sub>n&lt;/sub> + C sin h&lt;sub>n&lt;/sub>，其中 h&lt;sub>n&lt;/sub> = ϕ(f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>) + δ&lt;sub>n&lt;/sub>，ϕ 为参考平面的相位。&lt;/li>
-&lt;li>&lt;strong>最小二乘求相位。&lt;/strong> 对每个像素，以模型与实拍条纹图之差的平方和最小为准则，求出 a、B、C。由于 B = cos φ、C = −sin φ，物体形状引起的相位变化为 φ = arctan(−C / B)。&lt;/li>
-&lt;li>&lt;strong>图像复用。&lt;/strong> 对采集到的图像进行复用：每三张相邻图像得到一帧物体相位，而传统 PSP 的每一帧都由各自独立的一组图像得到。由此在投影速度受限的情况下提高运动物体的重构帧率。&lt;/li>
+&lt;li>&lt;strong>包含运动的条纹模型。&lt;/strong> 物体运动跟踪算法计算描述物体运动的旋转平移矩阵，由此得到图像之间的坐标变换关系 (f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>)。每张图像表示为 I&lt;sub>n&lt;/sub> = a + B cos h&lt;sub>n&lt;/sub> + C sin h&lt;sub>n&lt;/sub>，其中 h&lt;sub>n&lt;/sub> = ϕ(f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>) + δ&lt;sub>n&lt;/sub>，ϕ 为参考平面的相位，a 为环境光强度。&lt;/li>
+&lt;li>&lt;strong>最小二乘求相位。&lt;/strong> 对每个像素，以模型与实拍条纹图之差的平方和最小为准则，求出 a、B、C。B 和 C 携带了物体形状引起的相位变化 φ（B = cos φ、C = −sin φ），因此 φ = arctan(−C / B)。&lt;/li>
+&lt;li>&lt;strong>图像复用。&lt;/strong> 对采集到的图像进行复用：每三张相邻图像得到一帧物体相位，而传统 PSP 的每一帧都由各自独立的一组图像得到。因此每采到一张新图像就能得到一帧新的相位，而不必等一整组图案采完。由此在投影速度受限的情况下提高运动物体的重构帧率。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-method.webp" target="_blank" rel="noopener">
@@ -27,7 +27,7 @@
 &lt;/a>&lt;figcaption>(a) 传统 PSP 与 (b) 本文方法的重构帧率，本文方法对采集图像进行复用。论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>运动物体的均值误差：传统 PSP 为 0.1575 mm，本文方法为 0.0344 mm&lt;/strong>（表 1）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>运动物体相对静止重建结果的均值误差：传统 PSP 为 0.1575 mm，本文方法为 0.0344 mm&lt;/strong>（表 1）。&lt;/aside>
 &lt;p>实验系统由工业相机（OPT-CC1-048A-RM-G，分辨率 1800 × 1600 像素）、投影仪（TJ-S50，分辨率 1280 × 720 像素）和电动位移台组成，被测物体为面具。相机帧率为 20 帧/s，位移台速率为 20 mm/s，视场为 70 mm × 80 mm。先用传统 PSP 重构静止的面具，以此作为误差评估的真值。面具随位移台运动时，同一幅投射条纹下的两张图像中只有物体运动，不同投射条纹下的图像中则既有物体运动又有条纹相移。旋转平移矩阵由物体运动跟踪算法计算得到，每三张相邻图像得到一幅相位图。本文方法成功重构了运动中的面具，而用传统 PSP 重构同一运动物体则存在较大误差。&lt;/p>
 &lt;p>作者指出，影响最大的局限是物体跟踪算法的精度：它直接决定重构精度，而现有跟踪算法难以描述大幅度运动。该方法只能重构做二维平移运动的物体，受运动跟踪算法所限，无法处理二维旋转运动和三维运动。方法不要求物体匀速运动，但相机需拍摄到清晰的运动物体条纹图。&lt;/p>
 &lt;figure class="rfig">

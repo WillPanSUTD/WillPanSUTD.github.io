@@ -238,7 +238,7 @@ export default function mount(el, { kit, lang }) {
         } else {
           for (const [c, z] of [[4, 1], [5, 1], [2, 3], [3, 3]]) redBar(g, c, z, 2 * e - 1);
         }
-        label(g, RX + 115, 60, `${L.hungarian} · ${L.stage[0]}`, { size: 18, weight: 600 });
+        label(g, RX + 100, 60, `${L.hungarian} · ${L.stage[0]}`, { size: 18, weight: 600 });
         matrix(g, RX + 46, 76, ["1", "5", "8"], ["5′", "6′"], [[7, 8], [9, 8], [7, 6]], [[0, 0], [2, 1]]);
         label(g, RX + 115, 262, "1 → 5′ · 8 → 6′", { size: 20, weight: 600, fill: accent, opacity: e });
         // Red bar key
@@ -248,7 +248,7 @@ export default function mount(el, { kit, lang }) {
 
       if (i === 3) {
         scene(g, STAGE1, STAGE2, e);
-        label(g, RX + 115, 60, `${L.hungarian} · ${L.stage[1]}`, { size: 18, weight: 600 });
+        label(g, RX + 100, 60, `${L.hungarian} · ${L.stage[1]}`, { size: 18, weight: 600 });
         matrix(g, RX + 46, 76, ["4", "5"], ["7′", "8′"], [[7, 6], [8, 7]], [[0, 0], [1, 1]]);
         label(g, RX + 115, 226, "4 → 7′ · 5 → 8′", { size: 20, weight: 600, fill: accent });
         label(g, RX + 115, 270, "7 + 6 + 7 + 7", { size: 20, opacity: e });

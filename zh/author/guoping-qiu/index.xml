@@ -21,8 +21,8 @@
 &lt;/a>&lt;figcaption>顶点 v₀ 上的半核拉普拉斯算子。左：邻点 A 与 D 配对，D 是到 v₀、A 和质心 v′₀ 所在平面距离最短的邻点，直线 A–D 将邻域分为两个半窗口。中、右：两个半窗口的拉普拉斯 d₁、d₂ 及其在完整窗口拉普拉斯上的投影 δ₁、δ₂。引自论文图 4。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>仅有一个参数&lt;/strong>，即迭代次数；对比的法向滤波方法和 L0 方法有三至六个参数（表 1）。&lt;br>&lt;strong>在所有运行时间测试中最快&lt;/strong>，例如在 Armadillo（43,243 个顶点）上耗时 1.81 s，次快的 UNF 为 5.68 s，顶点迭代均为 10 次（表 3）。&lt;br>&lt;strong>在 9 组测试中有 4 组法向误差（MSAE）最低&lt;/strong>，例如在噪声 σn = 0.5 lₑ 的 Armadillo 上为 9.33 × 10⁻²，L0 最小化为 9.59 × 10⁻²（表 2）。&lt;/aside>
-&lt;p>论文将 HLO 与均匀拉普拉斯、余切拉普拉斯以及七种去噪方法进行了比较：双边网格滤波、单边、双边与引导法向滤波（UNF、BNF、GNF）、L0 最小化、级联法向回归（CNR）和非局部低秩法向滤波（NLLR）。合成测试在模型上添加零均值高斯噪声，其标准差 σn 与平均边长 lₑ 成正比；真实测试使用 Microsoft Kinect 扫描的模型以及扫描得到的 Angel 和 Rabbit 模型。与均匀拉普拉斯相比，HLO 显著减轻了收缩，在 Julius 模型上的平均顶点误差也低得多；余切拉普拉斯对几何更敏感，但容易在曲面上产生尖锐的“毛刺”。由于均匀拉普拉斯在光顺过程中能展开翻转的三角面片，HLO 对高噪声的敏感程度低于大多数对比方法。在法向误差 MSAE 上，L0 最小化和 HLO 通常是最好的两种方法。顶点误差 Ev 与视觉比较结果不一定一致，因为展开翻转三角面片可能使顶点远离其真实位置。在运行时间对比中 HLO 速度最快，而其代码尚未经过优化或并行加速。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>仅有一个参数&lt;/strong>，即迭代次数；对比的法向滤波方法和 L0 方法有三至六个参数（表 1）。&lt;br>&lt;strong>在所有运行时间测试中最快&lt;/strong>，例如在 Armadillo（43,243 个顶点）上耗时 1.81 s，次快的 UNF 为 5.68 s，顶点迭代均为 10 次（表 3）。&lt;br>&lt;strong>在 9 组测试中有 4 组法向误差（MSAE，越低越好）最低&lt;/strong>，例如在噪声 σn = 0.5 lₑ 的 Armadillo 上为 9.33 × 10⁻²，L0 最小化为 9.59 × 10⁻²（表 2）。&lt;/aside>
+&lt;p>论文将 HLO 与均匀拉普拉斯、余切拉普拉斯以及七种去噪方法进行了比较：双边网格滤波、单边、双边与引导法向滤波（UNF、BNF、GNF）、L0 最小化、级联法向回归（CNR）和非局部低秩法向滤波（NLLR）。合成测试在模型上添加零均值高斯噪声，其标准差 σn 与平均边长 lₑ 成正比；真实测试使用 Microsoft Kinect 扫描的模型以及扫描得到的 Angel 和 Rabbit 模型。与均匀拉普拉斯相比，HLO 显著减轻了收缩，在 Julius 模型上的平均顶点误差也低得多；余切拉普拉斯对几何更敏感，但容易在曲面上产生尖锐的“毛刺”。由于 HLO 建立在均匀拉普拉斯之上，而均匀拉普拉斯在光顺过程中能展开翻转的三角面片（见下图中的红色面片），HLO 对高噪声的敏感程度低于大多数对比方法。在法向误差 MSAE 上，L0 最小化和 HLO 通常是最好的两种方法。顶点误差 Ev（相对真值网格的位置误差）与视觉比较结果不一定一致，因为展开翻转三角面片可能使顶点远离其真实位置。在运行时间对比中 HLO 速度最快，而其代码尚未经过优化或并行加速。&lt;/p>
 &lt;p>作者也指出了局限：HLO 不是基于边的算子，因此难以在顶点数较少的类 CAD 模型上恢复光滑的尖锐边；对于顶点数较多的真实扫描类 CAD 模型，其结果与其他方法相当。与以往工作一样，HLO 固定输入网格的开放边界，有时会导致不理想的结果。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2020-hlo/fig-results.webp" target="_blank" rel="noopener">
@@ -52,9 +52,9 @@
 &lt;/a>&lt;figcaption>并行曲率滤波流程：在 3 × 3 邻域内枚举 8 个投影距离，在 GPU 上通过卷积为每个像素计算这些距离；每次迭代用其中最小的距离（d&lt;sub>m&lt;/sub>）更新图像。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">单块 GPU 每秒处理 &lt;strong>332 亿像素（33.2 Gpixel/s）&lt;/strong>（摘要）。&lt;br>对同一幅图像迭代 3000 次，&lt;strong>CPU 约需 87 秒，GPU 约需 6 秒&lt;/strong>（图 3）。&lt;/aside>
+&lt;aside class="keypoint">单块 GPU 每秒处理 &lt;strong>332 亿像素（33.2 Gpixel/s）&lt;/strong>。&lt;br>对同一幅图像迭代 3000 次，&lt;strong>CPU 约需 87 秒，GPU 约需 6 秒&lt;/strong>（图 3）。&lt;/aside>
 &lt;p>PCF 的 CUDA 实现在 GPU 线程块大小为 16 到 32 的设置下运行，所用 GPU 为 NVIDIA GeForce GTX 1080 Ti（3584 个 CUDA 核心、11264 MB 全局内存、每个线程块 49152 字节共享内存），对比对象是在 Intel Xeon E5-1620 v4（3.50 GHz）CPU 上运行的原始曲率滤波。图 3 中，两者的计算时间都随迭代次数增长，但 GPU 上的增长要慢得多。作者据此认为，这样的速度使曲率滤波可以用于视频处理、生物医学图像处理等实时应用。&lt;/p>
-&lt;p>论文还将高斯曲率和平均曲率两种 PCF 应用于一张照片，并绘制图中一条直线上经 10 次和 30 次迭代后的灰度分布。两种方法下，灰度剖面都随迭代次数增加而变得更平滑；作者认为平均曲率 PCF 比高斯曲率 PCF 更高效。&lt;/p>
+&lt;p>论文还将高斯曲率和平均曲率两种 PCF 应用于一张照片，并绘制图中一条直线上经 10 次和 30 次迭代后的灰度分布。两种方法下，灰度剖面都随迭代次数增加而变得更平滑；作者根据这些剖面认为，平均曲率 PCF 的平滑效率高于高斯曲率 PCF（比较的是平滑效果，而非运行时间）。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-timing.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-timing.webp" alt="计算时间（秒）随迭代次数（0 到 3000）变化的折线图：蓝色虚线（CPU）升至约 87 秒，红色实线（GPU）始终低于约 7 秒。" loading="lazy">

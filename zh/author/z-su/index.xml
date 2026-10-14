@@ -12,7 +12,7 @@
 &lt;ol>
 &lt;li>&lt;strong>三条光路。&lt;/strong> 条纹经前表面反射（F）、经后表面一次反射（B）以及在前后表面之间多次反射（M）后进入相机。通常 F 和 B 的光强最强，M 最弱。&lt;/li>
 &lt;li>&lt;strong>需要拆开的叠加。&lt;/strong> 每幅采集到的条纹图为 S = F + B + M + A，其中 A 为背景光。只有 F（连同背景光）可用于重建前表面，因此训练网络 p，采样得到估计值 F* ∼ p(S; θ)。&lt;/li>
-&lt;li>&lt;strong>训练。&lt;/strong> 在物体表面喷涂显像剂后采集前表面条纹图 x&lt;sub>0&lt;/sub>，同时采集同一场景的混叠条纹图 y。前向扩散过程向 x&lt;sub>0&lt;/sub> 逐步加入高斯噪声 e（T = 2600 步，β 从 0.0001 线性增加到 0.002）；带残差块的 U-Net 以含噪条纹图 x&lt;sub>t&lt;/sub>、步数 t 和条件 y 为输入，学习预测所加的噪声。&lt;/li>
+&lt;li>&lt;strong>训练。&lt;/strong> 在物体表面喷涂显像剂（可得到干净的前表面条纹）后采集前表面条纹图 x&lt;sub>0&lt;/sub>，同时采集同一场景的混叠条纹图 y。前向扩散过程向 x&lt;sub>0&lt;/sub> 逐步加入高斯噪声 e（T = 2600 步，β 从 0.0001 线性增加到 0.002）；带残差块的 U-Net 以含噪条纹图 x&lt;sub>t&lt;/sub>、步数 t 和条件 y 为输入，学习预测所加的噪声。&lt;/li>
 &lt;li>&lt;strong>采样。&lt;/strong> 从纯高斯噪声出发，训练好的网络以采集到的混叠条纹图 y 为条件，逐步估计并去除噪声，直到 t = 0，得到前表面条纹图 F*。&lt;/li>
 &lt;li>&lt;strong>常规 PSP。&lt;/strong> 用四步相移算法处理估计出的条纹图，求得包裹相位，进而重建前表面的三维形貌。&lt;/li>
 &lt;/ol>
@@ -24,7 +24,7 @@
 &lt;h2 id="实验结果">实验结果&lt;/h2>
 &lt;aside class="keypoint">透明立方体的 &lt;strong>RMS 重建误差为 0.0420 mm&lt;/strong>，透明半球为 &lt;strong>0.0423 mm&lt;/strong>（表 1）。&lt;br>半透明物体为 &lt;strong>0.0437 mm&lt;/strong>，局部透明物体为 &lt;strong>0.0388 mm&lt;/strong>（表 1）。&lt;/aside>
 &lt;p>实验系统采用 2048 × 1536 分辨率的相机、1280 × 1024 分辨率的 DLP 投影仪和四步相移算法。为获得干净的前表面条纹，作者尝试过仿真和在表面粘贴卡纸两种方式，但仿真图像与实拍图像差异明显，卡纸又难以贴合非平面物体，最终采用喷涂显像剂的方法构建数据集。每个物体使用 15,000 对图像训练、1500 对图像测试，物体的位置和姿态随机摆放。测试物体包括亚克力透明立方体（边长 25 mm）、玻璃透明半球（半径 20 mm）、亚克力半透明物体和玻璃局部透明物体。&lt;/p>
-&lt;p>对每个物体，作者将估计的前表面条纹图与喷涂显像剂后采集的条纹图在光强、包裹相位和重建形貌三个方面进行比较。两者光强并不严格一致，但估计的条纹图具有相同的特征，物体区域内的相位值也高度吻合。半透明物体不透光，基于折射的方法无法适用；局部透明物体的透明部分和不透明部分需要不同的重建算法，大多数现有方法难以完整重建。本文方法则把非前表面来的光视为噪声，由扩散模型去除。&lt;/p>
+&lt;p>对每个物体，作者将估计的前表面条纹图与喷涂显像剂后采集的条纹图在光强、包裹相位和重建形貌三个方面进行比较。两者光强并不严格一致，但估计的条纹图具有相同的特征，物体区域内的相位值也高度吻合。半透明物体中光线无法穿透，基于折射的方法无法适用；局部透明物体的透明部分和不透明部分需要不同的重建算法，大多数现有方法难以完整重建。本文方法则把非前表面来的光视为噪声，由扩散模型去除。&lt;/p>
 &lt;p>作者也指出了一个局限：由于生成的条纹图源自高斯噪声，会残留肉眼不可见的噪声，可能降低相位估计精度和三维重建质量。增加扩散步数可以缓解这一问题，但实验发现这会增加训练和采样的计算开销。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2024-transparent-diffusion/fig-objects.webp" target="_blank" rel="noopener">
@@ -44,13 +44,13 @@
 &lt;/a>&lt;figcaption>(a) 同步采集：信号线连接投影仪与相机，相机的每次曝光只看到一幅图案（每个色块一种颜色）。(b) 异步采集：没有信号连接时，曝光会跨越图案切换时刻，采集到的图像混入相邻图案。论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
-&lt;p>混叠本身的形式很简单。AFP 中每个像素的值，是曝光期间两幅图案各自贡献的累加，两者所占比例取决于投影仪切换图案的时刻（式 5）。混叠不会移动像素，在每个位置都以相同方式发生，这一性质正适合用卷积网络来处理。但切换时刻未知，且很难测量，因此从一幅图像恢复出两幅图像是一个病态的“一对多”问题。论文将其视为图像生成问题：由生成式网络学习生成两幅干净的条纹图，之后即可直接沿用标准的相移重建方法。&lt;/p>
+&lt;p>混叠本身的形式很简单。AFP 中每个像素的值，是曝光期间两幅图案各自贡献的累加，两者所占比例取决于投影仪切换图案的时刻（论文式 5）。混叠不会移动像素，在每个位置都以相同方式发生，这一性质正适合用卷积网络来处理。但切换时刻未知，且很难测量，因此从一幅图像恢复出两幅图像是一个病态的“一对多”问题。论文将其视为图像生成问题：由生成式网络学习生成两幅干净的条纹图，之后即可直接沿用标准的相移重建方法。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/lu-2024-generative-asl/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>同步采集（参照）。&lt;/strong> 每次曝光恰好只看到一幅投影图案，因此每张图像只包含一幅干净的条纹图。&lt;/li>
 &lt;li>&lt;strong>异步采集。&lt;/strong> 投影仪和相机各以恒定速度工作，且相机速度更快，以保证每幅图案都能被拍到。若图案切换发生在曝光期间，就会得到一幅对相邻两幅图案积分而成的 AFP。论文处理的是两幅图案混叠的情形。&lt;/li>
-&lt;li>&lt;strong>用 APSNet 分离。&lt;/strong> APSNet（混叠条纹图分离网络）是基于 U-Net 的编码器–解码器：编码端由四个带最大池化的模块组成，解码端通过上采样和跳跃连接逐步恢复到原始分辨率。它把一幅 AFP 映射为混叠前的两幅图案。训练时，APSNet 作为条件生成对抗网络（GAN）中的生成器：判别器将生成的图案对与真实图案对进行比较，另有均方误差和结构相似性两项损失，使生成图案在统计上接近投影图案。三项损失权重相等时，训练过程最为平稳（图 8）。&lt;/li>
-&lt;li>&lt;strong>求相位。&lt;/strong> 由三幅 AFP，APSNet 得到四幅相继的条纹图，相邻两幅相差四分之一周期。经典的四步相移算法由此求出包裹相位，再加上条纹级次（2π 的整数倍）完成相位展开，得到连续相位图。&lt;/li>
+&lt;li>&lt;strong>用 APSNet 分离。&lt;/strong> APSNet（混叠条纹图分离网络）是基于 U-Net 的编码器–解码器：编码端由四个带最大池化的模块组成，解码端通过上采样和跳跃连接逐步恢复到原始分辨率。它把一幅 AFP 映射为混叠前的两幅图案。训练时，APSNet 作为条件生成对抗网络（GAN）中的生成器：判别器将生成的图案对与真实图案对进行比较，另有均方误差和结构相似性两项损失，使生成图案在统计上接近投影图案。对抗、均方误差和结构相似性三项损失权重相等时，训练过程最为平稳（图 8）。&lt;/li>
+&lt;li>&lt;strong>求相位。&lt;/strong> 每幅 AFP 混入相邻两幅图案，相邻的三幅 AFP 与前后相邻者共享图案，因此 APSNet 可得到四幅相继的条纹图，相邻两幅相差四分之一周期。经典的四步相移算法由此求出包裹相位，再加上条纹级次（2π 的整数倍）完成相位展开，得到连续相位图。&lt;/li>
 &lt;li>&lt;strong>三维形貌。&lt;/strong> 利用成熟的 FPP 重建模型，由连续相位计算出物体的三维形貌。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
@@ -65,7 +65,7 @@
 &lt;/a>&lt;figcaption>分离一幅 AFP。(a、b) 同步采集记录的两幅源图案；(c) 异步系统记录的 AFP；(d、e) APSNet 从 (c) 中分离出的两幅图案；(f、g) 二者与源图案的绝对差，数值很小且随机分布。论文图 9。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>与同步重建结果的偏差不超过 0.008 mm&lt;/strong>：沿雕像的一条深度剖面，标准差为 0.003 mm；而直接用 AFP 计算的深度误差在 −5.000 到 3.600 mm 之间，标准差为 1.713 mm（图 13）。&lt;br>沿一条采样线，&lt;strong>包裹相位与同步结果的最大差值为 0.035 rad&lt;/strong>（图 11）。&lt;br>&lt;strong>螺旋桨和 3D 打印螺栓的绝对误差均小于 0.006 mm&lt;/strong>，这两个物体表面曲率大，此前的验证中未曾出现（标准差分别为 0.002 mm 和 0.001 mm；图 16）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>与同步重建结果的偏差不超过 0.008 mm&lt;/strong>：沿雕像的一条深度剖面，标准差为 0.003 mm；而直接用 AFP 计算的深度误差在 −5.000 到 3.600 mm 之间，标准差为 1.713 mm（图 13）。&lt;br>沿一条采样线，&lt;strong>包裹相位与同步结果的最大差值为 0.035 rad&lt;/strong>（图 11）。&lt;br>&lt;strong>螺旋桨和 3D 打印螺栓的绝对误差均小于 0.006 mm&lt;/strong>，这两个物体表面曲率大，是此前验证中没有包含的情形（标准差分别为 0.002 mm 和 0.001 mm；图 16）。&lt;/aside>
 &lt;p>测试对象包括雕像、汽车模型和球体，网络在训练和验证中都没有见过它们。所有对比都以同步图案的重建结果为基准。直接用 AFP 重建会丢失大量形状信息，而用 APSNet 分离出的图案重建的形状与基准非常接近（图 12）。论文总结指出，相比直接使用混叠条纹，重建精度提高了三个数量级。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-results.webp" target="_blank" rel="noopener">
@@ -98,7 +98,7 @@
 &lt;li>&lt;strong>以 NCC 代替点积计算相关。&lt;/strong> 特征编码器将两幅相邻的条纹图像映射为 1/8 分辨率的特征图，上下文编码器则只处理第一幅图像。原始 RAFT 以点积比较所有特征对；而在条纹照明下，特征点穿过条纹时其周围的光强分布会随之改变。改进网络采用归一化互相关（NCC），对局部光照变化进行归一化，以此构建四维相关体和四层相关金字塔。&lt;/li>
 &lt;li>&lt;strong>迭代更新光流。&lt;/strong> 从零光流出发，基于 GRU 的更新算子查询相关金字塔，经多次迭代逐步修正光流。1/8 分辨率的结果再上采样至全分辨率，得到每个像素的位移。&lt;/li>
 &lt;li>&lt;strong>只保留精确的点。&lt;/strong> RANSAC 先剔除明显的离群点；随后拟合旋转矩阵和平移向量，用它们变换各点，若变换后的位置与跟踪位置之差超过阈值（如 0.5 像素），则舍弃该点。反复进行拟合与检验，直至所有剩余点都满足阈值。&lt;/li>
-&lt;li>&lt;strong>结合运动信息重建。&lt;/strong> 最终的旋转矩阵和平移向量描述了物体运动，据此计算运动物体的正确相位（论文式 7–11），进而得到其表面。&lt;/li>
+&lt;li>&lt;strong>结合运动信息重建。&lt;/strong> 最终的旋转矩阵和平移向量描述了物体运动，据此计算运动物体的正确相位，进而得到其表面。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2023-kinematic-tracking/fig-method.webp" target="_blank" rel="noopener">
@@ -106,7 +106,7 @@
 &lt;/a>&lt;figcaption>改进的 RAFT 网络：特征编码器与上下文编码器、四维 NCC 相关体，以及输出光流的 GRU 迭代更新。引自论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>五个运动物体的均方根误差为 0.082–0.098 mm&lt;/strong>，以各物体静止时的重建结果为真值（表 1）。&lt;br>&lt;strong>与基于 SIFT 的方法相当&lt;/strong>（0.078–0.089 mm），后者依赖彩色相机分离条纹（表 1）。&lt;br>&lt;strong>约 1.2 万个&lt;/strong>光流精度高的点被保留，用于计算运动（第 3 节）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>五个运动物体的均方根误差为 0.082–0.098 mm&lt;/strong>，以各物体静止时的重建结果为真值（表 1）。&lt;br>&lt;strong>与基于 SIFT 的方法相当&lt;/strong>（0.078–0.089 mm），后者依赖彩色相机分离条纹（表 1）。&lt;br>**只使用光流精度高的点（约 1.2 万个）**来拟合运动（第 3 节）。&lt;/aside>
 &lt;p>实验系统采用分辨率为 1280 × 720 的投影仪和同分辨率的相机，使用四步相移。训练数据为 2000 对运动前后的条纹图像，按 8:1:1 划分为训练集、验证集和测试集。标签来自同一位置采集的无条纹图像：在这些图像上用 SIFT 求得旋转和平移，进而得到每个像素的运动信息。训练损失在 900 个 epoch 后收敛至 0.25 像素。若估计位移与基于 SIFT 的真值相差不足半个像素即计为正确点，则改进网络在条纹图像上得到的正确点多于原始 RAFT（图 10）。&lt;/p>
 &lt;p>同一训练好的网络还被用于另外四个物体（图 13），均在运动状态下完成了重建。对每个物体，本方法的均方根误差都略高于基于 SIFT 的方法，作者认为二者性能相当，而本方法不再需要彩色设备。该方法适用于平面内的二维运动；对复杂三维运动物体的表面重建留待后续工作。&lt;/p>
 &lt;figure class="rfig">
@@ -131,9 +131,9 @@
 &lt;div class="explainer" data-explainer="/publications/zhang-2023-double-sampling/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>每幅条纹拍摄两次。&lt;/strong> 在相机和投影仪上加入触发控制装置。投影仪以一定速率投射 N 幅条纹图，并在每个投射周期内触发相机两次：投射条纹 I&lt;sub>1&lt;/sub> 时采集 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>，投射 I&lt;sub>2&lt;/sub> 时采集 I&lt;sub>21&lt;/sub> 和 I&lt;sub>22&lt;/sub>，依此类推。&lt;/li>
-&lt;li>&lt;strong>区分运动与相移。&lt;/strong> 同一幅投射条纹下拍到的两幅图像（如 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>）之间只有物体运动引起的相移（δ&lt;sub>1&lt;/sub> = 0）；不同条纹下拍到的图像之间还包含 PSP 相移 δ&lt;sub>2&lt;/sub> = 2π/N。相位由 I&lt;sub>11&lt;/sub>、I&lt;sub>12&lt;/sub> 和 I&lt;sub>21&lt;/sub> 联合分析。&lt;/li>
+&lt;li>&lt;strong>区分运动与相移。&lt;/strong> 同一幅投射条纹下拍到的两幅图像（如 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>）之间没有 PSP 相移（δ&lt;sub>1&lt;/sub> = 0），因此只相差物体的运动；不同条纹下拍到的图像之间还包含 PSP 相移 δ&lt;sub>2&lt;/sub> = 2π/N。因此相位由 I&lt;sub>11&lt;/sub>、I&lt;sub>12&lt;/sub> 和 I&lt;sub>21&lt;/sub> 三幅图像联合分析。&lt;/li>
 &lt;li>&lt;strong>跟踪运动。&lt;/strong> 通过跟踪物体得到描述其运动的旋转矩阵和平移向量，进而得到描述各点运动前后位置关系的坐标变换 (f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>)。&lt;/li>
-&lt;li>&lt;strong>最小二乘求解相位。&lt;/strong> 三幅图像都写成 A + B cos(ϕ + δ&lt;sub>k&lt;/sub>) + C sin(ϕ + δ&lt;sub>k&lt;/sub>) 的形式，其中 ϕ 为参考平面相位在变换后坐标处的取值。对三幅图像（N = 3）的平方误差求最小，得到线性方程组 D X = E，其中 X = [A B C]&lt;sup>T&lt;/sup>，物体引起的相位变化为 φ = tan&lt;sup>−1&lt;/sup>(−C/B)。再根据相位和系统参数重建物体。&lt;/li>
+&lt;li>&lt;strong>最小二乘求解相位。&lt;/strong> 三幅图像都写成 A + B cos(ϕ + δ&lt;sub>k&lt;/sub>) + C sin(ϕ + δ&lt;sub>k&lt;/sub>) 的形式，其中 A、B、C 为未知量，ϕ 为参考平面相位在变换后坐标处的取值。对三幅图像（N = 3）的平方误差求最小，得到关于 X = [A B C]&lt;sup>T&lt;/sup> 的线性方程组 D X = E，物体引起的相位变化为 φ = tan&lt;sup>−1&lt;/sup>(−C/B)。再根据相位和系统参数重建物体。&lt;/li>
 &lt;li>&lt;strong>图像复用。&lt;/strong> 每连续三幅图像即可得到一幅物体相位图，各组相互重叠，每多拍一幅图像就开始新的一帧。传统 PSP 每一帧都需要三幅投射条纹。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
@@ -147,8 +147,8 @@
 &lt;/a>&lt;figcaption>条纹投射策略：(a) 传统 PSP 重建的帧；(b) 本文方法重建的帧，相互重叠的图像组各自给出一帧。论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>每幅投射条纹采集两幅图像&lt;/strong>，由相机和投影仪上的触发控制装置实现（第 3 节，图 1）。&lt;br>&lt;strong>每连续三幅图像得到一幅物体相位图&lt;/strong>，通过复用条纹图像实现（图 2、图 5a）。&lt;br>&lt;strong>拍摄帧率翻倍&lt;/strong>，相对于投影仪的最高帧率（第 5 节）。&lt;br>&lt;strong>仿真中物体在相邻两幅条纹图之间移动 10 个像素&lt;/strong>：所提方法重建出方块，而传统 PSP 对同一组图像的重建误差很大（图 5、图 6）。&lt;/aside>
-&lt;p>该方法通过仿真验证。分别仿真静止物体和运动物体的条纹图，运动物体从左向右移动，相邻两幅条纹图之间移动 10 个像素。为便于比较，先用传统 PSP 重建静止状态的条纹图（论文图 3）。在运动状态下，同一投射条纹下采集的图像只包含物体运动，不同投射条纹下的图像则同时包含条纹相移和物体运动（论文图 4）。通过跟踪物体计算运动的旋转矩阵和平移向量，再用所提模型计算相位，并通过复用由每三幅图像得到一幅物体相位图。由不同帧的相位图完成运动方块的高帧率三维重建（图 5）。对同一组图像使用传统 PSP 重建，结果存在很大误差（图 6）。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>仿真中物体在相邻两幅条纹图之间移动 10 个像素&lt;/strong>：所提方法重建出方块，而传统 PSP 对同一组图像的重建误差很大（图 5、图 6）。&lt;br>&lt;strong>每幅投射条纹采集两幅图像&lt;/strong>，由相机和投影仪上的触发控制装置实现（图 1）。&lt;br>&lt;strong>每连续三幅图像得到一幅物体相位图&lt;/strong>，通过复用条纹图像实现（图 2）。&lt;br>&lt;strong>拍摄帧率为投影仪最高帧率的两倍&lt;/strong>，因为相机在每幅条纹下拍摄两次。&lt;/aside>
+&lt;p>该方法通过仿真验证。分别仿真静止物体和运动物体的条纹图，运动物体从左向右移动，相邻两幅条纹图之间移动 10 个像素。为便于比较，先用传统 PSP 重建静止状态的条纹图。在运动状态下，同一投射条纹下采集的图像只包含物体运动，不同投射条纹下的图像则同时包含条纹相移和物体运动。通过跟踪物体计算运动的旋转矩阵和平移向量，再用所提模型计算相位，并通过复用由每三幅图像得到一幅物体相位图。由不同帧的相位图完成运动方块的高帧率三维重建（图 5）。对同一组图像使用传统 PSP 重建，结果存在很大误差（图 6）。&lt;/p>
 &lt;p>作者在结论中指出，该方法只需推导新的公式，并在三步相移的基础上投射前两步的条纹图，即可重建运动物体；它能以较低成本使拍摄帧率翻倍，同时不损失 PSP 的优点。与传统 PSP 的对比以图 5 和图 6 直观呈现。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-results.webp" target="_blank" rel="noopener">

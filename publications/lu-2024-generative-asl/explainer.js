@@ -9,7 +9,7 @@ export default function mount(el, { kit, lang }) {
         "Synchronised structured light: the projector shows one fringe pattern at a time and a trigger signal tells the camera when to expose, so every photo holds exactly one pattern.",
         "Without the trigger, projector and camera run on their own clocks. When the projector switches pattern during an exposure, the photo mixes two neighbouring patterns: an aliased fringe pattern (AFP).",
         "APSNet, a U-Net-style encoder–decoder trained adversarially with pixel and structural-similarity losses, takes one AFP and generates the two clean patterns it was mixed from.",
-        "Three AFPs yield four clean, phase-shifted patterns. The standard four-step phase-shifting algorithm turns them into a wrapped phase, which is then unwrapped into a continuous phase.",
+        "Each AFP mixes two neighbouring patterns, so three consecutive AFPs overlap and yield four clean, phase-shifted patterns. The standard four-step phase-shifting algorithm turns them into a wrapped phase, which is then unwrapped into a continuous phase.",
         "The phase gives depth. Along a test profile of a statue, depth from the raw AFPs is off by −5.0 to 3.6 mm, while depth from APSNet's patterns stays within 0.008 mm of the synchronised result.",
       ],
       proj: "Projector", cam: "Camera", trig: "trigger", noSync: "no sync",
@@ -24,7 +24,7 @@ export default function mount(el, { kit, lang }) {
         "同步结构光：投影仪每次只投射一幅条纹图案，并由触发信号通知相机曝光，因此每张图像恰好只包含一幅图案。",
         "去掉触发信号后，投影仪和相机各按自己的时钟工作。若投影仪在相机曝光期间切换图案，拍到的图像就会混入相邻的两幅图案，即混叠条纹图（AFP）。",
         "APSNet 是一个类 U-Net 的编码器–解码器网络，以对抗方式训练，并以像素误差和结构相似性损失加以监督；它输入一幅 AFP，生成混叠前的两幅干净条纹图。",
-        "三幅 AFP 可得到四幅干净的相移条纹图。经典的四步相移算法由此求出包裹相位，再经相位展开得到连续相位。",
+        "每幅 AFP 混入相邻两幅图案，相邻三幅 AFP 互有重叠，可得到四幅干净的相移条纹图。经典的四步相移算法由此求出包裹相位，再经相位展开得到连续相位。",
         "由相位即可求得深度。沿雕像的一条测试剖面，直接用 AFP 重建的深度误差在 −5.0 到 3.6 mm 之间，而用 APSNet 分离出的条纹图重建，与同步结果的偏差不超过 0.008 mm。",
       ],
       proj: "投影仪", cam: "相机", trig: "触发", noSync: "无同步",
@@ -111,7 +111,7 @@ export default function mount(el, { kit, lang }) {
           const a = X0 + m * SLOT + 10, b = a + SLOT - 20;
           line(g, [a, YP + BH], [a, YC], { stroke: accent, w: 1.6, dash: "4 3", opacity: v });
           if (v > 0) exposure(g, a, b, v);
-          fringe(g, a + 3, 194, SLOT - 26, 94, [{ phase: phase(m), w: 1 }], { opacity: v, stroke: PC[m], sw: 2.5 });
+          fringe(g, a + 3, 201, SLOT - 26, 87, [{ phase: phase(m), w: 1 }], { opacity: v, stroke: PC[m], sw: 2.5 });
           subText(g, a + (SLOT - 20) / 2, 186, "I", `${m + 1}`, { size: 21, fill: body, opacity: v });
         }
         line(g, [70, YP + BH], [70, YC + 4], { stroke: accent, w: 1.6, dash: "4 3" });
@@ -136,7 +136,7 @@ export default function mount(el, { kit, lang }) {
         text(g, 70, 186, L.noSync, { size: 20, fill: BAD, opacity: e });
         mixes.forEach(({ a, b, comps }, n) => {
           const mid = (a + b) / 2;
-          fringe(g, mid - 47, 194, 94, 94, comps, { stroke: comps.length > 1 ? BAD : PC[n], sw: 2.5 });
+          fringe(g, mid - 47, 201, 94, 87, comps, { stroke: comps.length > 1 ? BAD : PC[n], sw: 2.5 });
           subText(g, mid, 186, "I", `${n + 1}`, { size: 21, fill: body });
         });
         text(g, 380, 334, `${L.aliased} → ${L.afp}`, { size: 22, fill: BAD, weight: 600, opacity: e });
@@ -146,7 +146,7 @@ export default function mount(el, { kit, lang }) {
         // AFP -> U-shaped encoder-decoder -> two separated patterns
         const mix = [{ phase: phase(0), w: 0.55 }, { phase: phase(1), w: 0.45 }];
         fringe(g, 24, 122, 104, 104, mix, { stroke: BAD, sw: 2.5 });
-        subText(g, 76, 112, `${L.afp} I`, "n", { size: 21, fill: BAD, weight: 600 });
+        subText(g, 76, 104, `${L.afp} I`, "n", { size: 21, fill: BAD, weight: 600 });
         // U-Net silhouette: blocks shrink going down (encoder), grow coming up (decoder)
         const lv = [
           { x: 164, y: 110, h: 110 }, { x: 202, y: 150, h: 76 }, { x: 240, y: 186, h: 50 }, { x: 278, y: 214, h: 32 },

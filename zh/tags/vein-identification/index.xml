@@ -12,9 +12,9 @@
 &lt;ol>
 &lt;li>&lt;strong>不裁剪 ROI。&lt;/strong> 传统流程先定位手部、裁出手掌 ROI 再提取特征，ROI 以外的静脉信息随之丢失；VeinTr 则直接输入整只手的图像。&lt;/li>
 &lt;li>&lt;strong>提取局部特征。&lt;/strong> 卷积块（卷积、批归一化和 PReLU）在提取局部特征的同时缩小 256×256 的输入，再经三个残差块增强，得到 64×64×64 的局部特征图。&lt;/li>
-&lt;li>&lt;strong>用注意力聚合全局信息。&lt;/strong> 特征图被切分为 16×16 的图块，展平后投影到较低维度。三层 8 头的多头注意力让每个图块与其余所有图块建立关联，把感受野从局部扩大到整只手。&lt;/li>
+&lt;li>&lt;strong>用注意力聚合全局信息。&lt;/strong> 特征图被切分为 16 个 16×16 的图块，展平后投影到较低维度。三层 8 头的多头注意力让每个图块与其余所有图块建立关联，把感受野从局部扩大到整只手。&lt;/li>
 &lt;li>&lt;strong>每只手一个特征向量。&lt;/strong> 全局特征解码器将注意力输出展平，经过带批归一化的两层 MLP，得到 512 维的手部静脉特征。训练采用 ArcFace 损失，使同一只手的特征彼此接近、不同手的特征相互区分。&lt;/li>
-&lt;li>&lt;strong>待测样本–数据库匹配。&lt;/strong> 已注册手的归一化特征组成数据库矩阵 D；待测手被判为相似度最高的身份，即 C = argmax(D · ‖VeinTr(p)‖)。&lt;/li>
+&lt;li>&lt;strong>待测样本–数据库匹配。&lt;/strong> 已注册手的归一化特征组成数据库矩阵 D；待测手被判为相似度得分最高的身份 C，即 C = argmax(D · ‖VeinTr(p)‖)，其中 ‖·‖ 表示归一化。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-veintr/fig-method.webp" target="_blank" rel="noopener">
@@ -22,8 +22,8 @@
 &lt;/a>&lt;figcaption>VeinTr 流程。两个卷积层和残差模块从整只手中提取局部特征，注意力模块进行全局聚合，得到的特征 V 与数据库进行匹配。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>在 CASIA 上，850 nm 和 940 nm 波长下的正确识别率分别为 99.85% 和 99.92%&lt;/strong>，在论文与六种手工特征方法、六种深度学习方法的对比中最高（表 1）。&lt;br>&lt;strong>等错误率分别为 0.10% 和 0.09%&lt;/strong>，而最好的手工特征方法 NMRT 为 0.51%，PVSNet 为 3.71%（表 1）。&lt;br>&lt;strong>在 CASIA 上训练后，无需重新训练，在 TPV 和 PLUSVein 上分别达到 98.17% 和 97.62%&lt;/strong>（表 2）。&lt;/aside>
-&lt;p>对比方法均基于手掌或手指 ROI，只有 VeinTr 使用整只手。在 CASIA 上，所有手工特征方法的正确识别率都已超过 90%，NAF 更是接近饱和，达到 99.83% 和 99.50%，因此 VeinTr 在正确识别率上的领先幅度不大（0.02 和 0.42 个百分点）；等错误率则比 NMRT 低 0.41 个百分点，比 PVSNet 低 3.61 个百分点（表 1）。跨数据集实验中，VeinTr 分别在一个数据集上训练，再在全部三个数据集上测试。在 CASIA 或 TPV 上训练的模型，在每个测试集上的正确识别率都超过 90%。PLUSVein 规模小得多（42 名志愿者的 420 幅图像），在其上训练的模型泛化能力较弱，在 CASIA 和 TPV 上分别为 89.76% 和 81.43%。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>在 CASIA 上，850 nm 和 940 nm 波长下的正确识别率分别为 99.85% 和 99.92%&lt;/strong>，在论文与六种手工特征方法、六种深度学习方法的对比中最高（表 1）。&lt;br>&lt;strong>等错误率分别为 0.10% 和 0.09%&lt;/strong>（即误接受率等于误拒绝率时的错误率），而最好的手工特征方法 NMRT 为 0.51%，PVSNet 为 3.71%（表 1）。&lt;br>&lt;strong>在 CASIA 上训练后，无需重新训练，在 TPV 和 PLUSVein 上分别达到 98.17% 和 97.62%&lt;/strong>（表 2）。&lt;/aside>
+&lt;p>对比方法均基于手掌或手指 ROI，只有 VeinTr 使用整只手。在 CASIA 上，所有手工特征方法的正确识别率都已超过 90%，此前的 NAF 方法更是接近饱和，达到 99.83% 和 99.50%，因此 VeinTr 在正确识别率上的领先幅度不大（0.02 和 0.42 个百分点）；等错误率则比 NMRT 低 0.41 个百分点，比 PVSNet 低 3.61 个百分点（表 1）。跨数据集实验中，VeinTr 分别在一个数据集上训练，再在全部三个数据集上测试。在 CASIA 或 TPV 上训练的模型，在每个测试集上的正确识别率都超过 90%。PLUSVein 规模小得多（42 名志愿者的 420 幅图像），在其上训练的模型泛化能力较弱，在 CASIA 和 TPV 上分别为 89.76% 和 81.43%。&lt;/p>
 &lt;p>消融实验（所有模型均在 CASIA 上训练）表明，网络的两个部分都不可或缺。去掉注意力层后，正确识别率在 CASIA、TPV 和 PLUSVein 上分别降至 83.43%、65.14% 和 55.10%；去掉残差块后，分别降至 95.12%、75.07% 和 83.67%（表 3）。注意力层为三层时，CASIA 上的识别率趋于饱和，TPV 和 PLUSVein 上达到最高；增加到第四、第五层后识别率反而下降，作者将其归因于过拟合。残差块取三层，是在识别率与计算开销之间的折中。作者计划在后续工作中把全手静脉信息与全手手纹数据相融合。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-veintr/fig-results.webp" target="_blank" rel="noopener">

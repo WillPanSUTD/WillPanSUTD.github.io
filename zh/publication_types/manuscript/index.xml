@@ -7,9 +7,9 @@
 &lt;ol>
 &lt;li>&lt;strong>灰度写入高字节。&lt;/strong> 对每个像素，把标准 ITU-R BT.601 灰度值（0.299 R + 0.587 G + 0.114 B，取整到 8 位）存入 16 位字的最高 8 位。&lt;/li>
 &lt;li>&lt;strong>量化色相和饱和度。&lt;/strong> 像素的色相（OpenCV 取值 0–179）和饱和度（0–255）各量化为 4 位。这种均衡分配 H4S4 由比特分配消融实验选定。&lt;/li>
-&lt;li>&lt;strong>打包低字节。&lt;/strong> 4 位色相和 4 位饱和度打包进低字节。把该字右移 8 位即可精确取回标准灰度图：灰度 PSNR 为无穷大，灰度 SSIM 为 1.0。&lt;/li>
+&lt;li>&lt;strong>打包低字节。&lt;/strong> 4 位色相和 4 位饱和度打包进低字节（共 8 位），即 HSV 提示。把该字右移 8 位即可精确取回标准灰度图：灰度 PSNR 为无穷大，灰度 SSIM 为 1.0。&lt;/li>
 &lt;li>&lt;strong>直接解码。&lt;/strong> 无需任何训练：拆出各字段，对色相和饱和度反量化，以灰度值作为 V，再由 HSV 转回 RGB，得到一幅粗略的彩色图像。&lt;/li>
-&lt;li>&lt;strong>残差细化。&lt;/strong> 一个两级、0.47 M 参数的 U-Net 以粗略 RGB 以及灰度、色相、饱和度三个平面（共 6 通道）为输入，叠加一个乘以 0.25 的残差，结果再截断到有效范围。&lt;/li>
+&lt;li>&lt;strong>残差细化。&lt;/strong> 主模型（UNet-residual）是一个两级、0.47 M 参数的 U-Net，以粗略 RGB 以及灰度、色相、饱和度三个平面（共 6 通道）为输入，叠加一个乘以 0.25 的残差，结果再截断到有效范围。另有两个同规模的直接预测变体作为消融：UNet-gray 只输入灰度平面，UNet-hints 输入灰度、色相和饱和度（3 通道）。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-a-grayscale-compatible-color-encoding-via/fig-method.webp" target="_blank" rel="noopener">
@@ -17,7 +17,7 @@
 &lt;/a>&lt;figcaption>框架总览：无参数的确定性编码器把量化后的 HSV 提示打包进 16 位图像的低字节，其高字节为标准灰度图；混合解码器（直接逆变换加 0.47 M 参数的 U-Net）恢复 RGB。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>灰度平面与 BT.601 灰度图逐位一致&lt;/strong>：按构造，灰度 PSNR = ∞，SSIM = 1.0（第 II-E 节，表 XI）。&lt;br>输入提示引导 U-Net 的显式色度提示从每像素 0 位增加到 8 位时，&lt;strong>Kodak 24 上的 PSNR 从 23.89 dB 升至 40.64 dB，CIEDE2000 ΔE00 从 10.40 降至 1.63&lt;/strong>（表 VIII）。&lt;br>在 256 × 256 输入下，提示引导 U-Net 的&lt;strong>参数量 0.47 M、计算量 14.77 GFLOPs、速度 1474 FPS&lt;/strong>（残差变体为 757 FPS）；WIN 2025 为 2.34 M / 76.75 GFLOPs / 68 FPS，Zhao 2021 为 14.63 M / 129.05 GFLOPs / 18 FPS（表 VI）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>灰度平面与 BT.601 灰度图逐位一致&lt;/strong>：按构造，灰度 PSNR = ∞，SSIM = 1.0（第 II-E 节，表 XI）。&lt;br>U-Net 所获的显式色度提示从每像素 0 位（UNet-gray）增加到 8 位（UNet-hints）时，&lt;strong>Kodak 24 上的 PSNR 从 23.89 dB 升至 40.64 dB，CIEDE2000 ΔE00 从 10.40 降至 1.63&lt;/strong>（表 VIII）。&lt;br>在 256 × 256 输入下，UNet-hints 的&lt;strong>参数量 0.47 M、计算量 14.77 GFLOPs、速度 1474 FPS&lt;/strong>（残差变体为 757 FPS）；两个采用 8 位载体的可逆灰度基线中，WIN 2025 为 2.34 M / 76.75 GFLOPs / 68 FPS，Zhao 2021 为 14.63 M / 129.05 GFLOPs / 18 FPS（表 VI）。WIN 2025 在 Kodak 24 上的 PSNR 高于 UNet-hints。&lt;/aside>
 &lt;p>所有网络均在 PASCAL VOC 2012 的 5,000 幅图像子集上训练（训练/验证按 80/20 划分），并在 256 × 256 分辨率下于 Kodak 24、DIV2K 验证集（100 幅）和 McMaster 18 上测试。颜色主要来自低字节提示：同时输入灰度、色相和饱和度的 U-Net（UNet-hints）在 Kodak 24、DIV2K 和 McMaster 上分别达到 40.64 dB、38.10 dB 和 35.41 dB，而只输入灰度平面的同一网络仅为 23.89、22.98 和 18.61 dB。不用任何网络、仅靠直接解码器，在 Kodak 24 上为 26.05 dB。残差变体分别为 37.88、37.60 和 31.26 dB；作者认为它在高饱和度的 McMaster 图像上差距较大，是因为 0.25 的残差缩放限制了它对较弱直接重建结果的修正幅度。在重新测量的基线中，WIN 2025 在多数指标上更高（Kodak 24 为 40.96 dB，DIV2K 为 38.16 dB，McMaster 为 39.43 dB）。作者强调，这些比较并未做码率归一化：基线使用 8 位载体，本方法使用 16 位载体。&lt;/p>
 &lt;p>对 16 位图像做有损处理时，这种格式比较脆弱。质量因子为 90 的 JPEG 会使残差流程在 Kodak 上的 PSNR 从 37.88 dB 降到 22.02 dB，σ = 0.5 的高斯模糊则降到 16.32 dB，因为两者都会混合或丢弃提示字节中的比特。若完全丢弃提示字节，输出会退化为接近灰度的图像（22.79 dB，SSIM 0.931）。因此作者建议在能无损保存 16 位图像的流程中使用该格式，例如 16 位 PNG。&lt;/p>
 &lt;figure class="rfig">

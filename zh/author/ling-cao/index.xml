@@ -5,7 +5,7 @@
 &lt;div class="explainer" data-explainer="/publications/qiu-2026-3d-surface-matching-based-on-adaptive/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>深度图与曲率图。&lt;/strong> 将模型点云转换为深度图，并据此计算曲面曲率图。&lt;/li>
-&lt;li>&lt;strong>自适应阈值分割。&lt;/strong> 自适应阈值迭代分割算法剔除冗余点，保留几何意义显著的高曲率特征点作为模型点云。&lt;/li>
+&lt;li>&lt;strong>自适应阈值分割。&lt;/strong> 自适应阈值迭代分割算法剔除冗余点，保留几何意义显著的高曲率特征点作为精简后的模型点云。&lt;/li>
 &lt;li>&lt;strong>粗匹配。&lt;/strong> 基于积分体积描述子的粗匹配算法在场景点云中确定目标点云的大致位姿；据作者介绍，这提高了粗匹配的精度和鲁棒性，并降低了 ICP 迭代对初始位姿的依赖。&lt;/li>
 &lt;li>&lt;strong>精匹配。&lt;/strong> 最后由迭代最近点（ICP）算法完成曲面精匹配。&lt;/li>
 &lt;/ol>
@@ -26,7 +26,7 @@
 &lt;li>&lt;strong>扫描。&lt;/strong> 传感器保持静止，标定板随旋转台转动。每条扫描线在新的转角下构成图像的一行，因此行记录转角，列记录到旋转中心的距离。&lt;/li>
 &lt;li>&lt;strong>圆变椭圆。&lt;/strong> 在这种扇形扫描映射下，每个圆孔都成像为椭圆，其形状取决于所在位置。单个椭圆可能受噪声、局部遮挡或边缘定位误差的干扰，但所有椭圆整体上呈现稳定的变化趋势；该方法正是从这些整体趋势、而非某一个高精度测量中估计标定参数。&lt;/li>
 &lt;li>&lt;strong>对每个孔拟合椭圆。&lt;/strong> 先（手动或自动）定位圆孔区域，用自适应阈值分割，再沿图像梯度方向把边缘细化到亚像素精度。剔除离群边缘点后，用直接最小二乘法拟合椭圆，记录其中心和长宽比 ρ&lt;sub>i&lt;/sub> = r&lt;sub>x,i&lt;/sub> / r&lt;sub>y,i&lt;/sub>；残差过大或长宽比不合理的椭圆被剔除。&lt;/li>
-&lt;li>&lt;strong>回归求旋转中心和角采样率。&lt;/strong> 长宽比随椭圆中心的水平位置近似线性变化，ρ = a·c&lt;sub>x&lt;/sub> + b，因此直线过零的位置就是旋转中心 x&lt;sub>c&lt;/sub> = −b/a。由于斜率 a 的微小误差会使 x&lt;sub>c&lt;/sub> 明显偏移，直线采用稳健拟合：先用 RANSAC 剔除粗大离群点，再用基于残差的迭代最小二乘精化（ILS）舍去残差较大的测量并重新拟合，通常 2–3 次迭代即可收敛。对各椭圆中心的竖直位置再做一次线性回归，即得到角采样率 k。&lt;/li>
+&lt;li>&lt;strong>回归求旋转中心和角采样率。&lt;/strong> 长宽比随椭圆中心的水平位置近似线性变化，ρ = a·c&lt;sub>x&lt;/sub> + b，因此直线过零的位置就是旋转中心 x&lt;sub>c&lt;/sub> = −b/a。由于斜率 a 的微小误差会使 x&lt;sub>c&lt;/sub> 明显偏移，直线采用稳健拟合：先用 RANSAC 剔除粗大离群点，再用基于残差的迭代最小二乘精化（ILS）舍去残差较大的测量并重新拟合，通常 2–3 次迭代即可收敛。对角度与各椭圆中心的竖直位置再做一次线性回归，θ = k·c&lt;sub>y&lt;/sub> + d（d = −k·y&lt;sub>c&lt;/sub>），斜率即角采样率 k，截距则给出竖直方向的中心 y&lt;sub>c&lt;/sub>。&lt;/li>
 &lt;li>&lt;strong>展开校正。&lt;/strong> 利用估计出的 x&lt;sub>c&lt;/sub>、y&lt;sub>c&lt;/sub> 和 k，把校正图像中的每个像素映射回原始图像，并通过双线性插值取值，椭圆随之恢复为圆。对于三维数据，每个高度值转换为点 X = r cos θ，Y = r sin θ，高度 Z 保持不变。激光轮廓仪的二维强度图像和三维高度图来自同一组测量，因此一个变换即可同时校正两者。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
@@ -77,14 +77,15 @@
 &lt;/a>&lt;figcaption>端到端流程。第一阶段（出厂标定）：在 Z 轴位移台上进行多深度采集，获取激光开/关图像对，提取特征并拟合 22 个 RPC 系数。第二阶段（现场补偿）：把扫描得到的棋盘格映射到深度图，计算偏转角，再用逆旋转校正坐标。论文图 5。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>在留作测试的深度 Z&lt;sub>3&lt;/sub> 上，X、Z 方向平均绝对误差较 HALCON 基线分别降低 17.5% 和 11.8%&lt;/strong>：8.745 对 10.600 µm，3.820 对 4.332 µm（表 5）。&lt;br>&lt;strong>倾斜安装下 25° 标准角度块的角度误差：0.7591° → 0.0387°&lt;/strong>（深度均值），降低 94.90%（表 7）。&lt;br>&lt;strong>倾斜安装下棋盘格正交误差：10.007° → 0.309°&lt;/strong>（深度均值），降低 96.92%（表 8）。&lt;/aside>
-&lt;p>所有实验均使用一台商用线激光轮廓仪（OPT-LPF2-006-01），配合可编程 Z 轴位移台和推扫平台。真值来自经过认证的标准件：带 49 × 49 点阵（间距 1 mm）的网格畸变靶标、25 mm 方格的金属棋盘格、25° 标准角度块和高度块。在内部阶段，HALCON 基线与所提映射使用相同的图像堆栈、相同的光条中心提取器和相同的训练/测试深度划分。除平均绝对误差降低外，所提映射还使 X、Z 方向的重复性分别提升 33.8% 和 70.0%。提升最大的是 Z 方向重复性，它对高度方向的非线性最敏感，而三次残差正是为吸收这种非线性而设计的。残差阶数实验支持选择三次：二次残差欠拟合；四次残差的训练误差最低，但其测试误差升至 X 方向 12.155 µm、Z 方向 5.130 µm，而三次残差为 8.745 µm 和 3.820 µm（表 11）。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>在留作测试的深度 Z&lt;sub>3&lt;/sub> 上，X、Z 方向平均绝对误差较 HALCON 标定基线分别降低 17.5% 和 11.8%&lt;/strong>：8.745 对 10.600 µm，3.820 对 4.332 µm（表 5）。&lt;br>&lt;strong>倾斜安装下 25° 标准角度块的测量角度误差：0.7591° → 0.0387°&lt;/strong>（与 25° 的偏差，深度均值），降低 94.90%（表 7）。&lt;br>&lt;strong>倾斜安装下棋盘格正交误差：10.007° → 0.309°&lt;/strong>（相邻边偏离垂直的角度，深度均值），降低 96.92%（表 8）。&lt;/aside>
+&lt;p>所有实验均使用一台商用线激光轮廓仪（OPT-LPF2-006-01），配合可编程 Z 轴位移台和推扫平台。真值来自经过认证的标准件：带 49 × 49 点阵（间距 1 mm）的网格畸变靶标、25 mm 方格的金属棋盘格、25° 标准角度块和高度块。在内部阶段，HALCON 基线与所提映射使用相同的图像堆栈、相同的光条中心提取器和相同的训练/测试深度划分。除平均绝对误差降低外，所提映射还使 X、Z 方向的重复性分别提升 33.8% 和 70.0%。提升最大的是 Z 方向重复性，它对高度方向的非线性最敏感，而三次残差正是为吸收这种非线性而设计的。&lt;/p>
+&lt;p>残差阶数实验支持选择三次：二次残差欠拟合；四次残差的训练误差最低，但其测试误差升至 X 方向 12.155 µm、Z 方向 5.130 µm，而三次残差为 8.745 µm 和 3.820 µm（表 11）。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-internal.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-internal.webp" alt="两幅柱状图。左图（越低越好）：灰色为 HALCON 基线，蓝色为所提方法，R X 为 7.18 对 4.75，R Z 为 0.82 对 0.25，MAE X 为 10.60 对 8.74，MAE Z 为 4.33 对 3.82，单位为微米。右图（越高越好）：相对提升分别为 33.8%、70.0%、17.5% 和 11.8%。" loading="lazy">
 &lt;/a>&lt;figcaption>测试深度 Z&lt;sub>3&lt;/sub> 上的内部标定精度：(a) HALCON 基线与所提 RPC 映射的重复性 R 和平均绝对误差，单位 µm；(b) 所提映射的相对提升。论文图 8。&lt;/figcaption>
 &lt;/figure>
-&lt;p>在外部阶段，传感器被有意倾斜安装（横滚角 α ≈ 5°，偏航角 γ ≈ 10°），并在全部六个深度上按三种状态测量：正常安装、倾斜未补偿、倾斜并补偿，每种状态重复 10 次。与正常安装相比，倾斜使角度块误差放大 18.84 倍，正交误差放大 31.87 倍。使用在 Z&lt;sub>3&lt;/sub> 估计后固定的角度进行补偿后，两项误差都回到正常安装水平（分别为其 0.96 倍和 0.98 倍）。逐深度的误差降幅在角度任务中保持在 94.69%–95.04%，在正交任务中保持在 96.87%–96.97%，同一补偿器无需重新调参即可适用于每个深度。&lt;/p>
+&lt;p>在外部阶段，传感器被有意倾斜安装（横滚角 α ≈ 5°，偏航角 γ ≈ 10°），并在全部六个深度上按三种状态测量：正常安装、倾斜未补偿、倾斜并补偿，每种状态重复 10 次。与正常安装相比，倾斜使角度块误差放大 18.84 倍，正交误差放大 31.87 倍。使用在 Z&lt;sub>3&lt;/sub> 估计后固定的角度进行补偿后，两项误差都回到正常安装水平（分别为其 0.96 倍和 0.98 倍）。逐深度的误差降幅在角度块测量中保持在 94.69%–95.04%，在棋盘格正交性测量中保持在 96.87%–96.97%，同一补偿器无需重新调参即可适用于每个深度。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-orthogonality.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/cao-2026-depth-adaptive-calibration-of-line-laser/fig-orthogonality.webp" alt="左图：Z1 至 Z6 各深度正交误差的对数坐标折线图。红色的倾斜未补偿曲线保持在 10° 附近；灰色虚线的正常安装曲线与蓝色的倾斜补偿曲线在 0.3° 附近重合。右图：各深度误差降幅柱状图，介于 96.87% 与 96.97% 之间，虚线表示均值 96.92%。" loading="lazy">
@@ -98,21 +99,21 @@
 &lt;p>两个阶段缺一不可。关闭外部补偿器时，映射误差与完整流程相当，但角度误差和正交误差仍停留在未补偿水平。采用 HALCON 映射加外部补偿器时，几何误差降至 0.0506° 和 0.519°，但仍高于完整流程的 0.0387° 和 0.309°，且映射误差回到基线水平（表 10）。补偿器在超出厂商名义 5° 安装公差时依然有效：在深度 Z&lt;sub>3&lt;/sub>、偏航角约 10° 的条件下把横滚角逐步增大到 20°，校正后的角度误差保持在 0.037°–0.101°，正交误差保持在 0.16°–0.59°（表 9）。一次完整标定中的数值计算约需 2.3 s，约 11 分钟的总耗时主要花在物理扫描上（表 12）。&lt;/p>
 &lt;p>作者将上述结果的适用范围限定在所测试的单台设备及其工作距离范围内。在第二台相机上的验证、更多标准角度，以及独立重新安装后所估计角度的重复性，留待后续工作。&lt;/p></description></item><item><title>Dynamic correlation network and structure-aware matching for robust point cloud registration</title><link>https://willpan.xyz/zh/publications/lu-2026-dynamic-correlation-network-and-structure-aware/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2026-dynamic-correlation-network-and-structure-aware/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
 &lt;p>点云配准的任务，是求出把同一场景中两帧部分重叠的三维扫描对齐的旋转和平移，例如从不同视角采集的 LiDAR 或 RGB-D 扫描。学习类方法通常先从每个点的邻域中聚合特征来描述该点，再在两帧之间进行点匹配。当两帧之间的相对旋转较大时，这些特征以及特征之间的相关性会随朝向而变化，匹配也就随之不稳定。&lt;/p>
-&lt;p>常见的做法是在训练时对扫描施加随机旋转，但数据增强无法覆盖连续的三维旋转空间 SO(3)，训练中未出现过的朝向仍会造成性能下降。PARE-Net 等旋转等变网络缓解了这一问题，但它们仍用一个固定的 MLP 来组合邻域特征，对所有邻域施加相同的相关性建模。此外，即便两个超点已经正确匹配，超点内部的单个点仍可能被错误配对。&lt;/p>
+&lt;p>常见的做法是在训练时对扫描施加随机旋转，但数据增强无法覆盖连续的三维旋转空间 SO(3)，训练中未出现过的朝向仍会造成性能下降。PARE-Net 等旋转等变网络缓解了这一问题，但它们仍用一个固定的多层感知机（MLP）来组合邻域特征，对所有邻域施加相同的相关性建模。此外，即便两个超点（粗采样点，每个对应一块局部点云块，即 patch）已经正确匹配，超点内部的单个点仍可能被错误配对。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-dynamic-correlation-network-and-structure-aware/fig-problem.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/lu-2026-dynamic-correlation-network-and-structure-aware/fig-problem.webp" alt="蓝色与金色两帧室内扫描及其对应连线的三幅视图：两个圈出的 patch 之间以红线为主，随后是不使用和使用 SAPM 的稠密绿色对应关系，标注的内点率分别为 88.2% 和 93.2%。" loading="lazy">
 &lt;/a>&lt;figcaption>(a) 即使在一对正确匹配的超点 patch（圈出部分）内部，点级匹配也可能出错（红线）。(b) 不使用 SAPM 与 (c) 使用 SAPM 时的稠密对应关系，后者更加连贯。引自论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
-&lt;p>该方法沿用由粗到精的框架：骨干网络提取粗粒度的超点和稠密的点级特征，先匹配超点，再只在匹配的超点 patch 内部进行点匹配。论文改进了其中两个环节：在 PAREConv-FPN 骨干网络中加入动态相关网络（DCN），依据旋转不变的线索决定如何组合邻域特征；并用结构感知点匹配（SAPM）模块细化每个 patch 内的点匹配。&lt;/p>
+&lt;p>该方法沿用由粗到精的框架：骨干网络提取粗粒度的超点（稀疏的一组点，每个对应一块局部点云 patch）和稠密的点级特征，先匹配超点，再只在匹配的超点 patch 内部进行点匹配。论文改进了其中两个环节：在 PAREConv-FPN 骨干网络中加入动态相关网络（DCN），依据旋转不变的线索决定如何组合邻域特征；并用结构感知点匹配（SAPM）模块细化每个 patch 内的点匹配。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/lu-2026-dynamic-correlation-network-and-structure-aware/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-dynamic-correlation-network-and-structure-aware/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>带旋转的输入。&lt;/strong> 两帧扫描之间存在任意的相对旋转；即使训练时没有见过这一朝向，网络也要估计出两者之间的刚体变换。&lt;/li>
 &lt;li>&lt;strong>旋转不变的线索。&lt;/strong> 对每个点及其近邻，向量神经元编码器由相对偏移、邻域平均偏移以及二者的叉积构造特征。这些特征随扫描一起旋转，而它们的模长不变，因此模长可作为旋转不变的描述子。&lt;/li>
 &lt;li>&lt;strong>动态卷积核。&lt;/strong> 通道重分配网络把该描述子转换为对一组可学习卷积核（实验中为 4 个）的 softmax 得分，每个邻点的卷积核即这组核按得分加权求和的结果。由于得分只取决于旋转不变量，核的选择不随旋转改变，而聚合后的特征仍保持旋转等变。&lt;/li>
 &lt;li>&lt;strong>patch 内的上下文。&lt;/strong> 每对匹配的超点确定两个局部 patch。SAPM 在各自的 patch 内用线性自注意力细化每个点的描述子，计算量与 patch 大小成线性关系；离其他超点更近的点被掩码排除。&lt;/li>
-&lt;li>&lt;strong>一致的匹配与位姿。&lt;/strong> 对 patch 相似度矩阵分别按行和按列做掩码 softmax，再与逐点置信度融合，双向 top-k 的元素构成稠密匹配。每个 patch 用 SVD 给出一个位姿假设，由基于特征的假设生成器保留最优者，无需 RANSAC。&lt;/li>
+&lt;li>&lt;strong>一致的匹配与位姿。&lt;/strong> 对 patch 相似度矩阵分别按行和按列做掩码 softmax，再与逐点置信度融合。行、列两个方向上都在 top-k 之内的元素构成稠密匹配。每个 patch 用 SVD 给出一个位姿假设，由基于特征的假设生成器保留最优者，无需 RANSAC。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-dynamic-correlation-network-and-structure-aware/fig-method.webp" target="_blank" rel="noopener">
@@ -120,7 +121,7 @@
 &lt;/a>&lt;figcaption>方法总览。加入 DCN 的 PAREConv-FPN 骨干网络输出粗粒度超点和稠密点级特征；超点匹配确定局部 patch，SAPM 在每个 patch 内建立稠密对应关系，各 patch 由 SVD 得到的假设 (R_i, t_i) 中最优者即为最终变换。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率分别为 95.4% 和 79.6%&lt;/strong>，其中 3DLoMatch 的结果在所有对比方法中最高（表 3）。&lt;br>&lt;strong>在 3DLoMatch 和旋转后的 3DLoMatch 上的变换召回率分别为 82.3% 和 82.7%&lt;/strong>，而 FCGF 在旋转后下降 15.1 个百分点（表 4）。&lt;br>&lt;strong>在 KITTI 上的旋转误差为 0.21°&lt;/strong>，为所有对比方法中最低，平移误差 4.8 cm，召回率 99.8%（表 2）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率（对齐后 RMSE 小于 0.2 m 的扫描对所占比例）分别为 95.4% 和 79.6%&lt;/strong>，其中 3DLoMatch 的结果在所有对比方法中最高（表 3）。&lt;br>&lt;strong>在 3DLoMatch 和旋转后的 3DLoMatch 上的变换召回率（旋转误差小于 15° 且平移误差小于 0.3 m 的扫描对所占比例）分别为 82.3% 和 82.7%&lt;/strong>，而 FCGF 在旋转后比未旋转的 3DLoMatch 下降 15.1 个百分点（表 4）。&lt;br>&lt;strong>在 KITTI 上的旋转误差为 0.21°&lt;/strong>，为所有对比方法中最低，平移误差 4.8 cm，召回率 99.8%（表 2）。&lt;/aside>
 &lt;p>3DMatch 和 3DLoMatch 是室内基准，重叠率分别在 30% 以上和 10%–30% 之间；KITTI 为室外驾驶场景扫描。在 3DMatch 上，该方法与表现最好的基于 RANSAC 的方法 BUFFER-X（95.6%）接近，并略优于 DFAT 和 PARE-Net（均为 94.9%）；即使把自身的估计器换成 RANSAC，结果仍有 95.2% 和 79.3%。对 3DLoMatch 施加任意旋转后，FCGF、Predator 等主要依赖旋转增强的方法变换召回率下降，而采用旋转不变或等变设计的方法（包括本方法）保持稳定。在 KITTI 上，CAST 的平移误差更低（2.5 cm），而本方法的旋转误差最低。在 KITTI 上的消融实验中，DCN 和 SAPM 单独使用都能降低误差，二者结合时旋转误差从 0.239° 降到 0.211°，平移误差从 5.5 cm 降到 4.8 cm（表 6）。模型参数量为 4.04 M，在 RTX 4090 上耗时 100.29 ms，快于 CAST（129.80 ms）和 PARE-Net（122.80 ms）（表 5）。&lt;/p>
 &lt;p>作者指出了两点局限：重叠率极低时，粗粒度的超点匹配可能出错；高度重复的几何结构会产生有歧义的描述子，从而误导假设选择。&lt;/p>
 &lt;figure class="rfig">
@@ -138,7 +139,7 @@
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" alt="上图：ColorPCR/GeoTransformer 对两帧扫描做匹配，相似结构之间出现大量红色错误匹配，配准失败。下图：SuP 的流程（划分、OPS、MPN、合并匹配），绿色为正确匹配，配准成功。" loading="lazy">
-&lt;/a>&lt;figcaption>上：重叠区之外的相似结构（红框）吸引了大量错误匹配（红线），掩盖了正确对应；直接匹配的基线方法（图中标注为 ColorPCR / GeoTr.）在这对扫描上配准失败（旋转误差 41.3°，平移误差 101.7 cm）。下：SuP 找出重叠率高、特征一致性强的子点云对，合并其中的匹配后完成配准（1.3°，1.8 cm）。论文图 1。&lt;/figcaption>
+&lt;/a>&lt;figcaption>上：重叠区之外的相似结构（红框）吸引了大量错误匹配（红线），掩盖了正确对应；直接匹配的基线方法（图中标注为 ColorPCR 与 GeoTr.，即 GeoTransformer）在这对扫描上配准失败（旋转误差 41.3°，平移误差 101.7 cm）。下：SuP 找出重叠率高、特征一致性强的子点云对，合并其中的匹配后完成配准（1.3°，1.8 cm）。论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
 &lt;p>SuP 换了一个角度看问题。两帧扫描整体上可能只有少量重叠，但若把每帧切成更小的块并两两配对，其中有一部分子点云对具有很高的重叠率。SuP 把这些高重叠的子点云对称为“锚点对”：先分两个阶段把它们找出来，再只在锚点对内部建立匹配。&lt;/p>
@@ -146,7 +147,7 @@
 &lt;ol>
 &lt;li>&lt;strong>提取整帧特征。&lt;/strong> KPConv 骨干网络在多个尺度上提取点特征，再由注意力层在帧内和两帧之间交换上下文信息。SuP 默认采用 ColorPCR 的颜色增强骨干网络和注意力模块。&lt;/li>
 &lt;li>&lt;strong>划分子点云。&lt;/strong> 每帧点云被划分为 k 个子点云：先用最远点采样选出分布均匀的中心点，再以各中心点为核心，在半径范围内收集近邻点，构成子点云。&lt;/li>
-&lt;li>&lt;strong>第一阶段：重叠引导的先验加权（OPS）。&lt;/strong> 对每一对源–目标子点云，SuP 只统计互为前 k 强的特征相关，以此度量两者点特征的相关程度，并保留得分最高的若干对作为候选。这一步是高效的初筛，用来排除不重叠的子点云对。&lt;/li>
+&lt;li>&lt;strong>第一阶段：重叠引导的先验加权（OPS）。&lt;/strong> 对每一对源–目标子点云，SuP 只统计互为前几强的特征相关，以此度量两者点特征的相关程度，并保留得分最高的若干对作为候选。这一步是高效的初筛，用来排除不重叠的子点云对。&lt;/li>
 &lt;li>&lt;strong>第二阶段：多尺度后加权网络（MPN）。&lt;/strong> 先用加权 SVD 为每个候选对估计初步位姿并对齐，再由一个轻量的可学习网络在两个尺度上检查：对齐后彼此靠近的点，特征是否也相似。特征一致性权重最高的候选对成为锚点对。训练时，该网络以各候选对实际的对齐误差作为监督信号（对齐感知加权损失）。&lt;/li>
 &lt;li>&lt;strong>合并匹配。&lt;/strong> 将所有锚点对中的内点对应合并，在更稠密的点上细化，再交给标准估计器（RANSAC 或无需 RANSAC 的 LGR）求出最终的旋转和平移。&lt;/li>
 &lt;/ol>
@@ -154,7 +155,7 @@
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="网络结构图：特征提取、特征聚合、双阶段子点云锚点挖掘模块（划分、OPS、初步子点云匹配、MPN）以及合并匹配，并附各部分的细节面板。" loading="lazy">
-&lt;/a>&lt;figcaption>方法总览。多尺度特征（3.2 节）经注意力聚合（3.3 节）；双阶段子点云锚点挖掘模块（3.4 节）划分两帧点云，用 OPS 选出候选，初步对齐（PSM）后由 MPN 打分；合并匹配模块（3.5 节）把各锚点对的匹配合并，估计最终变换。论文图 2。&lt;/figcaption>
+&lt;/a>&lt;figcaption>方法总览。多尺度特征（3.2 节）经注意力聚合（3.3 节）；双阶段子点云锚点挖掘模块（3.4 节）划分两帧点云，用 OPS 选出候选，用初步位姿对齐（PSM）后由 MPN 打分；合并匹配模块（3.5 节）把各锚点对的匹配合并，估计最终变换。论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
 &lt;aside class="keypoint">使用无需 RANSAC 的 LGR 估计器时，&lt;strong>在 Color3DMatch 和 Color3DLoMatch 上的配准召回率分别为 97.8% 和 90.2%&lt;/strong>，在采用 LGR 的对比方法中最高（表 2）。&lt;br>使用 RANSAC 时为 &lt;strong>98.1% 和 90.4%&lt;/strong>，且在 5000 到 250 个采样对应点的各档设置下配准召回率均为最高（表 1）。&lt;br>&lt;strong>位姿误差最低&lt;/strong>：Color3DMatch 上为 1.374° / 0.046 m，Color3DLoMatch 上为 2.493° / 0.074 m（表 3）。&lt;/aside>
@@ -178,7 +179,7 @@
 &lt;ol>
 &lt;li>&lt;strong>一个采集周期。&lt;/strong> 投影仪依次显示三类图案：模拟四象限照明、供 PS 使用的二值图案，以及供 PMD 使用的水平（fringe-x）和竖直（fringe-y）正弦条纹。相机每个周期采集 12 幅图像。&lt;/li>
 &lt;li>&lt;strong>PMD 分支。&lt;/strong> 每个像素有四幅相移条纹图像：其均值为平均强度 A，由条纹调制计算镜面反射分量 S，漫反射分量为 D = A − S，光泽度为 S / A。多频相位展开得到绝对相位，其在 x、y 方向的导数构成相位梯度幅值 P。&lt;/li>
-&lt;li>&lt;strong>PS 分支。&lt;/strong> 四幅二值图案图像以 PMD 得到的反射分量图为先验，构成“图像数 × 像素数”的强度矩阵。对其做奇异值分解得到表面法向，再由法向计算表面梯度和平均曲率 H，计算过程采用 CUDA 加速。&lt;/li>
+&lt;li>&lt;strong>PS 分支。&lt;/strong> 四幅二值图案图像以 PMD 得到的镜面与漫反射分量图作为先验信息，构成“图像数 × 像素数”的强度矩阵。对其做奇异值分解得到表面法向，再由法向计算表面梯度和平均曲率 H，计算过程采用 CUDA 加速。&lt;/li>
 &lt;li>&lt;strong>按反射特性计算权重。&lt;/strong> 每个像素的权重为 w&lt;sub>PMD&lt;/sub> = S / (S + D)，w&lt;sub>PS&lt;/sub> = D / (S + D)。高光像素更依赖 PMD，偏漫反射的像素更依赖 PS，两者之间平滑过渡。&lt;/li>
 &lt;li>&lt;strong>融合。&lt;/strong> 结果为 R = w&lt;sub>PMD&lt;/sub>·P + w&lt;sub>PS&lt;/sub>·H。在条纹可靠的区域以 PMD 为主，在需要保留漫反射细节的区域以 PS 为主。&lt;/li>
 &lt;/ol>
@@ -188,8 +189,8 @@
 &lt;/a>&lt;figcaption>FPD 框架：图案投射、图像采集、PMD 特征提取（平均强度、漫反射、光泽度、镜面反射图及相位梯度）、PS 曲率图、自适应权重计算与自适应融合。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>高光标志上的划痕：&lt;/strong> PS 平均曲率图未能呈现，PMD 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>标志以外的指纹脏污：&lt;/strong> PMD 相位梯度图未能重建，PS 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>Smart3 缺陷检测：&lt;/strong> 基于 PS 的检测在强镜面反射区域失效，基于 PMD 的检测在反射较弱的区域失效，FPD 结果则能同时支持两类缺陷的检测（图 7）。&lt;/aside>
-&lt;p>测试对象是同时具有漫反射和镜面反射的 iPhone 后盖。实验平台由投影仪、相机和安装结构组成，每个周期采集二值、fringe-x 和 fringe-y 三类图案共 12 幅图像，处理所用电脑配备 Intel Core i5-13500 CPU 和 NVIDIA GeForce RTX 3060 GPU。对比在同一次采集得到的三幅重建图之间进行：PS 平均曲率图、PMD 相位梯度图和 FPD 融合结果；作者认为 FPD 对两类特征的重建都更完整、更一致。随后，在 OPT Machine Vision 的商用检测软件 Smart3 中分别对三幅图做缺陷检测：一是划痕检测，二是基于高斯线提取的指纹/脏污检测。FPD 也已集成到商用缺陷检测软件中。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>高光标志上的划痕：&lt;/strong> PS 平均曲率图未能呈现，PMD 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>标志以外的指纹脏污：&lt;/strong> PMD 相位梯度图未能重建，PS 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>Smart3（商用检测软件）缺陷检测：&lt;/strong> 基于 PS 的检测在强镜面反射区域失效，基于 PMD 的检测在反射较弱的区域失效，FPD 结果则能同时支持两类缺陷的检测（图 7）。&lt;/aside>
+&lt;p>测试对象是同时具有漫反射和镜面反射的 iPhone 后盖。实验平台由投影仪、相机和安装结构组成，每个周期采集二值、fringe-x 和 fringe-y 三类图案共 12 幅图像，处理所用电脑配备 Intel Core i5-13500 CPU 和 NVIDIA GeForce RTX 3060 GPU。对比在同一次采集得到的三幅重建图之间进行：PS 平均曲率图、PMD 相位梯度图和 FPD 融合结果；作者认为 FPD 对两类特征的重建都更完整、更一致。随后，在 OPT Machine Vision 的商用检测软件 Smart3 中分别对三幅图做缺陷检测：一是划痕检测，二是基于线特征提取的脏污检测。FPD 也已集成到商用缺陷检测软件中。&lt;/p>
 &lt;p>作者将集成系统的标定以及复杂表面的高度测量列为未来工作。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-results.webp" target="_blank" rel="noopener">
@@ -211,7 +212,7 @@
 &lt;li>&lt;strong>基于大核注意力的颜色特征。&lt;/strong> ResNet18 骨干网络与金字塔池化模块从图像块中提取多尺度特征。大核注意力由深度卷积、深度空洞卷积和 1×1 卷积组成，生成的注意力图与特征逐元素相乘，使网络既能捕捉局部纹理和边缘，也能建模更大范围的上下文。&lt;/li>
 &lt;li>&lt;strong>基于 3DGCN 与 PointNet 的几何特征。&lt;/strong> 三维图卷积网络（3DGCN）在每个点的邻域上施加可学习的三维图卷积核，再经图最大池化，刻画局部几何结构。PointNet 分支用全连接层处理各点，并通过最大池化得到全局形状特征。&lt;/li>
 &lt;li>&lt;strong>跨模态注意力。&lt;/strong> CMA-Net 模块的输入为颜色特征（F1）、3DGCN 特征（F2）和 PointNet 特征（F3）。第一次点积注意力以 F1、F2、F3 分别作为查询、键和值，增强颜色特征；第二次以 F2、F1、F3 作为查询、键和值，增强点云特征。两路输出与 F3 一起经 Squeeze-and-Excitation 模块进行通道重加权，再拼接在一起。&lt;/li>
-&lt;li>&lt;strong>稠密融合与位姿回归。&lt;/strong> 各像素的融合特征经共享 MLP 和平均池化得到全局特征，并拼接到每个像素的特征上。随后每个像素分别预测旋转、平移和置信度，保留置信度最高的预测，并沿用 DenseFusion 的做法，由一个小型网络预测残差位姿，对其进行迭代精化。&lt;/li>
+&lt;li>&lt;strong>稠密融合与位姿回归。&lt;/strong> 各像素的融合特征经共享 MLP 和平均池化得到全局特征，并拼接到每个像素的特征上。随后每个像素分别预测旋转、平移和置信度，保留置信度最高的预测；最后沿用 DenseFusion 的做法，由一个小型网络预测残差位姿，对其进行迭代精化。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/figure-overleaf-1-architecture.webp" target="_blank" rel="noopener">
@@ -219,7 +220,7 @@
 &lt;/a>&lt;figcaption>网络总览：语义分割、颜色分支（ResNet18 + LKA-PSPNet）、几何分支（3DGCN + PointNet）、CMA-Net、结合全局特征的逐像素稠密融合，以及逐像素位姿预测。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>LineMOD 平均准确率 97.7%&lt;/strong>（ADD(-S) 距离小于物体直径的 10% 记为正确），DenseFusion 为 94.3%（表 2）。&lt;br>单独加入任一模块均优于 94.3% 的基线：&lt;strong>3DGCN 96.9%、LKA 96.2%、CMA-Net 95.4%&lt;/strong>（表 1）。&lt;br>&lt;strong>YCB-Video 上 AUC 为 92.9%，误差小于 2 cm 的位姿占 95.7%&lt;/strong>，DenseFusion 分别为 91.2% 和 95.3%（第 4.4 节）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>LineMOD 平均准确率 97.7%&lt;/strong>（ADD(-S) 距离小于物体直径的 10% 记为正确），DenseFusion 为 94.3%（表 2）。&lt;br>单独加入任一模块均优于 94.3% 的基线：&lt;strong>图卷积（3DGCN）96.9%、大核注意力（LKA）96.2%、跨模态注意力（CMA-Net）95.4%&lt;/strong>（表 1）。&lt;br>&lt;strong>YCB-Video 上 AUC（阈值 10 cm 以内 ADD(-S) 准确率曲线下的面积）为 92.9%，误差小于 2 cm 的位姿占 95.7%&lt;/strong>，DenseFusion 分别为 91.2% 和 95.3%（第 4.4 节）。&lt;/aside>
 &lt;p>实验在两个公开数据集上进行。LineMOD 中的物体纹理较弱、背景复杂且光照多变；15% 的图像用于训练、85% 用于测试，位姿的 ADD 距离（对称物体用 ADD-S）小于物体直径的 10% 即视为正确。在表 2 中，GCMA6D 的平均准确率在参与比较的七种方法中最高，领先 TMFNet（96.8%）和 QaQ（95.3%），并在对称物体 eggbox 和 glue 上达到 100%。LineMOD 上的消融实验表明各模块相互补充：任意两个模块组合的准确率为 96.8%–97.4%，三者同时使用时达到 97.7%。&lt;/p>
 &lt;p>YCB-Video 包含 21 种物体，遮挡程度各不相同；测试使用 12 段视频中的 2,949 个关键帧。评价指标为阈值 0–10 cm 范围内 ADD(-S) 准确率曲线下的面积（AUC），以及误差小于 2 cm 的位姿所占比例。GCMA6D 的 AUC 为 92.9%，高于 SaMfNet（92.6%）、G2L-Net（92.4%）、MSCNet（91.5%）和 DenseFusion（91.2%）。作者指出，大号夹子和特大号夹子上的准确率较低：两者外观十分相似，PoseCNN 的语义分割难以为它们生成精确的掩码。作者还指出，高度对称或严重遮挡的物体仍是该方法的局限，后续将改进对背景掩码区域的处理。&lt;/p>
 &lt;figure class="rfig">
@@ -250,7 +251,7 @@
 &lt;/a>&lt;figcaption>候选区域定位。对轮廓图像集中的每幅图像逐行处理；沿一行，先上升（红）后下降（蓝）的灰度梯度界定出候选区域 I、II、III。引自论文图 4。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>黄绿色基板上体积测量的平均相对误差为 1.39%&lt;/strong>（最大 1.55%），蓝、粉、紫色基板分别为 9.05%、8.03% 和 8.63%（表 II、图 13）。&lt;br>在一幅表面粗糙、边缘扩散噪声明显的图像上，&lt;strong>提取的光条中心线连续、平滑&lt;/strong>，而 Steger 法和细化法会混入噪声点，灰度重心法则提取失败（图 11）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>黄绿色基板上体积测量的平均相对误差为 1.39%&lt;/strong>（最大 1.55%），同一方法在蓝、粉、紫色基板上分别为 9.05%、8.03% 和 8.63%（表 II、图 13）。&lt;br>在一幅表面粗糙、边缘扩散噪声明显的图像上，&lt;strong>提取的光条中心线连续、平滑&lt;/strong>，而 Steger 法和细化法会混入噪声点，灰度重心法则提取失败（图 11）。&lt;/aside>
 &lt;p>体积实验中，用精密点胶针头在四种基板（黄绿、蓝、粉、紫）上点出相近的直线透明胶条，并用精密电子天平称量各样件，作为参考真值。每个样件在车间环境中扫描，测量 5 次；预测重量为测得体积乘以胶的密度 0.0011 g/mm³。黄绿色基板上 5 次测量的相对误差在 1.32% 到 1.55% 之间，其余三种基板则在 8.01% 到 9.16% 之间。作者据此认为，CSBO 提高了透明胶的三维重建精度。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-specimens.webp" target="_blank" rel="noopener">

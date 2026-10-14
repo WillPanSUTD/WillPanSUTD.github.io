@@ -13,7 +13,7 @@
 &lt;li>&lt;strong>扫描。&lt;/strong> 传感器保持静止，标定板随旋转台转动。每条扫描线在新的转角下构成图像的一行，因此行记录转角，列记录到旋转中心的距离。&lt;/li>
 &lt;li>&lt;strong>圆变椭圆。&lt;/strong> 在这种扇形扫描映射下，每个圆孔都成像为椭圆，其形状取决于所在位置。单个椭圆可能受噪声、局部遮挡或边缘定位误差的干扰，但所有椭圆整体上呈现稳定的变化趋势；该方法正是从这些整体趋势、而非某一个高精度测量中估计标定参数。&lt;/li>
 &lt;li>&lt;strong>对每个孔拟合椭圆。&lt;/strong> 先（手动或自动）定位圆孔区域，用自适应阈值分割，再沿图像梯度方向把边缘细化到亚像素精度。剔除离群边缘点后，用直接最小二乘法拟合椭圆，记录其中心和长宽比 ρ&lt;sub>i&lt;/sub> = r&lt;sub>x,i&lt;/sub> / r&lt;sub>y,i&lt;/sub>；残差过大或长宽比不合理的椭圆被剔除。&lt;/li>
-&lt;li>&lt;strong>回归求旋转中心和角采样率。&lt;/strong> 长宽比随椭圆中心的水平位置近似线性变化，ρ = a·c&lt;sub>x&lt;/sub> + b，因此直线过零的位置就是旋转中心 x&lt;sub>c&lt;/sub> = −b/a。由于斜率 a 的微小误差会使 x&lt;sub>c&lt;/sub> 明显偏移，直线采用稳健拟合：先用 RANSAC 剔除粗大离群点，再用基于残差的迭代最小二乘精化（ILS）舍去残差较大的测量并重新拟合，通常 2–3 次迭代即可收敛。对各椭圆中心的竖直位置再做一次线性回归，即得到角采样率 k。&lt;/li>
+&lt;li>&lt;strong>回归求旋转中心和角采样率。&lt;/strong> 长宽比随椭圆中心的水平位置近似线性变化，ρ = a·c&lt;sub>x&lt;/sub> + b，因此直线过零的位置就是旋转中心 x&lt;sub>c&lt;/sub> = −b/a。由于斜率 a 的微小误差会使 x&lt;sub>c&lt;/sub> 明显偏移，直线采用稳健拟合：先用 RANSAC 剔除粗大离群点，再用基于残差的迭代最小二乘精化（ILS）舍去残差较大的测量并重新拟合，通常 2–3 次迭代即可收敛。对角度与各椭圆中心的竖直位置再做一次线性回归，θ = k·c&lt;sub>y&lt;/sub> + d（d = −k·y&lt;sub>c&lt;/sub>），斜率即角采样率 k，截距则给出竖直方向的中心 y&lt;sub>c&lt;/sub>。&lt;/li>
 &lt;li>&lt;strong>展开校正。&lt;/strong> 利用估计出的 x&lt;sub>c&lt;/sub>、y&lt;sub>c&lt;/sub> 和 k，把校正图像中的每个像素映射回原始图像，并通过双线性插值取值，椭圆随之恢复为圆。对于三维数据，每个高度值转换为点 X = r cos θ，Y = r sin θ，高度 Z 保持不变。激光轮廓仪的二维强度图像和三维高度图来自同一组测量，因此一个变换即可同时校正两者。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
@@ -65,9 +65,9 @@
 &lt;div class="explainer" data-explainer="/publications/zhang-2023-double-sampling/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>每幅条纹拍摄两次。&lt;/strong> 在相机和投影仪上加入触发控制装置。投影仪以一定速率投射 N 幅条纹图，并在每个投射周期内触发相机两次：投射条纹 I&lt;sub>1&lt;/sub> 时采集 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>，投射 I&lt;sub>2&lt;/sub> 时采集 I&lt;sub>21&lt;/sub> 和 I&lt;sub>22&lt;/sub>，依此类推。&lt;/li>
-&lt;li>&lt;strong>区分运动与相移。&lt;/strong> 同一幅投射条纹下拍到的两幅图像（如 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>）之间只有物体运动引起的相移（δ&lt;sub>1&lt;/sub> = 0）；不同条纹下拍到的图像之间还包含 PSP 相移 δ&lt;sub>2&lt;/sub> = 2π/N。相位由 I&lt;sub>11&lt;/sub>、I&lt;sub>12&lt;/sub> 和 I&lt;sub>21&lt;/sub> 联合分析。&lt;/li>
+&lt;li>&lt;strong>区分运动与相移。&lt;/strong> 同一幅投射条纹下拍到的两幅图像（如 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>）之间没有 PSP 相移（δ&lt;sub>1&lt;/sub> = 0），因此只相差物体的运动；不同条纹下拍到的图像之间还包含 PSP 相移 δ&lt;sub>2&lt;/sub> = 2π/N。因此相位由 I&lt;sub>11&lt;/sub>、I&lt;sub>12&lt;/sub> 和 I&lt;sub>21&lt;/sub> 三幅图像联合分析。&lt;/li>
 &lt;li>&lt;strong>跟踪运动。&lt;/strong> 通过跟踪物体得到描述其运动的旋转矩阵和平移向量，进而得到描述各点运动前后位置关系的坐标变换 (f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>)。&lt;/li>
-&lt;li>&lt;strong>最小二乘求解相位。&lt;/strong> 三幅图像都写成 A + B cos(ϕ + δ&lt;sub>k&lt;/sub>) + C sin(ϕ + δ&lt;sub>k&lt;/sub>) 的形式，其中 ϕ 为参考平面相位在变换后坐标处的取值。对三幅图像（N = 3）的平方误差求最小，得到线性方程组 D X = E，其中 X = [A B C]&lt;sup>T&lt;/sup>，物体引起的相位变化为 φ = tan&lt;sup>−1&lt;/sup>(−C/B)。再根据相位和系统参数重建物体。&lt;/li>
+&lt;li>&lt;strong>最小二乘求解相位。&lt;/strong> 三幅图像都写成 A + B cos(ϕ + δ&lt;sub>k&lt;/sub>) + C sin(ϕ + δ&lt;sub>k&lt;/sub>) 的形式，其中 A、B、C 为未知量，ϕ 为参考平面相位在变换后坐标处的取值。对三幅图像（N = 3）的平方误差求最小，得到关于 X = [A B C]&lt;sup>T&lt;/sup> 的线性方程组 D X = E，物体引起的相位变化为 φ = tan&lt;sup>−1&lt;/sup>(−C/B)。再根据相位和系统参数重建物体。&lt;/li>
 &lt;li>&lt;strong>图像复用。&lt;/strong> 每连续三幅图像即可得到一幅物体相位图，各组相互重叠，每多拍一幅图像就开始新的一帧。传统 PSP 每一帧都需要三幅投射条纹。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
@@ -81,8 +81,8 @@
 &lt;/a>&lt;figcaption>条纹投射策略：(a) 传统 PSP 重建的帧；(b) 本文方法重建的帧，相互重叠的图像组各自给出一帧。论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>每幅投射条纹采集两幅图像&lt;/strong>，由相机和投影仪上的触发控制装置实现（第 3 节，图 1）。&lt;br>&lt;strong>每连续三幅图像得到一幅物体相位图&lt;/strong>，通过复用条纹图像实现（图 2、图 5a）。&lt;br>&lt;strong>拍摄帧率翻倍&lt;/strong>，相对于投影仪的最高帧率（第 5 节）。&lt;br>&lt;strong>仿真中物体在相邻两幅条纹图之间移动 10 个像素&lt;/strong>：所提方法重建出方块，而传统 PSP 对同一组图像的重建误差很大（图 5、图 6）。&lt;/aside>
-&lt;p>该方法通过仿真验证。分别仿真静止物体和运动物体的条纹图，运动物体从左向右移动，相邻两幅条纹图之间移动 10 个像素。为便于比较，先用传统 PSP 重建静止状态的条纹图（论文图 3）。在运动状态下，同一投射条纹下采集的图像只包含物体运动，不同投射条纹下的图像则同时包含条纹相移和物体运动（论文图 4）。通过跟踪物体计算运动的旋转矩阵和平移向量，再用所提模型计算相位，并通过复用由每三幅图像得到一幅物体相位图。由不同帧的相位图完成运动方块的高帧率三维重建（图 5）。对同一组图像使用传统 PSP 重建，结果存在很大误差（图 6）。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>仿真中物体在相邻两幅条纹图之间移动 10 个像素&lt;/strong>：所提方法重建出方块，而传统 PSP 对同一组图像的重建误差很大（图 5、图 6）。&lt;br>&lt;strong>每幅投射条纹采集两幅图像&lt;/strong>，由相机和投影仪上的触发控制装置实现（图 1）。&lt;br>&lt;strong>每连续三幅图像得到一幅物体相位图&lt;/strong>，通过复用条纹图像实现（图 2）。&lt;br>&lt;strong>拍摄帧率为投影仪最高帧率的两倍&lt;/strong>，因为相机在每幅条纹下拍摄两次。&lt;/aside>
+&lt;p>该方法通过仿真验证。分别仿真静止物体和运动物体的条纹图，运动物体从左向右移动，相邻两幅条纹图之间移动 10 个像素。为便于比较，先用传统 PSP 重建静止状态的条纹图。在运动状态下，同一投射条纹下采集的图像只包含物体运动，不同投射条纹下的图像则同时包含条纹相移和物体运动。通过跟踪物体计算运动的旋转矩阵和平移向量，再用所提模型计算相位，并通过复用由每三幅图像得到一幅物体相位图。由不同帧的相位图完成运动方块的高帧率三维重建（图 5）。对同一组图像使用传统 PSP 重建，结果存在很大误差（图 6）。&lt;/p>
 &lt;p>作者在结论中指出，该方法只需推导新的公式，并在三步相移的基础上投射前两步的条纹图，即可重建运动物体；它能以较低成本使拍摄帧率翻倍，同时不损失 PSP 的优点。与传统 PSP 的对比以图 5 和图 6 直观呈现。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-results.webp" target="_blank" rel="noopener">
@@ -102,9 +102,9 @@
 &lt;ol>
 &lt;li>&lt;strong>双采样。&lt;/strong> 投影仪按正常速率投射 N 幅相移条纹图，在每个投影周期内触发相机两次。因此每幅投射条纹都对应运动物体的两张图像。&lt;/li>
 &lt;li>&lt;strong>混合相移。&lt;/strong> 同一幅投射条纹下拍摄的两张图像之间，只存在物体运动引起的相移；不同投射条纹下拍摄的图像，既有运动引起的相移，又有 PSP 的传统相移。对于三张图像 I&lt;sub>1&lt;/sub>、I&lt;sub>2&lt;/sub>、I&lt;sub>3&lt;/sub>，相移量为 δ&lt;sub>1&lt;/sub> = δ&lt;sub>2&lt;/sub> = 0，δ&lt;sub>3&lt;/sub> = 2π/N。&lt;/li>
-&lt;li>&lt;strong>包含运动的条纹模型。&lt;/strong> 物体运动跟踪算法计算描述物体运动的旋转平移矩阵，由此得到图像之间的坐标变换关系 (f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>)。每张图像表示为 I&lt;sub>n&lt;/sub> = a + B cos h&lt;sub>n&lt;/sub> + C sin h&lt;sub>n&lt;/sub>，其中 h&lt;sub>n&lt;/sub> = ϕ(f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>) + δ&lt;sub>n&lt;/sub>，ϕ 为参考平面的相位。&lt;/li>
-&lt;li>&lt;strong>最小二乘求相位。&lt;/strong> 对每个像素，以模型与实拍条纹图之差的平方和最小为准则，求出 a、B、C。由于 B = cos φ、C = −sin φ，物体形状引起的相位变化为 φ = arctan(−C / B)。&lt;/li>
-&lt;li>&lt;strong>图像复用。&lt;/strong> 对采集到的图像进行复用：每三张相邻图像得到一帧物体相位，而传统 PSP 的每一帧都由各自独立的一组图像得到。由此在投影速度受限的情况下提高运动物体的重构帧率。&lt;/li>
+&lt;li>&lt;strong>包含运动的条纹模型。&lt;/strong> 物体运动跟踪算法计算描述物体运动的旋转平移矩阵，由此得到图像之间的坐标变换关系 (f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>)。每张图像表示为 I&lt;sub>n&lt;/sub> = a + B cos h&lt;sub>n&lt;/sub> + C sin h&lt;sub>n&lt;/sub>，其中 h&lt;sub>n&lt;/sub> = ϕ(f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>) + δ&lt;sub>n&lt;/sub>，ϕ 为参考平面的相位，a 为环境光强度。&lt;/li>
+&lt;li>&lt;strong>最小二乘求相位。&lt;/strong> 对每个像素，以模型与实拍条纹图之差的平方和最小为准则，求出 a、B、C。B 和 C 携带了物体形状引起的相位变化 φ（B = cos φ、C = −sin φ），因此 φ = arctan(−C / B)。&lt;/li>
+&lt;li>&lt;strong>图像复用。&lt;/strong> 对采集到的图像进行复用：每三张相邻图像得到一帧物体相位，而传统 PSP 的每一帧都由各自独立的一组图像得到。因此每采到一张新图像就能得到一帧新的相位，而不必等一整组图案采完。由此在投影速度受限的情况下提高运动物体的重构帧率。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-3d-reconstruction-of-the-moving-object/fig-method.webp" target="_blank" rel="noopener">
@@ -117,7 +117,7 @@
 &lt;/a>&lt;figcaption>(a) 传统 PSP 与 (b) 本文方法的重构帧率，本文方法对采集图像进行复用。论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>运动物体的均值误差：传统 PSP 为 0.1575 mm，本文方法为 0.0344 mm&lt;/strong>（表 1）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>运动物体相对静止重建结果的均值误差：传统 PSP 为 0.1575 mm，本文方法为 0.0344 mm&lt;/strong>（表 1）。&lt;/aside>
 &lt;p>实验系统由工业相机（OPT-CC1-048A-RM-G，分辨率 1800 × 1600 像素）、投影仪（TJ-S50，分辨率 1280 × 720 像素）和电动位移台组成，被测物体为面具。相机帧率为 20 帧/s，位移台速率为 20 mm/s，视场为 70 mm × 80 mm。先用传统 PSP 重构静止的面具，以此作为误差评估的真值。面具随位移台运动时，同一幅投射条纹下的两张图像中只有物体运动，不同投射条纹下的图像中则既有物体运动又有条纹相移。旋转平移矩阵由物体运动跟踪算法计算得到，每三张相邻图像得到一幅相位图。本文方法成功重构了运动中的面具，而用传统 PSP 重构同一运动物体则存在较大误差。&lt;/p>
 &lt;p>作者指出，影响最大的局限是物体跟踪算法的精度：它直接决定重构精度，而现有跟踪算法难以描述大幅度运动。该方法只能重构做二维平移运动的物体，受运动跟踪算法所限，无法处理二维旋转运动和三维运动。方法不要求物体匀速运动，但相机需拍摄到清晰的运动物体条纹图。&lt;/p>
 &lt;figure class="rfig">

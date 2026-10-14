@@ -4,7 +4,7 @@
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" alt="上图：ColorPCR/GeoTransformer 对两帧扫描做匹配，相似结构之间出现大量红色错误匹配，配准失败。下图：SuP 的流程（划分、OPS、MPN、合并匹配），绿色为正确匹配，配准成功。" loading="lazy">
-&lt;/a>&lt;figcaption>上：重叠区之外的相似结构（红框）吸引了大量错误匹配（红线），掩盖了正确对应；直接匹配的基线方法（图中标注为 ColorPCR / GeoTr.）在这对扫描上配准失败（旋转误差 41.3°，平移误差 101.7 cm）。下：SuP 找出重叠率高、特征一致性强的子点云对，合并其中的匹配后完成配准（1.3°，1.8 cm）。论文图 1。&lt;/figcaption>
+&lt;/a>&lt;figcaption>上：重叠区之外的相似结构（红框）吸引了大量错误匹配（红线），掩盖了正确对应；直接匹配的基线方法（图中标注为 ColorPCR 与 GeoTr.，即 GeoTransformer）在这对扫描上配准失败（旋转误差 41.3°，平移误差 101.7 cm）。下：SuP 找出重叠率高、特征一致性强的子点云对，合并其中的匹配后完成配准（1.3°，1.8 cm）。论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
 &lt;p>SuP 换了一个角度看问题。两帧扫描整体上可能只有少量重叠，但若把每帧切成更小的块并两两配对，其中有一部分子点云对具有很高的重叠率。SuP 把这些高重叠的子点云对称为“锚点对”：先分两个阶段把它们找出来，再只在锚点对内部建立匹配。&lt;/p>
@@ -12,7 +12,7 @@
 &lt;ol>
 &lt;li>&lt;strong>提取整帧特征。&lt;/strong> KPConv 骨干网络在多个尺度上提取点特征，再由注意力层在帧内和两帧之间交换上下文信息。SuP 默认采用 ColorPCR 的颜色增强骨干网络和注意力模块。&lt;/li>
 &lt;li>&lt;strong>划分子点云。&lt;/strong> 每帧点云被划分为 k 个子点云：先用最远点采样选出分布均匀的中心点，再以各中心点为核心，在半径范围内收集近邻点，构成子点云。&lt;/li>
-&lt;li>&lt;strong>第一阶段：重叠引导的先验加权（OPS）。&lt;/strong> 对每一对源–目标子点云，SuP 只统计互为前 k 强的特征相关，以此度量两者点特征的相关程度，并保留得分最高的若干对作为候选。这一步是高效的初筛，用来排除不重叠的子点云对。&lt;/li>
+&lt;li>&lt;strong>第一阶段：重叠引导的先验加权（OPS）。&lt;/strong> 对每一对源–目标子点云，SuP 只统计互为前几强的特征相关，以此度量两者点特征的相关程度，并保留得分最高的若干对作为候选。这一步是高效的初筛，用来排除不重叠的子点云对。&lt;/li>
 &lt;li>&lt;strong>第二阶段：多尺度后加权网络（MPN）。&lt;/strong> 先用加权 SVD 为每个候选对估计初步位姿并对齐，再由一个轻量的可学习网络在两个尺度上检查：对齐后彼此靠近的点，特征是否也相似。特征一致性权重最高的候选对成为锚点对。训练时，该网络以各候选对实际的对齐误差作为监督信号（对齐感知加权损失）。&lt;/li>
 &lt;li>&lt;strong>合并匹配。&lt;/strong> 将所有锚点对中的内点对应合并，在更稠密的点上细化，再交给标准估计器（RANSAC 或无需 RANSAC 的 LGR）求出最终的旋转和平移。&lt;/li>
 &lt;/ol>
@@ -20,7 +20,7 @@
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="网络结构图：特征提取、特征聚合、双阶段子点云锚点挖掘模块（划分、OPS、初步子点云匹配、MPN）以及合并匹配，并附各部分的细节面板。" loading="lazy">
-&lt;/a>&lt;figcaption>方法总览。多尺度特征（3.2 节）经注意力聚合（3.3 节）；双阶段子点云锚点挖掘模块（3.4 节）划分两帧点云，用 OPS 选出候选，初步对齐（PSM）后由 MPN 打分；合并匹配模块（3.5 节）把各锚点对的匹配合并，估计最终变换。论文图 2。&lt;/figcaption>
+&lt;/a>&lt;figcaption>方法总览。多尺度特征（3.2 节）经注意力聚合（3.3 节）；双阶段子点云锚点挖掘模块（3.4 节）划分两帧点云，用 OPS 选出候选，用初步位姿对齐（PSM）后由 MPN 打分；合并匹配模块（3.5 节）把各锚点对的匹配合并，估计最终变换。论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
 &lt;aside class="keypoint">使用无需 RANSAC 的 LGR 估计器时，&lt;strong>在 Color3DMatch 和 Color3DLoMatch 上的配准召回率分别为 97.8% 和 90.2%&lt;/strong>，在采用 LGR 的对比方法中最高（表 2）。&lt;br>使用 RANSAC 时为 &lt;strong>98.1% 和 90.4%&lt;/strong>，且在 5000 到 250 个采样对应点的各档设置下配准召回率均为最高（表 1）。&lt;br>&lt;strong>位姿误差最低&lt;/strong>：Color3DMatch 上为 1.374° / 0.046 m，Color3DLoMatch 上为 2.493° / 0.074 m（表 3）。&lt;/aside>

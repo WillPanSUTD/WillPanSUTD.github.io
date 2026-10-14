@@ -10,7 +10,7 @@ export default function mount(el, { kit, lang }) {
       steps: [
         "One unit cell: a gold nanotriangle (side s = 400 nm) below a gold nanorod (550 × 80 nm), 50 nm thick on quartz, repeated with a 2 µm period. The gap g and the sideways offset Δd are varied. Light arrives at normal incidence, polarized along the rod (H) or across it (V).",
         "Under V polarization the nanotriangle resonates as a dipole. This mode is highly radiative and gives a broad resonance: the bright mode. Light polarized across the rod cannot directly excite the rod's longitudinal plasmons.",
-        "The localized surface plasmon at the triangle tip excites the nanorod through its near field. The rod responds with a multipolar mode (j = 2) with three charge parts. It acts as the dark resonator, with a narrow resonance.",
+        "The localized surface plasmon at the triangle tip excites the nanorod through its near field. The rod responds with a multipolar mode (labelled j = 2) with three charge parts. It acts as the dark resonator, with a narrow resonance.",
         "Bright and dark modes interfere destructively, and a transmission peak (III) rises from the broad valley. Dip I is the in-phase (bonding) and dip II the out-of-phase (antibonding) coupling. Under H polarization there is only one broad dipolar dip.",
         "Shifting the rod sideways weakens the coupling. At g = 20 nm the window fades as Δd grows from 0 to 120 nm, and at Δd = 120 nm it disappears for every gap tested. The offset has a much stronger effect than the gap.",
       ],
@@ -31,7 +31,7 @@ export default function mount(el, { kit, lang }) {
       steps: [
         "一个单元：金纳米三角（边长 s = 400 nm）位于金纳米棒（550 × 80 nm）下方，厚 50 nm，制作在石英衬底上，以 2 µm 周期排列。改变的参数是间隙 g 和横向偏移 Δd。光垂直入射，偏振方向沿纳米棒（H）或垂直于纳米棒（V）。",
         "在 V 偏振下，纳米三角以偶极模式共振。该模式辐射很强，共振谱线宽：这是亮模。偏振方向垂直于纳米棒的光无法直接激发纳米棒的纵向等离激元。",
-        "三角尖端的局域表面等离激元通过近场激发纳米棒。纳米棒以多极模式（j = 2）响应，电荷分为三段。它充当暗共振器，共振谱线窄。",
+        "三角尖端的局域表面等离激元通过近场激发纳米棒。纳米棒以多极模式（记作 j = 2）响应，电荷分为三段。它充当暗共振器，共振谱线窄。",
         "亮模与暗模发生相消干涉，宽谷中升起一个透射峰（III）。谷 I 对应同相（成键）耦合，谷 II 对应反相（反键）耦合。在 H 偏振下只有一个宽的偶极谷。",
         "纳米棒横向偏移会削弱耦合。在 g = 20 nm 时，随着 Δd 从 0 增至 120 nm，透明窗口逐渐消失；Δd = 120 nm 时，所有间隙下窗口都完全消失。偏移对窗口的影响远强于间隙。",
       ],

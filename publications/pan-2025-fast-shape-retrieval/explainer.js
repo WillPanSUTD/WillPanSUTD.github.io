@@ -9,8 +9,8 @@ export default function mount(el, { kit, lang }) {
     en: {
       steps: [
         "The contour traced from run-length encoding is dense (about 1 px apart) and noisy. It is smoothed with a neighbour mean and resampled at a fixed spacing into an ordered point set.",
-        "Each point gets a differential code from the turning angle θ between the vectors to its two neighbours, quantised to 0–4. The whole contour becomes a short code sequence.",
-        "The local contour's code is split into short segments. Each segment slides along the model code, and at every shift the cost Σ|b − a| is recorded, giving one cost array per segment.",
+        "Each point gets a differential code from the turning angle θ between the vectors to its two neighbours, quantised to a code 0–4 according to the angle sector θ falls in. The whole contour becomes a short code sequence.",
+        "The local contour's code is split into short segments. Each segment slides along the model code, and at every shift the cost Σ|b − a| (the sum of absolute differences between the segment's codes b and the model's codes a) is recorded, giving one cost array per segment.",
         "A sliding window (size 3) writes the minimum of each window into its centre. The arrays are aligned by segment offset and summed; local minima of the total become candidate start positions.",
         "For each candidate, point pairs are formed and a rigid transform is estimated by SVD. The candidate with the smaller mean point distance is kept; ICP can refine the result.",
       ],
@@ -27,8 +27,8 @@ export default function mount(el, { kit, lang }) {
     zh: {
       steps: [
         "由游程编码提取的轮廓点很密（间距约 1 像素）且含噪声。先用邻域均值平滑，再按固定间距重采样，得到有序点集。",
-        "每个点由其与前后两点构成的两个向量之间的转角 θ 确定差分码，量化为 0–4。整条轮廓由此变成一段短的码序列。",
-        "将局部轮廓的码序列切成若干短段。每一段沿模板码序列逐位滑动，记录每个位置的代价 Σ|b − a|，每段得到一个代价数组。",
+        "每个点由其与前后两点构成的两个向量之间的转角 θ 确定差分码，按所在角度扇区量化为 0–4 的码值。整条轮廓由此变成一段短的码序列。",
+        "将局部轮廓的码序列切成若干短段。每一段沿模板码序列逐位滑动，记录每个位置的代价 Σ|b − a|（片段码 b 与模板码 a 的绝对差之和），每段得到一个代价数组。",
         "用大小为 3 的滑动窗口把窗口内的最小值写入中心位置；再按各段的偏移对齐并求和，总代价的局部极小处即候选起始位置。",
         "对每个候选位置建立点对，用 SVD 估计刚体变换；保留变换后平均点距较小的候选，并可再用 ICP 精化。",
       ],

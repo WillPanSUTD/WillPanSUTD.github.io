@@ -7,7 +7,7 @@
 &lt;/a>&lt;figcaption>黄色 2×2 积木虽位于顶面，但四周被绿色积木完全包围，因此算法将其视为不可移动。引自论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
-&lt;p>源模型自上而下逐层拆解，目标模型自下而上逐层搭建。两种基本方法决定目标模型使用哪些积木，三种策略决定每块积木的来源：直接取自源模型、取自存放已拆下积木的缓冲区，或取自供应无限的库存。两者组合得到 RT1–RT3 和 FT1–FT3 共六种算法，使用七种形状的积木。&lt;/p>
+&lt;p>源模型自上而下逐层拆解，目标模型自下而上逐层搭建。两种基本方法（刚性变换 RT 与柔性变换 FT）决定目标模型使用哪些积木，三种策略决定每块积木的来源：直接取自源模型、取自存放已拆下积木的缓冲区，或取自供应无限的库存。两者组合得到 RT1–RT3 和 FT1–FT3 共六种算法，使用七种形状的积木。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/pan-2018-transformation/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2018-transformation/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>移动与约束。&lt;/strong> 每拾放一块积木（源模型到缓冲区、源模型到目标、缓冲区到目标或库存到目标）计成本 1。只有可移动的积木才能被拾取，即上方没有积木、且未被四周完全包围的积木。&lt;/li>
@@ -18,14 +18,14 @@
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-transformation/fig-method.webp" target="_blank" rel="noopener">
-&lt;img src="https://willpan.xyz/publications/pan-2018-transformation/fig-method.webp" alt="左：三行示意图，每行以黑白乐高足球为源模型、粉金配色的乐高造型为目标模型，第 1、2 行的积木经过青色缓冲区，第 3 行只有灰色库存。右：以乐高足球为源模型，RT 直接得到乐高目标模型，FT 经由中间体素模型得到目标，放大图对比两者的积木排布。" loading="lazy">
+&lt;img src="https://willpan.xyz/publications/pan-2018-transformation/fig-method.webp" alt="左：三行示意图，每行以黑白乐高球为源模型、粉金配色的乐高造型为目标模型，第 1、2 行的积木经过青色缓冲区，第 3 行只有灰色库存。右：以乐高球为源模型，RT 直接得到乐高目标模型，FT 经由中间体素模型得到目标，放大图对比两者的积木排布。" loading="lazy">
 &lt;/a>&lt;figcaption>左为每种基本方法下的三种策略（引自论文图 4）：箭头大小表示各路径的优先级，策略 1 全部经过缓冲区，策略 2 优先直接移动、必要时借助缓冲区，策略 3 只使用源模型和库存。右为两种基本方法（引自论文图 3）：RT 预先生成目标乐高模型，FT 在变换过程中由中间体素模型生成目标。此处将两幅图并排展示。&lt;/figcaption>
 &lt;/figure>
 &lt;p>算法用三项指标评价：成本 C，即搭建目标所需的拾放次数；复用率 R = N&lt;sub>r&lt;/sub>/N&lt;sub>s&lt;/sub>，即源模型 N&lt;sub>s&lt;/sub> 块积木中最终用到目标上的比例；以及综合性能 P = V·R/C，其中 V 是目标模型的体素数。&lt;/p>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>FT3 的综合性能在六种算法中最好&lt;/strong>：结果为八个模型两两互变、在七种模型尺寸下各 56 次变换的平均值；在 RT 算法中 RT2 最好（图 7c）。&lt;br>&lt;strong>策略 1 与策略 2 的复用率非常接近&lt;/strong>，说明一开始就把源模型全部拆掉并不划算（图 7b）。&lt;br>&lt;strong>足球变小屋（考虑颜色匹配）：FT3 以 2673 次拾放复用了 73.0% 的积木&lt;/strong>，而 FT1 需要 4502 次拾放，复用率为 74.8%（图 8）。&lt;/aside>
-&lt;p>测试使用八个转换为乐高的三角网格模型。第一项测试把模型 A 分别变换为其余七个模型，每个模型约 2500 个体素。第二项测试在七种模型尺寸下让八个模型两两互变。成本随模型尺寸线性增长，策略 1、2、3 的成本依次递减且始终如此。FT 算法的成本高于对应的 RT 算法，因为 FT 搭出的目标模型积木更多。FT3 的复用率与最好的 RT 算法相当。RT3 的复用率明显低于 RT1 和 RT2：目标积木事先确定、又没有缓冲区时，很难在源模型上找到匹配的积木，平均一半以上的目标积木来自库存。模型尺寸超过每模型 1700 个体素后，复用率对尺寸变化不太敏感；模型更小时复用率会下降。&lt;/p>
-&lt;p>第三项测试加入颜色：外表面积木必须与表面颜色一致，内部积木可以是任意颜色。在足球变小屋的例子中，RT1 和 RT2 的复用率分别为 61.9% 和 59.9%，RT3 仅为 9.2%（图 9）。作者也指出了其中的取舍：FT 的复用率更高，但使用的积木更多、更小，结构内部存在滑移面，强度较弱；综合性能只是一个经验指标，其他场景可能对成本有不同的权衡。本研究每次只移动一块积木，把一组积木作为模块整体复用留待未来工作；其结论也未必能直接用于货运集装箱堆垛等具体的工业应用。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>FT3 的综合性能在六种算法中最好&lt;/strong>：结果为八个模型的全部 56 个有序模型对（两两互变）、在七种模型尺寸下的平均值；在 RT 算法中 RT2 最好（图 7c）。&lt;br>&lt;strong>策略 1 与策略 2 的复用率非常接近&lt;/strong>，说明一开始就把源模型全部拆掉并不划算（图 7b）。&lt;br>&lt;strong>球变小屋（考虑颜色匹配）：FT3 以 2673 次拾放复用了 73.0% 的积木&lt;/strong>，而 FT1 需要 4502 次拾放，复用率为 74.8%（图 8）。&lt;/aside>
+&lt;p>测试使用八个转换为乐高的三角网格模型。第一项测试把模型 A 分别变换为其余七个模型，每个模型约 2500 个体素。第二项测试在七种模型尺寸下让八个模型两两互变。成本随模型尺寸线性增长，在每种模型尺寸下，策略 1、2、3 的成本都依次递减。FT 算法的成本高于对应的 RT 算法，因为 FT 搭出的目标模型积木更多。FT3 的复用率与最好的 RT 算法相当。RT3 的复用率明显低于 RT1 和 RT2：目标积木事先确定、又没有缓冲区时，很难在源模型上找到匹配的积木，平均一半以上的目标积木来自库存。模型尺寸超过每模型 1700 个体素后，复用率对尺寸变化不太敏感；模型更小时复用率会下降。&lt;/p>
+&lt;p>第三项测试加入颜色：外表面积木必须与表面颜色一致，内部积木可以是任意颜色。在球变小屋的例子中，RT1 和 RT2 的复用率分别为 61.9% 和 59.9%，RT3 仅为 9.2%（图 9）。作者也指出了其中的取舍：FT 的复用率更高，但使用的积木更多、更小，结构内部存在滑移面，强度较弱；综合性能只是一个经验指标，其他场景可能对成本有不同的权衡。本研究每次只移动一块积木，把一组积木作为模块整体复用留待未来工作；其结论也未必能直接用于货运集装箱堆垛等具体的工业应用。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-transformation/fig-results.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/pan-2018-transformation/fig-results.webp" alt="FT1–FT3 与 RT1–RT3 随模型尺寸（体素数）变化的三幅折线图：(a) 成本线性上升，(b) 复用率基本平稳、RT3 远低于其余算法，(c) 综合性能 FT3 最高。" loading="lazy">
@@ -33,6 +33,6 @@
 &lt;/figure>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-transformation/fig-sequences.webp" target="_blank" rel="noopener">
-&lt;img src="https://willpan.xyz/publications/pan-2018-transformation/fig-sequences.webp" alt="三行渲染快照：FT1、FT2、FT3 分别把乐高足球改搭成乐高小屋，画面中有库存、缓冲区积木堆和累计拾放次数。" loading="lazy">
-&lt;/a>&lt;figcaption>FT1、FT2、FT3 在考虑颜色的情况下把模型 A（足球）变换为模型 H（小屋），每张快照下方为累计拾放次数。FT3 不使用缓冲区，成本是三者中最低的。引自论文图 8。&lt;/figcaption>
+&lt;img src="https://willpan.xyz/publications/pan-2018-transformation/fig-sequences.webp" alt="三行渲染快照：FT1、FT2、FT3 分别把乐高球改搭成乐高小屋，画面中有库存、缓冲区积木堆和累计拾放次数。" loading="lazy">
+&lt;/a>&lt;figcaption>FT1、FT2、FT3 在考虑颜色的情况下把模型 A（球）变换为模型 H（小屋），每张快照下方为累计拾放次数。FT3 不使用缓冲区，成本是三者中最低的。引自论文图 8。&lt;/figcaption>
 &lt;/figure></description></item></channel></rss>

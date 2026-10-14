@@ -199,7 +199,7 @@ export default function mount(el, { kit, lang }) {
           arrow(g, [312, 164], [312, 214], { stroke: body, w: 1.8, opacity: v });
           kit.svg("polygon", { points: "252,218 304,240 304,286 252,308", fill: accent, "fill-opacity": 0.14, stroke: accent, "stroke-width": 1.5, opacity: v }, g);
           kit.svg("polygon", { points: "320,240 372,218 372,308 320,286", fill: accent, "fill-opacity": 0.14, stroke: accent, "stroke-width": 1.5, opacity: v }, g);
-          text(g, 312, 334, [L.unet + " ε", { sub: "θ" }, "(X", { sub: "t" }, ", t, y)"], { size: 16, fill: accent, weight: 600, opacity: v });
+          text(g, 312, 334, [L.unet + " ε", { sub: "θ" }, "(X", { sub: "t" }, " , t, y)"], { size: 18, fill: accent, weight: 600, opacity: v });
           arrow(g, [380, 262], [420, 262], { stroke: body, w: 1.8, opacity: v });
           text(g, 440, 268, "ε*", { size: 18, fill: accent, weight: 700, opacity: v });
           text(g, 540, 268, L.loss, { size: 16, fill: body, opacity: v });

@@ -14,7 +14,7 @@
 &lt;li>&lt;strong>一次扫描得到四幅图像。&lt;/strong> 把交错采集的扫描行按光源分区归类，即得到运动顶盖在四个不同照明方向下的四幅图像。&lt;/li>
 &lt;li>&lt;strong>最小二乘求法向。&lt;/strong> 在朗伯反射模型下，像素亮度为 I = ρ L · N，其中 ρ 为表面反射率，L 为光源方向，N 为表面法向。四个光源为每个像素提供四个方程，用最小二乘法求解。反射率图用于发现异物和污染；由法向得到表面梯度和平均曲率图，用于识别划痕、褶皱等缺陷。&lt;/li>
 &lt;li>&lt;strong>图像增强。&lt;/strong> 对比度拉伸扩大曲率图中的灰度差异；随后用加权最小二乘滤波这一保边平滑方法，抑制工件表面纹理，同时保留划痕等缺陷。&lt;/li>
-&lt;li>&lt;strong>缺陷提取。&lt;/strong> 先选取感兴趣区域（ROI），对图像进行滤波和采样处理；再求差分图像并阈值二值化，经形态学处理细化区域，最后按形状和灰度特征筛选出缺陷。&lt;/li>
+&lt;li>&lt;strong>缺陷提取。&lt;/strong> 先选取感兴趣区域（ROI），对图像进行滤波和采样处理；再求原图与预处理（滤波和采样）后图像的差分图像并阈值二值化，经形态学处理细化区域，最后按形状和灰度特征筛选出缺陷。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-method.webp" target="_blank" rel="noopener">
@@ -27,8 +27,8 @@
 &lt;/a>&lt;figcaption>对合成后的光度立体图像进行缺陷检测的流程。引自论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>划痕检出率 95.38%，凹坑检出率 96.43%&lt;/strong>，统计对象为 100 幅含已知缺陷的铝合金表面图像中的 376 条划痕和 336 个凹坑（表 2）。&lt;br>与 Ren 等人的方法（参考文献 12）相比，增强后图像的&lt;strong>清晰度为 77.06（对比 16.91），方差为 168.88（对比 41.03）&lt;/strong>；信息熵、PSNR 和 SSIM 也均更高（表 1）。&lt;/aside>
-&lt;p>系统运行在一台配备 Intel Core i5-12500 处理器和 Nvidia GeForce RTX 3060 GPU 的工控机上。先用环形光标定各光源方向，再用 CUDA 并行处理四幅图像，生成反射率图和平均曲率图。论文从清晰度、信息熵、方差、PSNR 和 SSIM 五项图像质量指标，将增强后的曲率图与 Ren 等人的方法进行比较。本文方法五项指标全部更优（信息熵 4.70 对 4.16，PSNR 12.37 对 10.84，SSIM 0.527 对 0.512），作者据此认为该方法在增强缺陷对比度的同时保留了原始图像结构。作者还在不同图像尺寸下比较了基于 Intel TBB 的 CPU 并行计算与基于 CUDA 的 GPU 并行计算，结果表明 GPU 加速显著提高了计算效率。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>划痕检出率 95.38%，凹坑检出率 96.43%&lt;/strong>，统计对象为 100 幅含已知缺陷的铝合金表面图像中的 376 条划痕和 336 个凹坑（表 2）。&lt;br>与 Ren 等人的方法（参考文献 12）相比，增强后图像的&lt;strong>清晰度为 77.06（对比 16.91），方差为 168.88（对比 41.03）&lt;/strong>；信息熵、峰值信噪比（PSNR）和结构相似性（SSIM）也均更高（表 1）。&lt;/aside>
+&lt;p>系统运行在一台配备 Intel Core i5-12500 处理器和 Nvidia GeForce RTX 3060 GPU 的工控机上。先用环形光标定光源方向向量，再用 CUDA 并行处理沿这些方向采集的四幅图像，生成反射率图和平均曲率图。论文从清晰度、信息熵、方差、PSNR 和 SSIM（后两者为峰值信噪比与结构相似性）五项图像质量指标，将增强后的曲率图与 Ren 等人的方法进行比较。本文方法五项指标全部更优（信息熵 4.70 对 4.16，PSNR 12.37 对 10.84，SSIM 0.527 对 0.512），作者据此认为该方法在增强缺陷对比度的同时保留了原始图像结构。作者还在不同图像尺寸下比较了基于 Intel TBB 的 CPU 并行计算与基于 CUDA 的 GPU 并行计算，结果表明 GPU 加速显著提高了计算效率。&lt;/p>
 &lt;p>后续工作将把算法推广到非朗伯表面，并进一步提高实时处理效率。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-curvature.webp" target="_blank" rel="noopener">
@@ -53,9 +53,9 @@
 &lt;li>&lt;strong>光度立体成像。&lt;/strong> WTAYOLO 采用光度立体系统，降低表面反射带来的干扰。&lt;/li>
 &lt;li>&lt;strong>扩大感受野。&lt;/strong> WTAConv 模块扩大感受野，增强从图像中提取划痕特征的能力。&lt;/li>
 &lt;li>&lt;strong>通道与空间注意力。&lt;/strong> WTAConv 通过通道注意力和空间注意力机制强化重要特征，同时抑制冗余信息。&lt;/li>
-&lt;li>&lt;strong>划痕检测。&lt;/strong> 模型在不增加参数量的前提下检测出细微划痕。&lt;/li>
+&lt;li>&lt;strong>划痕检测。&lt;/strong> 模型检测出细微划痕。&lt;/li>
 &lt;/ol>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>mAP50 达到 86.8%&lt;/strong>，&lt;strong>比 YOLOv11n 提高 5.1%&lt;/strong>，且未增加参数量。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>mAP50 达到 86.8%&lt;/strong>，&lt;strong>比基线模型 YOLOv11n 提高 5.1%&lt;/strong>，且未增加参数量。&lt;/aside>
 &lt;p>作者总结认为，该方法在精度与模型成本效益之间取得了有效平衡，为工业应用提供了有效的解决方案。&lt;/p>
 &lt;p>&lt;em>本页内容依据论文摘要整理，全文见出版方页面：&lt;a href="https://doi.org/10.1145/3725949.3725956">doi.org/10.1145/3725949.3725956&lt;/a>。&lt;/em>&lt;/p></description></item></channel></rss>

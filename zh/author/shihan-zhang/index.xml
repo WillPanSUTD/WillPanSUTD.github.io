@@ -9,7 +9,7 @@
 &lt;li>&lt;strong>基于大核注意力的颜色特征。&lt;/strong> ResNet18 骨干网络与金字塔池化模块从图像块中提取多尺度特征。大核注意力由深度卷积、深度空洞卷积和 1×1 卷积组成，生成的注意力图与特征逐元素相乘，使网络既能捕捉局部纹理和边缘，也能建模更大范围的上下文。&lt;/li>
 &lt;li>&lt;strong>基于 3DGCN 与 PointNet 的几何特征。&lt;/strong> 三维图卷积网络（3DGCN）在每个点的邻域上施加可学习的三维图卷积核，再经图最大池化，刻画局部几何结构。PointNet 分支用全连接层处理各点，并通过最大池化得到全局形状特征。&lt;/li>
 &lt;li>&lt;strong>跨模态注意力。&lt;/strong> CMA-Net 模块的输入为颜色特征（F1）、3DGCN 特征（F2）和 PointNet 特征（F3）。第一次点积注意力以 F1、F2、F3 分别作为查询、键和值，增强颜色特征；第二次以 F2、F1、F3 作为查询、键和值，增强点云特征。两路输出与 F3 一起经 Squeeze-and-Excitation 模块进行通道重加权，再拼接在一起。&lt;/li>
-&lt;li>&lt;strong>稠密融合与位姿回归。&lt;/strong> 各像素的融合特征经共享 MLP 和平均池化得到全局特征，并拼接到每个像素的特征上。随后每个像素分别预测旋转、平移和置信度，保留置信度最高的预测，并沿用 DenseFusion 的做法，由一个小型网络预测残差位姿，对其进行迭代精化。&lt;/li>
+&lt;li>&lt;strong>稠密融合与位姿回归。&lt;/strong> 各像素的融合特征经共享 MLP 和平均池化得到全局特征，并拼接到每个像素的特征上。随后每个像素分别预测旋转、平移和置信度，保留置信度最高的预测；最后沿用 DenseFusion 的做法，由一个小型网络预测残差位姿，对其进行迭代精化。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/figure-overleaf-1-architecture.webp" target="_blank" rel="noopener">
@@ -17,7 +17,7 @@
 &lt;/a>&lt;figcaption>网络总览：语义分割、颜色分支（ResNet18 + LKA-PSPNet）、几何分支（3DGCN + PointNet）、CMA-Net、结合全局特征的逐像素稠密融合，以及逐像素位姿预测。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>LineMOD 平均准确率 97.7%&lt;/strong>（ADD(-S) 距离小于物体直径的 10% 记为正确），DenseFusion 为 94.3%（表 2）。&lt;br>单独加入任一模块均优于 94.3% 的基线：&lt;strong>3DGCN 96.9%、LKA 96.2%、CMA-Net 95.4%&lt;/strong>（表 1）。&lt;br>&lt;strong>YCB-Video 上 AUC 为 92.9%，误差小于 2 cm 的位姿占 95.7%&lt;/strong>，DenseFusion 分别为 91.2% 和 95.3%（第 4.4 节）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>LineMOD 平均准确率 97.7%&lt;/strong>（ADD(-S) 距离小于物体直径的 10% 记为正确），DenseFusion 为 94.3%（表 2）。&lt;br>单独加入任一模块均优于 94.3% 的基线：&lt;strong>图卷积（3DGCN）96.9%、大核注意力（LKA）96.2%、跨模态注意力（CMA-Net）95.4%&lt;/strong>（表 1）。&lt;br>&lt;strong>YCB-Video 上 AUC（阈值 10 cm 以内 ADD(-S) 准确率曲线下的面积）为 92.9%，误差小于 2 cm 的位姿占 95.7%&lt;/strong>，DenseFusion 分别为 91.2% 和 95.3%（第 4.4 节）。&lt;/aside>
 &lt;p>实验在两个公开数据集上进行。LineMOD 中的物体纹理较弱、背景复杂且光照多变；15% 的图像用于训练、85% 用于测试，位姿的 ADD 距离（对称物体用 ADD-S）小于物体直径的 10% 即视为正确。在表 2 中，GCMA6D 的平均准确率在参与比较的七种方法中最高，领先 TMFNet（96.8%）和 QaQ（95.3%），并在对称物体 eggbox 和 glue 上达到 100%。LineMOD 上的消融实验表明各模块相互补充：任意两个模块组合的准确率为 96.8%–97.4%，三者同时使用时达到 97.7%。&lt;/p>
 &lt;p>YCB-Video 包含 21 种物体，遮挡程度各不相同；测试使用 12 段视频中的 2,949 个关键帧。评价指标为阈值 0–10 cm 范围内 ADD(-S) 准确率曲线下的面积（AUC），以及误差小于 2 cm 的位姿所占比例。GCMA6D 的 AUC 为 92.9%，高于 SaMfNet（92.6%）、G2L-Net（92.4%）、MSCNet（91.5%）和 DenseFusion（91.2%）。作者指出，大号夹子和特大号夹子上的准确率较低：两者外观十分相似，PoseCNN 的语义分割难以为它们生成精确的掩码。作者还指出，高度对称或严重遮挡的物体仍是该方法的局限，后续将改进对背景掩码区域的处理。&lt;/p>
 &lt;figure class="rfig">

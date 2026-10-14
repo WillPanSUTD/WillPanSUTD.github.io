@@ -12,9 +12,9 @@
 &lt;ol>
 &lt;li>&lt;strong>不裁剪 ROI。&lt;/strong> 传统流程先定位手部、裁出手掌 ROI 再提取特征，ROI 以外的静脉信息随之丢失；VeinTr 则直接输入整只手的图像。&lt;/li>
 &lt;li>&lt;strong>提取局部特征。&lt;/strong> 卷积块（卷积、批归一化和 PReLU）在提取局部特征的同时缩小 256×256 的输入，再经三个残差块增强，得到 64×64×64 的局部特征图。&lt;/li>
-&lt;li>&lt;strong>用注意力聚合全局信息。&lt;/strong> 特征图被切分为 16×16 的图块，展平后投影到较低维度。三层 8 头的多头注意力让每个图块与其余所有图块建立关联，把感受野从局部扩大到整只手。&lt;/li>
+&lt;li>&lt;strong>用注意力聚合全局信息。&lt;/strong> 特征图被切分为 16 个 16×16 的图块，展平后投影到较低维度。三层 8 头的多头注意力让每个图块与其余所有图块建立关联，把感受野从局部扩大到整只手。&lt;/li>
 &lt;li>&lt;strong>每只手一个特征向量。&lt;/strong> 全局特征解码器将注意力输出展平，经过带批归一化的两层 MLP，得到 512 维的手部静脉特征。训练采用 ArcFace 损失，使同一只手的特征彼此接近、不同手的特征相互区分。&lt;/li>
-&lt;li>&lt;strong>待测样本–数据库匹配。&lt;/strong> 已注册手的归一化特征组成数据库矩阵 D；待测手被判为相似度最高的身份，即 C = argmax(D · ‖VeinTr(p)‖)。&lt;/li>
+&lt;li>&lt;strong>待测样本–数据库匹配。&lt;/strong> 已注册手的归一化特征组成数据库矩阵 D；待测手被判为相似度得分最高的身份 C，即 C = argmax(D · ‖VeinTr(p)‖)，其中 ‖·‖ 表示归一化。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-veintr/fig-method.webp" target="_blank" rel="noopener">
@@ -22,8 +22,8 @@
 &lt;/a>&lt;figcaption>VeinTr 流程。两个卷积层和残差模块从整只手中提取局部特征，注意力模块进行全局聚合，得到的特征 V 与数据库进行匹配。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>在 CASIA 上，850 nm 和 940 nm 波长下的正确识别率分别为 99.85% 和 99.92%&lt;/strong>，在论文与六种手工特征方法、六种深度学习方法的对比中最高（表 1）。&lt;br>&lt;strong>等错误率分别为 0.10% 和 0.09%&lt;/strong>，而最好的手工特征方法 NMRT 为 0.51%，PVSNet 为 3.71%（表 1）。&lt;br>&lt;strong>在 CASIA 上训练后，无需重新训练，在 TPV 和 PLUSVein 上分别达到 98.17% 和 97.62%&lt;/strong>（表 2）。&lt;/aside>
-&lt;p>对比方法均基于手掌或手指 ROI，只有 VeinTr 使用整只手。在 CASIA 上，所有手工特征方法的正确识别率都已超过 90%，NAF 更是接近饱和，达到 99.83% 和 99.50%，因此 VeinTr 在正确识别率上的领先幅度不大（0.02 和 0.42 个百分点）；等错误率则比 NMRT 低 0.41 个百分点，比 PVSNet 低 3.61 个百分点（表 1）。跨数据集实验中，VeinTr 分别在一个数据集上训练，再在全部三个数据集上测试。在 CASIA 或 TPV 上训练的模型，在每个测试集上的正确识别率都超过 90%。PLUSVein 规模小得多（42 名志愿者的 420 幅图像），在其上训练的模型泛化能力较弱，在 CASIA 和 TPV 上分别为 89.76% 和 81.43%。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>在 CASIA 上，850 nm 和 940 nm 波长下的正确识别率分别为 99.85% 和 99.92%&lt;/strong>，在论文与六种手工特征方法、六种深度学习方法的对比中最高（表 1）。&lt;br>&lt;strong>等错误率分别为 0.10% 和 0.09%&lt;/strong>（即误接受率等于误拒绝率时的错误率），而最好的手工特征方法 NMRT 为 0.51%，PVSNet 为 3.71%（表 1）。&lt;br>&lt;strong>在 CASIA 上训练后，无需重新训练，在 TPV 和 PLUSVein 上分别达到 98.17% 和 97.62%&lt;/strong>（表 2）。&lt;/aside>
+&lt;p>对比方法均基于手掌或手指 ROI，只有 VeinTr 使用整只手。在 CASIA 上，所有手工特征方法的正确识别率都已超过 90%，此前的 NAF 方法更是接近饱和，达到 99.83% 和 99.50%，因此 VeinTr 在正确识别率上的领先幅度不大（0.02 和 0.42 个百分点）；等错误率则比 NMRT 低 0.41 个百分点，比 PVSNet 低 3.61 个百分点（表 1）。跨数据集实验中，VeinTr 分别在一个数据集上训练，再在全部三个数据集上测试。在 CASIA 或 TPV 上训练的模型，在每个测试集上的正确识别率都超过 90%。PLUSVein 规模小得多（42 名志愿者的 420 幅图像），在其上训练的模型泛化能力较弱，在 CASIA 和 TPV 上分别为 89.76% 和 81.43%。&lt;/p>
 &lt;p>消融实验（所有模型均在 CASIA 上训练）表明，网络的两个部分都不可或缺。去掉注意力层后，正确识别率在 CASIA、TPV 和 PLUSVein 上分别降至 83.43%、65.14% 和 55.10%；去掉残差块后，分别降至 95.12%、75.07% 和 83.67%（表 3）。注意力层为三层时，CASIA 上的识别率趋于饱和，TPV 和 PLUSVein 上达到最高；增加到第四、第五层后识别率反而下降，作者将其归因于过拟合。残差块取三层，是在识别率与计算开销之间的折中。作者计划在后续工作中把全手静脉信息与全手手纹数据相融合。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-veintr/fig-results.webp" target="_blank" rel="noopener">
@@ -53,9 +53,9 @@
 &lt;/a>&lt;figcaption>方法总览。KPConv 提取多层级形状特征；GMSP 将二维语义特征转化为先验 θ；两个语义引导特征交互（SGFI）模块在自注意力和交叉注意力中利用这些先验；语义约束匹配（SCM）模块输出最终的对应关系。引自论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率分别为 94.7% 和 75.9%&lt;/strong>，在两者上均为所有对比方法中最高（表 1）。&lt;br>经 ICP 精化后提升至 &lt;strong>95.4% 和 77.4%&lt;/strong>（表 2）。&lt;br>将四个语义模块全部替换为常规模块后，召回率降至 &lt;strong>92.1% 和 66.5%&lt;/strong>（表 3）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率分别为 94.7% 和 75.9%&lt;/strong>，在两者上均为所有对比方法中最高（表 1）。&lt;br>经 ICP 精化后提升至 &lt;strong>95.4% 和 77.4%&lt;/strong>（表 2）。&lt;br>将四个语义模块（语义约束匹配、语义感知焦点损失、语义自注意力、GMSP 引导的交叉注意力）全部替换为常规模块后，召回率降至 &lt;strong>92.1% 和 66.5%&lt;/strong>（表 3）。&lt;/aside>
 &lt;p>实验使用室内 RGB-D 基准 3DMatch 及其低重叠子集 3DLoMatch（重叠率 10–30% 的扫描对）。配准召回率指估计变换误差（RMSE）小于 0.2 m 的扫描对所占比例。SemReg 在两个子集上均居首位，在 3DMatch 上领先 SIRA-PCR，在 3DLoMatch 上领先 GeoTransformer；在论文的 ICP 精化对比中，它相对次优方法的优势扩大到 1.5 和 2.9 个百分点。重叠越少，语义模块的作用越明显：在 3DLoMatch 上它们贡献了 9.4 个百分点的召回率，而在 3DMatch 上为 2.6 个百分点。在一个重叠率仅 12.53%、唯一共有物体是一把椅子的极端例子中，语义先验依然能在目标点云中找到这把椅子并成功配准，而 GeoTransformer 配准失败。&lt;/p>
-&lt;p>SemReg 在粗粒度层级上匹配，每对扫描建立 0.1K–1K 个对应关系，而 GeoTransformer 等稠密方法为 6K–7K 个。因此它的内点率低于部分对比方法，但配准召回率更高。室外 KITTI 数据集上的结果见补充材料。该方法依赖与扫描对齐的 RGB 图像，因此不能直接用于单独的点云；作者提出，未来可先由点云渲染出二维图像来解决这一问题。&lt;/p>
+&lt;p>SemReg 在粗粒度层级上匹配，每对扫描建立 0.1K–1K 个对应关系，而 GeoTransformer 等稠密方法为 6K–7K 个。因此它的内点率（真值变换下距离小于 0.1 m 的对应关系所占比例）低于部分对比方法，但配准召回率更高。室外 KITTI 数据集上的结果见补充材料。该方法依赖与扫描对齐的 RGB 图像，因此不能直接用于单独的点云；作者提出，未来可先由点云渲染出二维图像来解决这一问题。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-semreg/fig-results.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2024-semreg/fig-results.webp" alt="三组室内扫描对（蓝色与黄色）：输入、真值、特征与对应关系可视化，以及 Lepard 与 SemReg 的配准结果。" loading="lazy">
@@ -91,11 +91,12 @@
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-topformer/fig-method.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2024-topformer/fig-method.webp" alt="网络结构图：黄色与蓝色点云 X、Y 进入 KPConv 编码器；包含拓扑结构编码、自注意力和交叉注意力的拓扑感知 Transformer 输出置信度矩阵；经最优传输、互为 top-k 选择和 RANSAC 得到对齐的点云及 R、t。" loading="lazy">
-&lt;/a>&lt;figcaption>方法总览。KPConv 编码器输出稀疏点、稠密点及其特征；拓扑结构编码与稀疏特征融合后进行自注意力和交叉注意力；由置信度矩阵得到稀疏匹配，以此约束稠密对应关系的选取，稠密对应经最优传输和互为 top-k 选择细化后送入 RANSAC。引自论文图 3。&lt;/figcaption>
+&lt;/a>&lt;figcaption>方法总览。KPConv 编码器输出稀疏点、稠密点及其特征；拓扑结构编码与稀疏特征融合后进行自注意力和交叉注意力；由置信度矩阵得到稀疏匹配，以此约束稠密对应关系的选取，稠密对应在稠密层级经最优传输和互为 top-k 选择细化后送入 RANSAC。引自论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">使用 5,000 个对应关系时，&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率分别为 92.4% 和 75.1%&lt;/strong>，GeoTransformer 为 92.0% 和 75.0%（表 1）。&lt;br>&lt;strong>在 KITTI 上配准召回率为 99.8%&lt;/strong>，相对平移误差 &lt;strong>6.7 cm&lt;/strong>，为对比方法中最低（表 2）。&lt;br>去掉拓扑结构编码后，3DMatch 和 3DLoMatch 上的召回率降至 &lt;strong>89.7% 和 67.4%&lt;/strong>（表 3）。&lt;/aside>
-&lt;p>室内实验使用 3DMatch 及其低重叠子集 3DLoMatch（重叠率 10–30% 的扫描对）。配准召回率指估计变换的 RMSE 小于 0.2 m 的扫描对所占比例，计算时运行 5 万次 RANSAC 迭代。在两个子集上，从 5,000 到 250 的各个对应关系数量下，TopFormer 的配准召回率都是最高或并列最高；它在 3DMatch 上的特征匹配召回率保持在 98.4% 至 98.7% 之间。在 5,000 个对应关系时，它的内点率低于 GeoTransformer（3DMatch 上 71.7% 对 71.9%，3DLoMatch 上 37.2% 对 43.5%），但对应关系较少时更高，例如 1,000 个对应关系时，3DMatch 上为 82.8% 对 76.0%，3DLoMatch 上为 53.1% 对 46.2%。在室外 KITTI 里程计数据上，多数对比方法的召回率已达到 99.8%，TopFormer 同样达到这一水平，旋转误差为 0.27°。&lt;/p>
+&lt;aside class="keypoint">使用 5,000 个对应关系时，&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率（RMSE 小于 0.2 m 的扫描对所占比例）分别为 92.4% 和 75.1%&lt;/strong>，GeoTransformer 为 92.0% 和 75.0%（表 1）。&lt;br>&lt;strong>在 KITTI 上配准召回率为 99.8%&lt;/strong>，相对平移误差 &lt;strong>6.7 cm&lt;/strong>，为对比方法中最低（表 2）。&lt;br>去掉拓扑结构编码后，3DMatch 和 3DLoMatch 上的召回率降至 &lt;strong>89.7% 和 67.4%&lt;/strong>（表 3）。&lt;/aside>
+&lt;p>室内实验使用 3DMatch 及其低重叠子集 3DLoMatch（重叠率 10–30% 的扫描对）。配准召回率指估计变换的 RMSE 小于 0.2 m 的扫描对所占比例，计算时运行 5 万次 RANSAC 迭代。在两个子集上，从 5,000 到 250 的各个对应关系数量下，TopFormer 的配准召回率都是最高或并列最高；它在 3DMatch 上的特征匹配召回率保持在 98.4% 至 98.7% 之间。&lt;/p>
+&lt;p>在 5,000 个对应关系时，它的内点率低于 GeoTransformer（3DMatch 上 71.7% 对 71.9%，3DLoMatch 上 37.2% 对 43.5%），但对应关系较少时更高，例如 1,000 个对应关系时，3DMatch 上为 82.8% 对 76.0%，3DLoMatch 上为 53.1% 对 46.2%。在室外 KITTI 里程计数据上，多数对比方法的召回率已达到 99.8%，TopFormer 同样达到这一水平，旋转误差为 0.27°。&lt;/p>
 &lt;p>消融实验表明，编码的两个组成部分都有贡献。去掉测地距离后，配准召回率在 3DMatch 上由 92.4% 降至 90.3%，在 3DLoMatch 上由 75.1% 降至 72.3%；去掉基于法向的方向项后，分别降至 91.9% 和 73.9%。完全去掉编码、退化为普通 Transformer 时，召回率分别下降 2.7 和 7.7 个百分点，内点率分别下降 8.6 和 5.6 个百分点。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-topformer/fig-results.webp" target="_blank" rel="noopener">

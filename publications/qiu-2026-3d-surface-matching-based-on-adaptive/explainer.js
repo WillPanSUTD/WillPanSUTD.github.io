@@ -6,7 +6,7 @@ export default function mount(el, { kit, lang }) {
     en: {
       steps: [
         "The model point cloud of the workpiece is converted into a depth map, and a surface curvature map is calculated from it.",
-        "An adaptive threshold iterative segmentation removes redundant points and keeps the geometrically significant high-curvature points as the model point cloud.",
+        "An adaptive threshold iterative segmentation removes redundant points and keeps the geometrically significant high-curvature points as the reduced model point cloud.",
         "Coarse matching based on an integral volume descriptor finds the approximate pose of the target within the scene point cloud.",
         "From that approximate pose, the iterative closest point (ICP) algorithm performs the fine surface matching.",
       ],
@@ -20,7 +20,7 @@ export default function mount(el, { kit, lang }) {
     zh: {
       steps: [
         "将工件的模型点云转换为深度图，并据此计算曲面曲率图。",
-        "自适应阈值迭代分割剔除冗余点，保留几何意义显著的高曲率点作为模型点云。",
+        "自适应阈值迭代分割剔除冗余点，保留几何意义显著的高曲率点作为精简后的模型点云。",
         "基于积分体积描述子的粗匹配在场景点云中找到目标的大致位姿。",
         "以该大致位姿为起点，迭代最近点（ICP）算法完成曲面精匹配。",
       ],

@@ -9,14 +9,14 @@ export default function mount(el, { kit, lang }) {
     en: {
       steps: [
         "A noisy triangle mesh with one sharp edge. Many normal-based filters give faces across the edge small weights, but those faces still take part and still affect the result near the edge.",
-        "Every edge shared by two faces is tested. The region stops growing across it only if the cosine between the two face normals is at most the global threshold Nthr and the area-based edge operator ‖D(e)‖₂, computed from the four surrounding vertices, is at least Dthr. Noise can also make some edges look like features.",
+        "Every edge shared by two faces is tested. A region grows across an edge when the cosine between the two face normals exceeds the global threshold Nthr or the area-based edge operator ‖D(e)‖₂, computed from the four surrounding vertices, is below Dthr; otherwise the edge is a feature edge. Noise can also make some edges look like features.",
         "Region growing: a seed face S1 passes its label to edge-connected faces through edges that pass the test, until no more faces qualify; then a new seed S2 starts from the unclustered faces, and so on until every face has a label.",
         "Noise can leave small leftover clusters (S3 here). Clusters below 50 faces are dissolved: each of their faces takes the neighbouring label with the largest sum of normal cosines over its 2-ring neighbourhood.",
         "Each region is then denoised by an existing filter (BNF, UNF, GNF or L1) that uses only faces of the same region, so faces across the sharp edge no longer interfere.",
       ],
       noisy: "noisy mesh", sharp: "sharp edge", face: "face f",
       same: "same side", other: "other side:", small: "small weight,", still: "still counts",
-      stops: "growth stops if", and: "and", noiseEdge: "false edges from noise",
+      stops: "region grows across e if", and: "or", noiseEdge: "false edges from noise",
       flat: "flat edge: ‖D(e)‖", flatTail: " = 0",
       grow: ["seed grows across", "edges that pass", "the test"],
       next: "then a new seed",
@@ -30,14 +30,14 @@ export default function mount(el, { kit, lang }) {
     zh: {
       steps: [
         "一个带有一条尖锐棱边的含噪三角网格。许多基于法向的滤波方法会给棱边另一侧的面片较小的权重，但这些面片仍参与计算，依然会影响棱边附近的结果。",
-        "对两个面片共享的每条边进行检验：只有当两面片法向夹角的余弦不大于全局阈值 Nthr，且由周围四个顶点计算的面积型边算子 ‖D(e)‖₂ 不小于 Dthr 时，区域才不跨过这条边生长。噪声也可能使个别边被误判为特征边。",
+        "对两个面片共享的每条边进行检验：当两面片法向夹角的余弦大于全局阈值 Nthr，或由周围四个顶点计算的面积型边算子 ‖D(e)‖₂ 小于 Dthr 时，区域跨过这条边继续生长；否则这条边就是特征边。噪声也可能使个别边被误判为特征边。",
         "区域生长：种子面片 S1 通过检验合格的边，把自身标签传给相邻面片，直到再无符合条件的面片；随后从未聚类的面片中选取新种子 S2，如此重复，直到所有面片都被标记。",
         "噪声可能留下零散的小簇（图中的 S3）。面片数少于 50 的小簇会被拆散：其中每个面片在二环邻域内按标签累加法向余弦，改归余弦和最大的相邻标签。",
         "随后用现有的去噪方法（BNF、UNF、GNF 或 L1）逐区域去噪，每个面片只使用同一区域内的面片，棱边另一侧的面片不再产生干扰。",
       ],
       noisy: "含噪网格", sharp: "尖锐棱边", face: "面片 f",
       same: "同侧", other: "棱边另一侧：", small: "权重虽小，", still: "仍参与计算",
-      stops: "停止生长的条件", and: "且", noiseEdge: "噪声造成的伪特征边",
+      stops: "区域跨过边 e 生长的条件", and: "或", noiseEdge: "噪声造成的伪特征边",
       flat: "平坦边：‖D(e)‖", flatTail: " = 0",
       grow: ["种子跨过检验", "合格的边", "向外生长"],
       next: "随后选取新种子",
@@ -238,9 +238,9 @@ export default function mount(el, { kit, lang }) {
         label(g, p4[0] + 8, p4[1] + 6, ["p", { sub: "4" }], { size: 16, anchor: "start" });
         const o = seg01(t, 0.2, 1);
         label(g, PX, 186, L.stops, { weight: 600, opacity: o });
-        label(g, PX, 214, ["cos(n", { sub: "i" }, ", n", { sub: "j" }, ") ≤ N", { sub: "thr" }], { opacity: o });
+        label(g, PX, 214, ["cos(n", { sub: "i" }, ", n", { sub: "j" }, ") > N", { sub: "thr" }], { opacity: o });
         label(g, PX, 250, L.and, { fill: body, opacity: o, size: 15 });
-        label(g, PX, 280, ["‖D(e)‖", { sub: "2" }, " ≥ D", { sub: "thr" }], { opacity: o, fill: FEAT });
+        label(g, PX, 280, ["‖D(e)‖", { sub: "2" }, " < D", { sub: "thr" }], { opacity: o });
         label(g, PX, 322, [L.flat, { sub: "2" }, L.flatTail], { opacity: o, fill: body, size: 15 });
         // The small cluster's outline: edges that noise makes look like features.
         const sc = centroid(faces.find((f) => isSmall(f) && f.k === 0), 1);

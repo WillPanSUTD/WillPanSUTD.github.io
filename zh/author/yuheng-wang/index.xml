@@ -11,7 +11,7 @@
 &lt;div class="explainer" data-explainer="/publications/lu-2026-underwater-structured-light-3d-imaging-method/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>退化建模。&lt;/strong> 依据 Jaffe–McGlamery 模型，到达相机的光分为三部分：随距离衰减的直接透射、使图像产生高斯模糊的前向散射，以及形成背景光和噪声的后向散射。水—空气界面的折射还会使光线产生与深度相关的偏移。&lt;/li>
-&lt;li>&lt;strong>训练条件扩散模型。&lt;/strong> 以在空气中采集的高信噪比条纹图为目标，以同一场景在浑浊水中采集的条纹图为条件。清晰图像在 T = 1000 步内逐步加噪至高斯噪声，带自注意力的 U-Net 根据含噪图像、时间步和水下图像预测所加入的噪声。损失函数由 SSIM、噪声预测误差、权重的 L1 稀疏项和物理一致性项组成。&lt;/li>
+&lt;li>&lt;strong>训练条件扩散模型。&lt;/strong> 以在空气中采集的高信噪比条纹图为目标，以同一场景在浑浊水中采集的条纹图为条件。清晰图像在 T = 1000 个扩散步内逐步加噪至高斯噪声，带自注意力的 U-Net 根据含噪图像、时间步和水下图像预测所加入的噪声。损失函数由图像相似性项（SSIM）、噪声预测误差和物理一致性项组成，另有对权重的 L1 稀疏惩罚。&lt;/li>
 &lt;li>&lt;strong>反向扩散复原。&lt;/strong> 采样从纯高斯噪声开始，每一步都把水下观测输入网络，逐步去噪，直至得到清晰的条纹图。&lt;/li>
 &lt;li>&lt;strong>物理修正。&lt;/strong> 简化退化算子（表示前向散射的高斯模糊加表示后向散射的噪声项）把估计与观测联系起来。反向扩散每隔 k = 50 步，以强度 α = 0.01 做一次梯度修正，减小观测与估计的模拟退化之间的残差。折射不包含在该算子中，而由 U-Net 从数据中学习。&lt;/li>
 &lt;li>&lt;strong>相位求解与三维重建。&lt;/strong> 复原图像具有标准 N 步相移条纹的形式，相位求解流程无需改动：由反正切公式得到包裹相位，经相位展开得到绝对相位，再与参考平面相位作差，并借助已标定的投影仪—相机几何关系转换为三维坐标。&lt;/li>
@@ -22,8 +22,8 @@
 &lt;/a>&lt;figcaption>训练（上）与采样（下）流程。采样时，每当 t mod k = 0 就施加一次基于物理残差的修正。论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>最高浊度 T4 下的条纹复原：PSNR 42.42 dB，SSIM 0.9750，MS-SSIM 0.9974&lt;/strong>（表 2）。&lt;br>&lt;strong>T4 下包裹相位 MAE 0.0354 rad&lt;/strong>，T1 下为 0.0260 rad（表 3）。&lt;br>&lt;strong>T4 下三维重建 RMSE 0.0890 mm&lt;/strong>，T1 下为 0.0317 mm（表 4）。&lt;/aside>
-&lt;p>实验系统由一台工业相机（1800 × 1600 像素）和一台数字投影仪（1280 × 1024 像素）组成，安装在亚克力水箱上方约 0.6 m 处，采用三频四步相移方案。在 13 L 清水中依次加入 4、5、6、7 mL 牛奶，得到 T1–T4 四个浊度等级。数据集包含五个随机摆放的物体，按 4:1 划分为 7200 张训练图像和 1800 张测试图像，所有结果均在测试集上得到。误差均相对于真值条纹图、真值相位和参考重建计算。从 T1 到 T4，PSNR 仅从 43.02 dB 降至 42.42 dB，包裹相位余弦相似度保持在 0.9951–0.9962 之间；剩余的相位误差主要集中在物体边界、阴影区域和相位不连续处。在 NVIDIA GeForce RTX 4090 上复原一张 512 × 512 条纹图约需 430 ms。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>最高浊度 T4 下的条纹复原（T1 为四个浊度等级中最清澈的一级）：PSNR 42.42 dB，SSIM 0.9750，MS-SSIM 0.9974&lt;/strong>（表 2）。&lt;br>&lt;strong>T4 下包裹相位 MAE 0.0354 rad&lt;/strong>，T1 下为 0.0260 rad（表 3）。&lt;br>&lt;strong>T4 下三维重建 RMSE 0.0890 mm&lt;/strong>，T1 下为 0.0317 mm（表 4）。&lt;/aside>
+&lt;p>实验系统由一台工业相机（1800 × 1600 像素）和一台数字投影仪（1280 × 1024 像素）组成，安装在亚克力水箱上方约 0.6 m 处，采用三频四步相移方案。在 13 L 清水中依次加入 4、5、6、7 mL 牛奶，得到 T1–T4 四个浊度等级。数据集包含五个随机摆放的物体，按 4:1 划分为 7200 张训练图像和 1800 张测试图像，所有结果均在测试集上得到。误差均相对于真值条纹图、真值相位和参考重建计算。从 T1 到 T4，PSNR 仅从 43.02 dB 降至 42.42 dB，包裹相位与参考相位的余弦相似度保持在 0.9951–0.9962 之间；剩余的相位误差主要集中在物体边界、阴影区域和相位不连续处。在 NVIDIA GeForce RTX 4090 上复原一张 512 × 512 条纹图约需 430 ms。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-results.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/lu-2026-underwater-structured-light-3d-imaging-method/fig-results.webp" alt="两行鲸鱼形物体的灰度条纹图，每行四幅。标注 (a) 的上行昏暗，从左到右越来越模糊；标注 (b) 的下行四幅条纹都清晰、对比度高。" loading="lazy">

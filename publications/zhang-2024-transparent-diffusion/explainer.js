@@ -11,7 +11,7 @@ export default function mount(el, { kit, lang }) {
       steps: [
         "Fringes projected onto a transparent object reach the camera along three paths: reflected by the front surface (F), reflected once by the back surface (B), and reflected several times between the two surfaces (M). In the image they overlap.",
         "Each captured fringe pattern is the sum S = F + B + M + A, where A is the background light. Only F, with the background light, describes the front surface, so a network p is trained to sample an estimate F* from S.",
-        "Training: the front-surface pattern x0 is captured after spraying a developer onto the object, paired with the aliased pattern y. Gaussian noise e is added to x0 (T = 2600 steps), and a U-Net, given the noisy pattern, the step t and y, learns to predict that noise.",
+        "Training: the front-surface pattern x0 is captured after spraying a developer onto the object (which gives clean front-surface fringes), paired with the aliased pattern y. Gaussian noise e is added to x0 (T = 2600 steps), and a U-Net, given the noisy pattern, the step t and y, learns to predict that noise.",
         "Sampling: start from pure Gaussian noise. At each step the trained network, conditioned on the captured aliased pattern y, estimates the noise and removes it, t ← t − 1, until t = 0. The result is the front-surface pattern F*.",
         "The estimated patterns go into conventional 4-step PSP: wrapped phase, then the 3D shape of the front surface. RMS reconstruction errors on the four test objects range from 0.0388 to 0.0437 mm.",
       ],
@@ -29,7 +29,7 @@ export default function mount(el, { kit, lang }) {
       steps: [
         "条纹投射到透明物体上后，沿三条路径进入相机：经前表面反射（F）、经后表面一次反射（B），以及在前后表面之间多次反射（M）。三者在图像中相互叠加。",
         "每幅采集到的条纹图都是 S = F + B + M + A，其中 A 为背景光。只有 F（连同背景光）反映前表面，因此训练网络 p，从 S 中采样出估计值 F*。",
-        "训练：在物体表面喷涂显像剂后采集前表面条纹图 x0，并与混叠条纹图 y 配对。对 x0 逐步加入高斯噪声 e（T = 2600 步），U-Net 网络以含噪条纹图、步数 t 和 y 为输入，学习预测所加的噪声。",
+        "训练：在物体表面喷涂显像剂（可得到干净的前表面条纹）后采集前表面条纹图 x0，并与混叠条纹图 y 配对。对 x0 逐步加入高斯噪声 e（T = 2600 步），U-Net 网络以含噪条纹图、步数 t 和 y 为输入，学习预测所加的噪声。",
         "采样：从纯高斯噪声出发。每一步中，训练好的网络以采集到的混叠条纹图 y 为条件估计噪声并将其去除，t ← t − 1，直到 t = 0，得到前表面条纹图 F*。",
         "估计出的条纹图送入常规四步相移法：先求包裹相位，再重建前表面的三维形貌。四个测试物体的重建 RMS 误差为 0.0388–0.0437 mm。",
       ],

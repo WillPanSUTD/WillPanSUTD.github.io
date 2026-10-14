@@ -4,13 +4,13 @@ export default function mount(el, { kit, lang }) {
   const L = kit.pick({
     en: {
       steps: [
-        "Two NeRFs of one object, trained separately in different coordinate frames. Points are sampled at occupied voxel centres whose density exceeds σt; the clouds are noisy, with floaters.",
-        "Around each coarse point, a patch of nearby dense points queries its NeRF for view-independent embeddings, enriched with colour and density. Colour stands for features: the raw embeddings of the two NeRFs disagree.",
+        "Two NeRFs of one object, trained separately in different coordinate frames. Points are sampled at occupied voxel centres whose density exceeds σt; the clouds are noisy, with stray floating points.",
+        "Around each sparse point, a patch of nearby dense points queries its NeRF for view-independent embeddings, enriched with colour and density. Colour stands for features: the raw embeddings of the two NeRFs disagree.",
         "A texture-aware graph convolution runs on each patch. Edge weights favour points that are close but have contrasting features. Fused with geometric features, the descriptors now agree across the two NeRFs.",
         "Geometric self-attention and cross-attention add context, and coarse-to-fine matching yields correspondences. A few are still wrong.",
         "Outliers are removed, and SVD solves the rotation R and translation t that align NeRF X with NeRF Y.",
       ],
-      x: "NeRF X", y: "NeRF Y", sigma: "σ > σt", floaters: "floaters",
+      x: "NeRF X", y: "NeRF Y", sigma: "σ > σt", floaters: "stray points",
       query: "NeRF query", emb: "e + PE([c; σ])", disagree: "raw embeddings: X ≠ Y",
       patch: "patch", gnn: "patch GNN", wjk: "close + contrasting → strong edge",
       agree: "deep semantic descriptors: X ≈ Y",
@@ -19,13 +19,13 @@ export default function mount(el, { kit, lang }) {
     },
     zh: {
       steps: [
-        "同一物体的两个 NeRF，分别在不同坐标系下独立训练。在占据体素的中心中保留密度大于 σt 的点，得到的点云含有噪声和漂浮点。",
+        "同一物体的两个 NeRF，分别在不同坐标系下独立训练。在占据体素的中心中保留密度大于 σt 的点，得到的点云含有噪声和零散的游离点。",
         "以每个稀疏点为中心，取邻近的稠密点组成局部块，向各自的 NeRF 查询与视角无关的嵌入，并融入颜色和密度。图中颜色代表特征：两个 NeRF 的原始嵌入并不一致。",
         "在每个局部块上运行纹理感知图卷积：距离近而特征差异大的点之间，边权更大。再与几何特征融合后，两个 NeRF 的描述子趋于一致。",
         "几何自注意力和交叉注意力引入上下文信息，再经由粗到精匹配得到对应关系，其中仍有少量错误匹配。",
         "剔除外点后，用 SVD 求解旋转 R 和平移 t，将 NeRF X 与 NeRF Y 对齐。",
       ],
-      x: "NeRF X", y: "NeRF Y", sigma: "σ > σt", floaters: "漂浮点",
+      x: "NeRF X", y: "NeRF Y", sigma: "σ > σt", floaters: "游离点",
       query: "查询 NeRF", emb: "e + PE([c; σ])", disagree: "原始嵌入：X ≠ Y",
       patch: "局部块", gnn: "局部图卷积", wjk: "距离近 + 特征差异大 → 强边",
       agree: "深度语义描述子：X ≈ Y",

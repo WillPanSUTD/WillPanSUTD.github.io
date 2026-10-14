@@ -11,7 +11,7 @@
 &lt;div class="explainer" data-explainer="/publications/lu-2026-robust-object-6d-pose-estimation-under/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-robust-object-6d-pose-estimation-under/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>高光让原模型失效。&lt;/strong> 对于带金属部件的物体（如刀、剪刀），Gen6D 往往只识别出反光较弱的塑料手柄，而漏掉强反光的金属部分。&lt;/li>
-&lt;li>&lt;strong>在骨干网络中加入通道注意力。&lt;/strong> 在 VGG 中 64、128、256 个滤波器的卷积层之后加入 ECA 模块。每个模块先把各通道平均为一个数值，再沿相邻通道做一维卷积（卷积核大小由通道数自适应确定），经 Sigmoid 映射为 0–1 之间的权重，最后与各通道相乘。与其所基于的 SE 模块不同，ECA 不需要先降低通道维度。&lt;/li>
+&lt;li>&lt;strong>在骨干网络中加入通道注意力。&lt;/strong> 在 VGG 中 64、128、256 个滤波器的卷积层之后加入 ECA 模块。每个模块先把各通道平均为一个数值，再沿相邻通道做一维卷积（卷积核大小由通道数自适应确定），经 Sigmoid 映射为 0–1 之间的权重，最后与各通道相乘。与其所基于的挤压激励（SE）模块不同，ECA 不需要先降低通道维度。&lt;/li>
 &lt;li>&lt;strong>检测器。&lt;/strong> 以参考图像的 VGG-ECA 特征为卷积核，在若干预设尺度上与查询图像的特征做卷积。所得热图的峰值即物体中心的二维投影，尺度图在该处的取值给出包围框尺寸，由此得到深度和初始平移。&lt;/li>
 &lt;li>&lt;strong>选择器。&lt;/strong> 将物体区域与各参考图像比较，最相似的一张给出初始旋转。&lt;/li>
 &lt;li>&lt;strong>精化器。&lt;/strong> 3D CNN 回归当前位姿与真实位姿之间的残差，并据此更新估计。&lt;/li>
@@ -27,7 +27,7 @@
 &lt;/a>&lt;figcaption>ECA 模块：全局平均池化、跨通道的一维卷积（图中卷积核大小 K = 5）、Sigmoid，以及与输入特征的逐通道相乘。引自论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>ADD-0.1d 为 51.48，Gen6D 为 49.48&lt;/strong>，为 GenMOP 中七个物体的平均值（表 1）。&lt;br>&lt;strong>Prj-5 为 91.94，Gen6D 为 89.64&lt;/strong>，提升最大的是刀：&lt;strong>77.21 对 69.73&lt;/strong>（表 1）。&lt;br>&lt;strong>推理时间 0.5322 s，原 VGG 模型为 0.4965 s&lt;/strong>，增加 35.7 ms（7.19%）（表 2）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>ADD-0.1d 为 51.48，Gen6D 为 49.48&lt;/strong>（位姿误差在物体直径 10% 以内的比例），为 GenMOP 中七个物体的平均值（表 1）。&lt;br>&lt;strong>Prj-5 为 91.94，Gen6D 为 89.64&lt;/strong>，提升最大的是刀：&lt;strong>77.21 对 69.73&lt;/strong>（表 1）。&lt;br>&lt;strong>推理时间 0.5322 s，原 VGG 模型为 0.4965 s&lt;/strong>，增加 35.7 ms（7.19%）（表 2）。&lt;/aside>
 &lt;p>模型在 Gen6D 的官方数据集 GenMOP（共 10 个物体）上训练，测试时作者专门挑选了表面反光强的物体。ADD-0.1d 统计模型点与真值之间的平均距离小于物体直径 10% 的位姿所占比例；Prj-5 统计二维投影误差小于 5 像素的位姿所占比例。表 1 中的七个物体上，改进模型在两项指标上均高于 Gen6D。&lt;/p>
 &lt;p>在高动态环境光下另行采集的 RGB 图像直观地展示了效果。Gen6D 只框住了刀和剪刀的塑料手柄，改进模型则能捕捉物体的整体位姿；对于透明的玻璃杯，Gen6D 检测失败，改进模型则成功检测出其位姿。在由暗到亮的五个光照等级（L1–L5）下，Gen6D 对刀和剪刀的估计在低光（L1、L2）和强光（L4、L5）下都明显变差，而改进模型更为准确，玻璃杯上的提升尤为明显。作者也报告了失败情况：强光使部分刀身在图像中呈黑色，改进模型无法检测这些刀身部分的位姿；金属剪刀在 L1、L2 下仍有错位。作者提出，未来工作包括扩展到更多物体和数据集、尝试其他注意力机制，以及在实际工业应用中进行测试。&lt;/p>
 &lt;figure class="rfig">

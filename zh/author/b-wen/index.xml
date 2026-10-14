@@ -16,7 +16,7 @@
 &lt;div class="explainer" data-explainer="/publications/wen-2020-iteratively-weighted/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>局部平面拟合。&lt;/strong> 用 Kd 树查找每个点的 k 近邻，并对其进行最小二乘平面拟合。邻域协方差矩阵最小特征值对应的特征向量即为法向。&lt;/li>
-&lt;li>&lt;strong>双边权重。&lt;/strong> IWPCA 以该点本身为中心构造协方差矩阵，并为每个邻点赋予两种权重。空间权重随邻点与该点距离的增大而减小，由 σ&lt;sub>d&lt;/sub> 控制，通常取 kNN 搜索半径的一半；法向权重随邻点法向与该点法向偏差的增大而减小，由 σ&lt;sub>n&lt;/sub> 控制，通常取 15° 到 30°。首次计算时，两者的法向均设为默认值 (1, 0, 0)。&lt;/li>
+&lt;li>&lt;strong>双边权重。&lt;/strong> IWPCA 以该点本身为中心构造协方差矩阵，并为每个邻点赋予两种权重。空间权重随邻点与该点距离的增大而减小，由 σ&lt;sub>d&lt;/sub> 控制，通常取 kNN 搜索半径的一半；法向权重随邻点法向与该点法向偏差的增大而减小，由 σ&lt;sub>n&lt;/sub> 控制，通常取 15° 到 30°。首次计算时，每个点的法向均设为 (1, 0, 0)，因此法向权重起初是均匀的。&lt;/li>
 &lt;li>&lt;strong>迭代。&lt;/strong> 每一轮都把上一轮得到的法向代入法向权重。迭代次数越多，估计越好，但耗时也越长；作者建议迭代 2 到 3 次，并以最后一轮的结果作为输出。&lt;/li>
 &lt;li>&lt;strong>向外预翻转。&lt;/strong> 计算整个点云的中心，将所有指向该中心的法向翻转。&lt;/li>
 &lt;li>&lt;strong>沿最小生成树传播。&lt;/strong> 用 Prim 算法在相邻点之间构建最小生成树，边权为 1 − |n&lt;sub>i&lt;/sub> · n&lt;sub>j&lt;/sub>|。从根节点开始，若子节点法向与父节点法向的点积为负，则翻转子节点的法向。&lt;/li>
@@ -25,11 +25,11 @@
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-method.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-method.webp" alt="立方体点云的四个视图，布满密集的绿色法向线。(a) 中法向杂乱，边缘难以辨认；(b) 和 (c) 中边缘略为清晰；(d) 中交汇于前方顶点的三条棱十分清晰。" loading="lazy">
-&lt;/a>&lt;figcaption>立方体模型的法向：(a) 经典 PCA；(b) IWPCA 迭代 1 次；(c) IWPCA 迭代 3 次；(d) 用改进的 MST 方法对 (c) 重新定向后的法向。引自论文图 7。&lt;/figcaption>
+&lt;/a>&lt;figcaption>立方体模型的法向：(a) 经典 PCA；(b) IWPCA 迭代 1 次；(c) IWPCA 迭代 3 次；(d) 用步骤 4–5 的预翻转与 MST 传播对 (c) 重新定向后的法向。引自论文图 7。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>四个测试模型&lt;/strong>均来自斯坦福大学计算机图形实验室：Stanford bunny（34,835 个点）、立方体（39,846 个点）、尖锥（50,000 个点）和一块扫描曲面（30,443 个点），参数均为 σ&lt;sub>n&lt;/sub> = 30°、σ&lt;sub>d&lt;/sub> = 0.5（表 1）。&lt;br>&lt;strong>Stanford bunny 的运行时间：PCA 为 564 ms，IWPCA 迭代 1 次为 697 ms，迭代 3 次为 896 ms&lt;/strong>（表 1）。&lt;br>建议&lt;strong>迭代 2 到 3 次&lt;/strong>（第 4.1 节）。&lt;/aside>
-&lt;p>论文中的对比均为可视化比较。在立方体上，IWPCA 提高了尖锐边处法向的鲁棒性；经 MST 重新定向后，全部法向的可靠性、鲁棒性和朝向一致性都得到改善，立方体的形状也更加清晰（图 7）。用泊松方法重建立方体时，基于 IWPCA 法向重建出的棱和顶点比基于经典 PCA 法向的更加锐利、清晰（图 8）。在尖锥上，经典 PCA 在锥顶处的法向结果不理想，部分点的法向未能算出，底部也有许多法向指向内侧；IWPCA 提高了顶部和底部法向的鲁棒性（图 9）。在扫描曲面上，改进的 MST 修正了朝向不一致的法向，绝大多数法向指向曲面的凸起一侧（图 11）。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>四个测试模型&lt;/strong>均来自斯坦福大学计算机图形实验室：Stanford bunny（34,835 个点）、立方体（39,846 个点）、尖锥（50,000 个点）和一块扫描曲面（30,443 个点），参数均为 σ&lt;sub>n&lt;/sub> = 30°、σ&lt;sub>d&lt;/sub> = 0.5（表 1）。&lt;br>&lt;strong>Stanford bunny 的运行时间：PCA 为 564 ms，IWPCA 迭代 1 次为 697 ms，迭代 3 次为 896 ms&lt;/strong>（表 1）。&lt;br>建议&lt;strong>迭代 2 到 3 次&lt;/strong>（第 4.1 节）。&lt;br>用泊松方法重建立方体时，&lt;strong>基于 IWPCA 法向的棱和顶点比基于经典 PCA 法向的更锐利&lt;/strong>（图 8）。&lt;/aside>
+&lt;p>论文中的对比均为可视化比较。在立方体上，IWPCA 提高了尖锐边处法向的鲁棒性；经 MST 重新定向后，全部法向的可靠性、鲁棒性和朝向一致性都得到改善，立方体的形状也更加清晰（图 7）。用泊松方法重建立方体时，基于 IWPCA 法向重建出的棱和顶点比基于经典 PCA 法向的更加锐利、清晰（图 8）。在尖锥上，经典 PCA 在锥顶处的法向结果不理想，部分点的法向未能算出，底部也有许多法向指向内侧；IWPCA 提高了顶部和底部法向的鲁棒性（图 9）。在扫描曲面上，预翻转与 MST 传播（步骤 4–5）修正了朝向不一致的法向，绝大多数法向指向曲面的凸起一侧（图 11）。&lt;/p>
 &lt;p>IWPCA 的计算量大于经典 PCA，其运行时间包含了法向重定向过程。迭代 1 次时，它比 PCA 慢；迭代 3 次时，它比连续运行 3 次经典 PCA 略快。实验运行环境为 Windows 7（64 位）、Intel Core i7-5650U CPU（2.20 GHz）和 8 GB 内存。邻域大小 k 以及权重参数 σ&lt;sub>d&lt;/sub> 和 σ&lt;sub>n&lt;/sub> 不易确定，目前依经验选取；作者提出，今后可根据局部曲率、噪声分布和点密度来确定这些参数。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-results.webp" target="_blank" rel="noopener">
@@ -39,5 +39,5 @@
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-orientation.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/wen-2020-iteratively-weighted/fig-orientation.webp" alt="扫描曲面的四个视图，带有绿色和品红色法向线。上排中，同一块曲面上的法向指向两侧；下排中，各大块曲面主要呈现同一侧的颜色。" loading="lazy">
-&lt;/a>&lt;figcaption>扫描曲面的法向：(a, b) 重新定向前；(c, d) 用改进的 MST 方法重新定向后，绝大多数法向指向凸起一侧。引自论文图 11。&lt;/figcaption>
+&lt;/a>&lt;figcaption>扫描曲面的法向：(a, b) 重新定向前；(c, d) 用步骤 4–5 的预翻转与 MST 传播重新定向后，绝大多数法向指向凸起一侧。引自论文图 11。&lt;/figcaption>
 &lt;/figure></description></item></channel></rss>

@@ -7,13 +7,13 @@
 &lt;/a>&lt;figcaption>(a) 同步采集：信号线连接投影仪与相机，相机的每次曝光只看到一幅图案（每个色块一种颜色）。(b) 异步采集：没有信号连接时，曝光会跨越图案切换时刻，采集到的图像混入相邻图案。论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
-&lt;p>混叠本身的形式很简单。AFP 中每个像素的值，是曝光期间两幅图案各自贡献的累加，两者所占比例取决于投影仪切换图案的时刻（式 5）。混叠不会移动像素，在每个位置都以相同方式发生，这一性质正适合用卷积网络来处理。但切换时刻未知，且很难测量，因此从一幅图像恢复出两幅图像是一个病态的“一对多”问题。论文将其视为图像生成问题：由生成式网络学习生成两幅干净的条纹图，之后即可直接沿用标准的相移重建方法。&lt;/p>
+&lt;p>混叠本身的形式很简单。AFP 中每个像素的值，是曝光期间两幅图案各自贡献的累加，两者所占比例取决于投影仪切换图案的时刻（论文式 5）。混叠不会移动像素，在每个位置都以相同方式发生，这一性质正适合用卷积网络来处理。但切换时刻未知，且很难测量，因此从一幅图像恢复出两幅图像是一个病态的“一对多”问题。论文将其视为图像生成问题：由生成式网络学习生成两幅干净的条纹图，之后即可直接沿用标准的相移重建方法。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/lu-2024-generative-asl/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>同步采集（参照）。&lt;/strong> 每次曝光恰好只看到一幅投影图案，因此每张图像只包含一幅干净的条纹图。&lt;/li>
 &lt;li>&lt;strong>异步采集。&lt;/strong> 投影仪和相机各以恒定速度工作，且相机速度更快，以保证每幅图案都能被拍到。若图案切换发生在曝光期间，就会得到一幅对相邻两幅图案积分而成的 AFP。论文处理的是两幅图案混叠的情形。&lt;/li>
-&lt;li>&lt;strong>用 APSNet 分离。&lt;/strong> APSNet（混叠条纹图分离网络）是基于 U-Net 的编码器–解码器：编码端由四个带最大池化的模块组成，解码端通过上采样和跳跃连接逐步恢复到原始分辨率。它把一幅 AFP 映射为混叠前的两幅图案。训练时，APSNet 作为条件生成对抗网络（GAN）中的生成器：判别器将生成的图案对与真实图案对进行比较，另有均方误差和结构相似性两项损失，使生成图案在统计上接近投影图案。三项损失权重相等时，训练过程最为平稳（图 8）。&lt;/li>
-&lt;li>&lt;strong>求相位。&lt;/strong> 由三幅 AFP，APSNet 得到四幅相继的条纹图，相邻两幅相差四分之一周期。经典的四步相移算法由此求出包裹相位，再加上条纹级次（2π 的整数倍）完成相位展开，得到连续相位图。&lt;/li>
+&lt;li>&lt;strong>用 APSNet 分离。&lt;/strong> APSNet（混叠条纹图分离网络）是基于 U-Net 的编码器–解码器：编码端由四个带最大池化的模块组成，解码端通过上采样和跳跃连接逐步恢复到原始分辨率。它把一幅 AFP 映射为混叠前的两幅图案。训练时，APSNet 作为条件生成对抗网络（GAN）中的生成器：判别器将生成的图案对与真实图案对进行比较，另有均方误差和结构相似性两项损失，使生成图案在统计上接近投影图案。对抗、均方误差和结构相似性三项损失权重相等时，训练过程最为平稳（图 8）。&lt;/li>
+&lt;li>&lt;strong>求相位。&lt;/strong> 每幅 AFP 混入相邻两幅图案，相邻的三幅 AFP 与前后相邻者共享图案，因此 APSNet 可得到四幅相继的条纹图，相邻两幅相差四分之一周期。经典的四步相移算法由此求出包裹相位，再加上条纹级次（2π 的整数倍）完成相位展开，得到连续相位图。&lt;/li>
 &lt;li>&lt;strong>三维形貌。&lt;/strong> 利用成熟的 FPP 重建模型，由连续相位计算出物体的三维形貌。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
@@ -28,7 +28,7 @@
 &lt;/a>&lt;figcaption>分离一幅 AFP。(a、b) 同步采集记录的两幅源图案；(c) 异步系统记录的 AFP；(d、e) APSNet 从 (c) 中分离出的两幅图案；(f、g) 二者与源图案的绝对差，数值很小且随机分布。论文图 9。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>与同步重建结果的偏差不超过 0.008 mm&lt;/strong>：沿雕像的一条深度剖面，标准差为 0.003 mm；而直接用 AFP 计算的深度误差在 −5.000 到 3.600 mm 之间，标准差为 1.713 mm（图 13）。&lt;br>沿一条采样线，&lt;strong>包裹相位与同步结果的最大差值为 0.035 rad&lt;/strong>（图 11）。&lt;br>&lt;strong>螺旋桨和 3D 打印螺栓的绝对误差均小于 0.006 mm&lt;/strong>，这两个物体表面曲率大，此前的验证中未曾出现（标准差分别为 0.002 mm 和 0.001 mm；图 16）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>与同步重建结果的偏差不超过 0.008 mm&lt;/strong>：沿雕像的一条深度剖面，标准差为 0.003 mm；而直接用 AFP 计算的深度误差在 −5.000 到 3.600 mm 之间，标准差为 1.713 mm（图 13）。&lt;br>沿一条采样线，&lt;strong>包裹相位与同步结果的最大差值为 0.035 rad&lt;/strong>（图 11）。&lt;br>&lt;strong>螺旋桨和 3D 打印螺栓的绝对误差均小于 0.006 mm&lt;/strong>，这两个物体表面曲率大，是此前验证中没有包含的情形（标准差分别为 0.002 mm 和 0.001 mm；图 16）。&lt;/aside>
 &lt;p>测试对象包括雕像、汽车模型和球体，网络在训练和验证中都没有见过它们。所有对比都以同步图案的重建结果为基准。直接用 AFP 重建会丢失大量形状信息，而用 APSNet 分离出的图案重建的形状与基准非常接近（图 12）。论文总结指出，相比直接使用混叠条纹，重建精度提高了三个数量级。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2024-generative-asl/fig-results.webp" target="_blank" rel="noopener">
@@ -46,7 +46,7 @@
 &lt;img src="https://willpan.xyz/publications/lu-2024-generative-asl/fig-objects.webp" alt="五个测试对象（两尊雕像、球体、汽车模型和第三尊雕像）及其混叠条纹图，下面三行分别为由同步、异步和 APSNet 图案得到的重建结果。" loading="lazy">
 &lt;/a>&lt;figcaption>未参与训练的测试对象（首行，附其 AFP），分别由同步图案（第二行）、原始 AFP（第三行）和 APSNet 分离出的图案（末行）重建。左侧两尊雕像使用正弦条纹；球体、汽车模型和第三尊雕像使用二值条纹。论文图 14。&lt;/figcaption>
 &lt;/figure></description></item><item><title>Deep learning-enabled 3D multimodal fusion of cone-beam CT and intraoral mesh scans for clinically applicable tooth-bone reconstruction</title><link>https://willpan.xyz/zh/publications/liu-2023-tooth-bone/</link><pubDate>Fri, 01 Sep 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/liu-2023-tooth-bone/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
-&lt;p>正畸治疗和种植手术需要在牙齿及其周围骨组织的三维模型上进行规划。这类模型的数据来自两种扫描，而每一种都只能看到一部分。锥形束 CT（CBCT）是一种 X 线扫描，能显示颌骨内完整的牙齿，包括牙冠和牙根。但 CBCT 的测量值最多可比实际值小 6.9%，具体取决于分辨率；而且由于牙釉质密度高，加之修复体、种植体和正畸矫治器的影响，CBCT 往往无法准确呈现咬合面。口内扫描仪（IOS）向牙列投射光线，以表面网格的形式记录数字印模。其收缩率可低至 0.9%，是三维数字化模态中精度最高的一种，也能准确记录咬合关系和牙列位置，但它只包含牙冠和牙龈，看不到龈下的任何结构。&lt;/p>
+&lt;p>正畸治疗和种植手术需要在牙齿及其周围骨组织的三维模型上进行规划。这类模型的数据来自两种扫描，而每一种都只能看到一部分。锥形束 CT（CBCT）是一种 X 线扫描，能显示颌骨内完整的牙齿，包括牙冠和牙根。但 CBCT 的测量值最多可比实际值小 6.9%，具体取决于分辨率；而且由于牙釉质密度高，加之修复体、种植体和正畸矫治器的影响，CBCT 往往无法准确呈现咬合面。口内扫描仪（IOS）向牙列投射光线，以表面网格的形式记录数字印模。其测量值的收缩率可低至 0.9%，是三维数字化模态中精度最高的一种，也能准确记录咬合关系和牙列位置，但它只包含牙冠和牙龈，看不到龈下的任何结构。&lt;/p>
 &lt;p>将两者结合，才能得到临床所需的模型：精确的牙冠、位置正确的牙根，以及周围的牙槽骨。手工融合十分耗时。两种扫描都要先完成分割，而不同患者的解剖形态差异很大，使分割并不容易。CBCT 通常同时包含上下颌，且常处于牙齿相互接触的咬合状态，而口内扫描则分别记录上颌和下颌。即使借助交互式软件和半自动工具，经验丰富的专家处理一位患者也至少需要五小时，而全自动、可用于临床的方案此前尚未出现。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/liu-2023-tooth-bone/fig-problem.webp" target="_blank" rel="noopener">

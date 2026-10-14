@@ -5,7 +5,7 @@
 &lt;div class="explainer" data-explainer="/publications/qiu-2026-3d-surface-matching-based-on-adaptive/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>深度图与曲率图。&lt;/strong> 将模型点云转换为深度图，并据此计算曲面曲率图。&lt;/li>
-&lt;li>&lt;strong>自适应阈值分割。&lt;/strong> 自适应阈值迭代分割算法剔除冗余点，保留几何意义显著的高曲率特征点作为模型点云。&lt;/li>
+&lt;li>&lt;strong>自适应阈值分割。&lt;/strong> 自适应阈值迭代分割算法剔除冗余点，保留几何意义显著的高曲率特征点作为精简后的模型点云。&lt;/li>
 &lt;li>&lt;strong>粗匹配。&lt;/strong> 基于积分体积描述子的粗匹配算法在场景点云中确定目标点云的大致位姿；据作者介绍，这提高了粗匹配的精度和鲁棒性，并降低了 ICP 迭代对初始位姿的依赖。&lt;/li>
 &lt;li>&lt;strong>精匹配。&lt;/strong> 最后由迭代最近点（ICP）算法完成曲面精匹配。&lt;/li>
 &lt;/ol>
@@ -31,7 +31,7 @@
 &lt;ol>
 &lt;li>&lt;strong>外参漂移。&lt;/strong> 振动使相机–投影仪系统的外参缓慢移动，削弱三角测量约束。&lt;/li>
 &lt;li>&lt;strong>初值。&lt;/strong> 以相机和投影仪各自的独立标定参数作为初值。&lt;/li>
-&lt;li>&lt;strong>联合优化。&lt;/strong> 将待重建物体的表面点云作为约束条件纳入优化，建立相机参数、投影仪参数与场景三维点的协同优化模型。&lt;/li>
+&lt;li>&lt;strong>联合优化（即光束法平差）。&lt;/strong> 将待重建物体的表面点云作为约束条件纳入优化，建立相机参数、投影仪参数与场景三维点的协同优化模型。&lt;/li>
 &lt;li>&lt;strong>外参校正。&lt;/strong> 借助该模型，系统外参得到快速、准确的校正。&lt;/li>
 &lt;/ol>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
@@ -42,7 +42,7 @@
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-2.webp" alt="上图：ColorPCR/GeoTransformer 对两帧扫描做匹配，相似结构之间出现大量红色错误匹配，配准失败。下图：SuP 的流程（划分、OPS、MPN、合并匹配），绿色为正确匹配，配准成功。" loading="lazy">
-&lt;/a>&lt;figcaption>上：重叠区之外的相似结构（红框）吸引了大量错误匹配（红线），掩盖了正确对应；直接匹配的基线方法（图中标注为 ColorPCR / GeoTr.）在这对扫描上配准失败（旋转误差 41.3°，平移误差 101.7 cm）。下：SuP 找出重叠率高、特征一致性强的子点云对，合并其中的匹配后完成配准（1.3°，1.8 cm）。论文图 1。&lt;/figcaption>
+&lt;/a>&lt;figcaption>上：重叠区之外的相似结构（红框）吸引了大量错误匹配（红线），掩盖了正确对应；直接匹配的基线方法（图中标注为 ColorPCR 与 GeoTr.，即 GeoTransformer）在这对扫描上配准失败（旋转误差 41.3°，平移误差 101.7 cm）。下：SuP 找出重叠率高、特征一致性强的子点云对，合并其中的匹配后完成配准（1.3°，1.8 cm）。论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
 &lt;p>SuP 换了一个角度看问题。两帧扫描整体上可能只有少量重叠，但若把每帧切成更小的块并两两配对，其中有一部分子点云对具有很高的重叠率。SuP 把这些高重叠的子点云对称为“锚点对”：先分两个阶段把它们找出来，再只在锚点对内部建立匹配。&lt;/p>
@@ -50,7 +50,7 @@
 &lt;ol>
 &lt;li>&lt;strong>提取整帧特征。&lt;/strong> KPConv 骨干网络在多个尺度上提取点特征，再由注意力层在帧内和两帧之间交换上下文信息。SuP 默认采用 ColorPCR 的颜色增强骨干网络和注意力模块。&lt;/li>
 &lt;li>&lt;strong>划分子点云。&lt;/strong> 每帧点云被划分为 k 个子点云：先用最远点采样选出分布均匀的中心点，再以各中心点为核心，在半径范围内收集近邻点，构成子点云。&lt;/li>
-&lt;li>&lt;strong>第一阶段：重叠引导的先验加权（OPS）。&lt;/strong> 对每一对源–目标子点云，SuP 只统计互为前 k 强的特征相关，以此度量两者点特征的相关程度，并保留得分最高的若干对作为候选。这一步是高效的初筛，用来排除不重叠的子点云对。&lt;/li>
+&lt;li>&lt;strong>第一阶段：重叠引导的先验加权（OPS）。&lt;/strong> 对每一对源–目标子点云，SuP 只统计互为前几强的特征相关，以此度量两者点特征的相关程度，并保留得分最高的若干对作为候选。这一步是高效的初筛，用来排除不重叠的子点云对。&lt;/li>
 &lt;li>&lt;strong>第二阶段：多尺度后加权网络（MPN）。&lt;/strong> 先用加权 SVD 为每个候选对估计初步位姿并对齐，再由一个轻量的可学习网络在两个尺度上检查：对齐后彼此靠近的点，特征是否也相似。特征一致性权重最高的候选对成为锚点对。训练时，该网络以各候选对实际的对齐误差作为监督信号（对齐感知加权损失）。&lt;/li>
 &lt;li>&lt;strong>合并匹配。&lt;/strong> 将所有锚点对中的内点对应合并，在更稠密的点上细化，再交给标准估计器（RANSAC 或无需 RANSAC 的 LGR）求出最终的旋转和平移。&lt;/li>
 &lt;/ol>
@@ -58,7 +58,7 @@
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2026-sup-sub-cloud-driven-point-cloud/figure-1.webp" alt="网络结构图：特征提取、特征聚合、双阶段子点云锚点挖掘模块（划分、OPS、初步子点云匹配、MPN）以及合并匹配，并附各部分的细节面板。" loading="lazy">
-&lt;/a>&lt;figcaption>方法总览。多尺度特征（3.2 节）经注意力聚合（3.3 节）；双阶段子点云锚点挖掘模块（3.4 节）划分两帧点云，用 OPS 选出候选，初步对齐（PSM）后由 MPN 打分；合并匹配模块（3.5 节）把各锚点对的匹配合并，估计最终变换。论文图 2。&lt;/figcaption>
+&lt;/a>&lt;figcaption>方法总览。多尺度特征（3.2 节）经注意力聚合（3.3 节）；双阶段子点云锚点挖掘模块（3.4 节）划分两帧点云，用 OPS 选出候选，用初步位姿对齐（PSM）后由 MPN 打分；合并匹配模块（3.5 节）把各锚点对的匹配合并，估计最终变换。论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
 &lt;aside class="keypoint">使用无需 RANSAC 的 LGR 估计器时，&lt;strong>在 Color3DMatch 和 Color3DLoMatch 上的配准召回率分别为 97.8% 和 90.2%&lt;/strong>，在采用 LGR 的对比方法中最高（表 2）。&lt;br>使用 RANSAC 时为 &lt;strong>98.1% 和 90.4%&lt;/strong>，且在 5000 到 250 个采样对应点的各档设置下配准召回率均为最高（表 1）。&lt;br>&lt;strong>位姿误差最低&lt;/strong>：Color3DMatch 上为 1.374° / 0.046 m，Color3DLoMatch 上为 2.493° / 0.074 m（表 3）。&lt;/aside>
@@ -72,7 +72,7 @@
 &lt;p>灰度图像能降低计算复杂度、存储和传输开销，因而应用广泛。但在许多应用中，后续仍需要找回原始颜色，这就要求转换可逆：灰度图像本身必须携带足够的颜色信息，以便恢复出 RGB 图像。&lt;/p>
 &lt;p>直方图平移、小波包数据隐藏等传统可逆灰度化方法，把颜色线索嵌入亮度通道，通常需要附加变换域约束或多个辅助通道，增加了计算量和内存开销。深度学习方法的重建保真度较高，但推理延迟大、模型体积大、可解释性有限，并且强烈依赖训练数据。&lt;/p>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
-&lt;p>该方法无需训练。每个 RGB 像素先转换到 HSV 颜色空间，把色度部分（色调 H、饱和度 S）与亮度部分（明度 V）分开；三个分量分别量化为 a、b、c 位（a + b + c = 16），并依次写入一个 16 位灰度像素的各个位域。解码时用移位和掩码把各字段读回。整个流程只用到量化和位运算，除量化误差外完全可逆。&lt;/p>
+&lt;p>该方法无需训练。每个 RGB 像素先转换到 HSV 颜色空间，把色度部分（色调 H、饱和度 S）与亮度部分（明度 V）分开；三个分量分别量化为 a、b、c 位（a + b + c = 16），并按 H、S、V 从高位到低位的顺序写入一个 16 位灰度像素的各个位域。解码时用移位和掩码把各字段读回。整个流程只用到量化和位运算，除量化误差外完全可逆。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/wang-2025-a-reversible-grayscale-method-based-on/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/wang-2025-a-reversible-grayscale-method-based-on/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>归一化。&lt;/strong> 将 8 位 RGB 像素的三个通道除以 255，映射到 [0, 1]。&lt;/li>
@@ -88,7 +88,7 @@
 &lt;/figure>
 &lt;p>(a, b, c) 的取值决定了精度在各通道之间如何分配。人眼对色调变化较为敏感，作者建议 a ≥ 5（32 个色调等级），以免出现明显色偏；c ≥ 6（64 个明度等级）可避免条带伪影；对颜色较少的图像，b 可以适当减小。由于色调是环形量，非线性量化可减小 0°/360° 附近的误差，Floyd–Steinberg 误差扩散则把剩余的量化误差在空间上分散开。&lt;/p>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>在 Kodak 上，方案 1 每幅图像编码 3.71 ms、解码 7.01 ms&lt;/strong>，而 IDN 为 175.30 / 125.24 ms，CNN-based 方法为 2486.75 / 2453.82 ms（表 II）。&lt;br>&lt;strong>方案 1 在 Kodak 上 PSNR 为 34.80 dB，SSIM 为 0.9726&lt;/strong>（表 II）。&lt;br>&lt;strong>方案 1 在 Urban100 / BSD500 / McMaster 上 PSNR 分别为 34.06 / 34.48 / 32.20 dB&lt;/strong>，编码和解码时间在 2.80–3.82 ms 之间（表 III）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>在 Kodak 上，方案 1 每幅图像编码 3.71 ms、解码 7.01 ms&lt;/strong>，而 IDN 为 175.30 / 125.24 ms，CNN-based 方法为 2486.75 / 2453.82 ms（表 II）。&lt;br>&lt;strong>方案 1 在 Kodak 上 PSNR 为 34.80 dB，SSIM 为 0.9726&lt;/strong>；越高越好，其中 PSNR 低于 IDN（42.16 dB）和 CNN-based 方法（37.40 dB）（表 II）。&lt;br>&lt;strong>方案 1 在 Urban100 / BSD500 / McMaster 上 PSNR 分别为 34.06 / 34.48 / 32.20 dB&lt;/strong>，编码和解码时间在 2.80–3.82 ms 之间（表 III）。&lt;/aside>
 &lt;p>实验在四个数据集上进行：Kodak PhotoCD（24 幅图像）、Urban100（100 幅城市场景）、BSD500（500 幅自然风景）和 McMaster（18 幅图像）。对比对象为两种基于学习的可逆灰度化方法 IDN 和 CNN-based 方法，评价指标包括 MAE、PSNR、SSIM、FSIM 和 LPIPS，计时平台为 AMD Ryzen 9 7945HX 与 NVIDIA GeForce RTX 4060。四种比特分配方案中，方案 1 (6, 4, 6) 的综合表现最均衡；方案 2 (5, 5, 6) 在 Kodak 上的 SSIM 为四者最高（0.9779）；方案 4 (6, 5, 5) 速度最快，编码 3.21 ms、解码 4.49 ms。在 Kodak 上，16 位文件也略小：方案 1 为 633.20 KB，IDN 为 721.47 KB，CNN-based 方法为 660.87 KB（表 II）。&lt;/p>
 &lt;p>速度优势是以保真度为代价的。在 Kodak 上，IDN 的 PSNR 为 42.16 dB，CNN-based 方法为 37.40 dB，而本方法为 34.80 dB；作者也指出，近期一种可逆数据隐藏方法报告的 PSNR 达到 43.69 dB。作者将本方法定位为面向边缘计算和嵌入式系统等资源受限场景的轻量、可解释方案，并计划通过自适应分配算法和可逆压缩来缩小质量差距，通过 FPGA/ASIC 实现进一步降低延迟。&lt;/p>
 &lt;figure class="rfig">
@@ -109,7 +109,7 @@
 &lt;ol>
 &lt;li>&lt;strong>一个采集周期。&lt;/strong> 投影仪依次显示三类图案：模拟四象限照明、供 PS 使用的二值图案，以及供 PMD 使用的水平（fringe-x）和竖直（fringe-y）正弦条纹。相机每个周期采集 12 幅图像。&lt;/li>
 &lt;li>&lt;strong>PMD 分支。&lt;/strong> 每个像素有四幅相移条纹图像：其均值为平均强度 A，由条纹调制计算镜面反射分量 S，漫反射分量为 D = A − S，光泽度为 S / A。多频相位展开得到绝对相位，其在 x、y 方向的导数构成相位梯度幅值 P。&lt;/li>
-&lt;li>&lt;strong>PS 分支。&lt;/strong> 四幅二值图案图像以 PMD 得到的反射分量图为先验，构成“图像数 × 像素数”的强度矩阵。对其做奇异值分解得到表面法向，再由法向计算表面梯度和平均曲率 H，计算过程采用 CUDA 加速。&lt;/li>
+&lt;li>&lt;strong>PS 分支。&lt;/strong> 四幅二值图案图像以 PMD 得到的镜面与漫反射分量图作为先验信息，构成“图像数 × 像素数”的强度矩阵。对其做奇异值分解得到表面法向，再由法向计算表面梯度和平均曲率 H，计算过程采用 CUDA 加速。&lt;/li>
 &lt;li>&lt;strong>按反射特性计算权重。&lt;/strong> 每个像素的权重为 w&lt;sub>PMD&lt;/sub> = S / (S + D)，w&lt;sub>PS&lt;/sub> = D / (S + D)。高光像素更依赖 PMD，偏漫反射的像素更依赖 PS，两者之间平滑过渡。&lt;/li>
 &lt;li>&lt;strong>融合。&lt;/strong> 结果为 R = w&lt;sub>PMD&lt;/sub>·P + w&lt;sub>PS&lt;/sub>·H。在条纹可靠的区域以 PMD 为主，在需要保留漫反射细节的区域以 PS 为主。&lt;/li>
 &lt;/ol>
@@ -119,8 +119,8 @@
 &lt;/a>&lt;figcaption>FPD 框架：图案投射、图像采集、PMD 特征提取（平均强度、漫反射、光泽度、镜面反射图及相位梯度）、PS 曲率图、自适应权重计算与自适应融合。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>高光标志上的划痕：&lt;/strong> PS 平均曲率图未能呈现，PMD 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>标志以外的指纹脏污：&lt;/strong> PMD 相位梯度图未能重建，PS 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>Smart3 缺陷检测：&lt;/strong> 基于 PS 的检测在强镜面反射区域失效，基于 PMD 的检测在反射较弱的区域失效，FPD 结果则能同时支持两类缺陷的检测（图 7）。&lt;/aside>
-&lt;p>测试对象是同时具有漫反射和镜面反射的 iPhone 后盖。实验平台由投影仪、相机和安装结构组成，每个周期采集二值、fringe-x 和 fringe-y 三类图案共 12 幅图像，处理所用电脑配备 Intel Core i5-13500 CPU 和 NVIDIA GeForce RTX 3060 GPU。对比在同一次采集得到的三幅重建图之间进行：PS 平均曲率图、PMD 相位梯度图和 FPD 融合结果；作者认为 FPD 对两类特征的重建都更完整、更一致。随后，在 OPT Machine Vision 的商用检测软件 Smart3 中分别对三幅图做缺陷检测：一是划痕检测，二是基于高斯线提取的指纹/脏污检测。FPD 也已集成到商用缺陷检测软件中。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>高光标志上的划痕：&lt;/strong> PS 平均曲率图未能呈现，PMD 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>标志以外的指纹脏污：&lt;/strong> PMD 相位梯度图未能重建，PS 和 FPD 均能保留（图 4）。&lt;br>&lt;strong>Smart3（商用检测软件）缺陷检测：&lt;/strong> 基于 PS 的检测在强镜面反射区域失效，基于 PMD 的检测在反射较弱的区域失效，FPD 结果则能同时支持两类缺陷的检测（图 7）。&lt;/aside>
+&lt;p>测试对象是同时具有漫反射和镜面反射的 iPhone 后盖。实验平台由投影仪、相机和安装结构组成，每个周期采集二值、fringe-x 和 fringe-y 三类图案共 12 幅图像，处理所用电脑配备 Intel Core i5-13500 CPU 和 NVIDIA GeForce RTX 3060 GPU。对比在同一次采集得到的三幅重建图之间进行：PS 平均曲率图、PMD 相位梯度图和 FPD 融合结果；作者认为 FPD 对两类特征的重建都更完整、更一致。随后，在 OPT Machine Vision 的商用检测软件 Smart3 中分别对三幅图做缺陷检测：一是划痕检测，二是基于线特征提取的脏污检测。FPD 也已集成到商用缺陷检测软件中。&lt;/p>
 &lt;p>作者将集成系统的标定以及复杂表面的高度测量列为未来工作。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-fpd-fringe-photometric-deflectometry-when-fringe/fig-results.webp" target="_blank" rel="noopener">
@@ -142,7 +142,7 @@
 &lt;li>&lt;strong>基于大核注意力的颜色特征。&lt;/strong> ResNet18 骨干网络与金字塔池化模块从图像块中提取多尺度特征。大核注意力由深度卷积、深度空洞卷积和 1×1 卷积组成，生成的注意力图与特征逐元素相乘，使网络既能捕捉局部纹理和边缘，也能建模更大范围的上下文。&lt;/li>
 &lt;li>&lt;strong>基于 3DGCN 与 PointNet 的几何特征。&lt;/strong> 三维图卷积网络（3DGCN）在每个点的邻域上施加可学习的三维图卷积核，再经图最大池化，刻画局部几何结构。PointNet 分支用全连接层处理各点，并通过最大池化得到全局形状特征。&lt;/li>
 &lt;li>&lt;strong>跨模态注意力。&lt;/strong> CMA-Net 模块的输入为颜色特征（F1）、3DGCN 特征（F2）和 PointNet 特征（F3）。第一次点积注意力以 F1、F2、F3 分别作为查询、键和值，增强颜色特征；第二次以 F2、F1、F3 作为查询、键和值，增强点云特征。两路输出与 F3 一起经 Squeeze-and-Excitation 模块进行通道重加权，再拼接在一起。&lt;/li>
-&lt;li>&lt;strong>稠密融合与位姿回归。&lt;/strong> 各像素的融合特征经共享 MLP 和平均池化得到全局特征，并拼接到每个像素的特征上。随后每个像素分别预测旋转、平移和置信度，保留置信度最高的预测，并沿用 DenseFusion 的做法，由一个小型网络预测残差位姿，对其进行迭代精化。&lt;/li>
+&lt;li>&lt;strong>稠密融合与位姿回归。&lt;/strong> 各像素的融合特征经共享 MLP 和平均池化得到全局特征，并拼接到每个像素的特征上。随后每个像素分别预测旋转、平移和置信度，保留置信度最高的预测；最后沿用 DenseFusion 的做法，由一个小型网络预测残差位姿，对其进行迭代精化。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-gcma6d-graph-convolution-and-cross-modality/figure-overleaf-1-architecture.webp" target="_blank" rel="noopener">
@@ -150,7 +150,7 @@
 &lt;/a>&lt;figcaption>网络总览：语义分割、颜色分支（ResNet18 + LKA-PSPNet）、几何分支（3DGCN + PointNet）、CMA-Net、结合全局特征的逐像素稠密融合，以及逐像素位姿预测。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>LineMOD 平均准确率 97.7%&lt;/strong>（ADD(-S) 距离小于物体直径的 10% 记为正确），DenseFusion 为 94.3%（表 2）。&lt;br>单独加入任一模块均优于 94.3% 的基线：&lt;strong>3DGCN 96.9%、LKA 96.2%、CMA-Net 95.4%&lt;/strong>（表 1）。&lt;br>&lt;strong>YCB-Video 上 AUC 为 92.9%，误差小于 2 cm 的位姿占 95.7%&lt;/strong>，DenseFusion 分别为 91.2% 和 95.3%（第 4.4 节）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>LineMOD 平均准确率 97.7%&lt;/strong>（ADD(-S) 距离小于物体直径的 10% 记为正确），DenseFusion 为 94.3%（表 2）。&lt;br>单独加入任一模块均优于 94.3% 的基线：&lt;strong>图卷积（3DGCN）96.9%、大核注意力（LKA）96.2%、跨模态注意力（CMA-Net）95.4%&lt;/strong>（表 1）。&lt;br>&lt;strong>YCB-Video 上 AUC（阈值 10 cm 以内 ADD(-S) 准确率曲线下的面积）为 92.9%，误差小于 2 cm 的位姿占 95.7%&lt;/strong>，DenseFusion 分别为 91.2% 和 95.3%（第 4.4 节）。&lt;/aside>
 &lt;p>实验在两个公开数据集上进行。LineMOD 中的物体纹理较弱、背景复杂且光照多变；15% 的图像用于训练、85% 用于测试，位姿的 ADD 距离（对称物体用 ADD-S）小于物体直径的 10% 即视为正确。在表 2 中，GCMA6D 的平均准确率在参与比较的七种方法中最高，领先 TMFNet（96.8%）和 QaQ（95.3%），并在对称物体 eggbox 和 glue 上达到 100%。LineMOD 上的消融实验表明各模块相互补充：任意两个模块组合的准确率为 96.8%–97.4%，三者同时使用时达到 97.7%。&lt;/p>
 &lt;p>YCB-Video 包含 21 种物体，遮挡程度各不相同；测试使用 12 段视频中的 2,949 个关键帧。评价指标为阈值 0–10 cm 范围内 ADD(-S) 准确率曲线下的面积（AUC），以及误差小于 2 cm 的位姿所占比例。GCMA6D 的 AUC 为 92.9%，高于 SaMfNet（92.6%）、G2L-Net（92.4%）、MSCNet（91.5%）和 DenseFusion（91.2%）。作者指出，大号夹子和特大号夹子上的准确率较低：两者外观十分相似，PoseCNN 的语义分割难以为它们生成精确的掩码。作者还指出，高度对称或严重遮挡的物体仍是该方法的局限，后续将改进对背景掩码区域的处理。&lt;/p>
 &lt;figure class="rfig">
@@ -173,7 +173,7 @@
 &lt;li>&lt;strong>一次扫描得到四幅图像。&lt;/strong> 把交错采集的扫描行按光源分区归类，即得到运动顶盖在四个不同照明方向下的四幅图像。&lt;/li>
 &lt;li>&lt;strong>最小二乘求法向。&lt;/strong> 在朗伯反射模型下，像素亮度为 I = ρ L · N，其中 ρ 为表面反射率，L 为光源方向，N 为表面法向。四个光源为每个像素提供四个方程，用最小二乘法求解。反射率图用于发现异物和污染；由法向得到表面梯度和平均曲率图，用于识别划痕、褶皱等缺陷。&lt;/li>
 &lt;li>&lt;strong>图像增强。&lt;/strong> 对比度拉伸扩大曲率图中的灰度差异；随后用加权最小二乘滤波这一保边平滑方法，抑制工件表面纹理，同时保留划痕等缺陷。&lt;/li>
-&lt;li>&lt;strong>缺陷提取。&lt;/strong> 先选取感兴趣区域（ROI），对图像进行滤波和采样处理；再求差分图像并阈值二值化，经形态学处理细化区域，最后按形状和灰度特征筛选出缺陷。&lt;/li>
+&lt;li>&lt;strong>缺陷提取。&lt;/strong> 先选取感兴趣区域（ROI），对图像进行滤波和采样处理；再求原图与预处理（滤波和采样）后图像的差分图像并阈值二值化，经形态学处理细化区域，最后按形状和灰度特征筛选出缺陷。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-method.webp" target="_blank" rel="noopener">
@@ -186,8 +186,8 @@
 &lt;/a>&lt;figcaption>对合成后的光度立体图像进行缺陷检测的流程。引自论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>划痕检出率 95.38%，凹坑检出率 96.43%&lt;/strong>，统计对象为 100 幅含已知缺陷的铝合金表面图像中的 376 条划痕和 336 个凹坑（表 2）。&lt;br>与 Ren 等人的方法（参考文献 12）相比，增强后图像的&lt;strong>清晰度为 77.06（对比 16.91），方差为 168.88（对比 41.03）&lt;/strong>；信息熵、PSNR 和 SSIM 也均更高（表 1）。&lt;/aside>
-&lt;p>系统运行在一台配备 Intel Core i5-12500 处理器和 Nvidia GeForce RTX 3060 GPU 的工控机上。先用环形光标定各光源方向，再用 CUDA 并行处理四幅图像，生成反射率图和平均曲率图。论文从清晰度、信息熵、方差、PSNR 和 SSIM 五项图像质量指标，将增强后的曲率图与 Ren 等人的方法进行比较。本文方法五项指标全部更优（信息熵 4.70 对 4.16，PSNR 12.37 对 10.84，SSIM 0.527 对 0.512），作者据此认为该方法在增强缺陷对比度的同时保留了原始图像结构。作者还在不同图像尺寸下比较了基于 Intel TBB 的 CPU 并行计算与基于 CUDA 的 GPU 并行计算，结果表明 GPU 加速显著提高了计算效率。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>划痕检出率 95.38%，凹坑检出率 96.43%&lt;/strong>，统计对象为 100 幅含已知缺陷的铝合金表面图像中的 376 条划痕和 336 个凹坑（表 2）。&lt;br>与 Ren 等人的方法（参考文献 12）相比，增强后图像的&lt;strong>清晰度为 77.06（对比 16.91），方差为 168.88（对比 41.03）&lt;/strong>；信息熵、峰值信噪比（PSNR）和结构相似性（SSIM）也均更高（表 1）。&lt;/aside>
+&lt;p>系统运行在一台配备 Intel Core i5-12500 处理器和 Nvidia GeForce RTX 3060 GPU 的工控机上。先用环形光标定光源方向向量，再用 CUDA 并行处理沿这些方向采集的四幅图像，生成反射率图和平均曲率图。论文从清晰度、信息熵、方差、PSNR 和 SSIM（后两者为峰值信噪比与结构相似性）五项图像质量指标，将增强后的曲率图与 Ren 等人的方法进行比较。本文方法五项指标全部更优（信息熵 4.70 对 4.16，PSNR 12.37 对 10.84，SSIM 0.527 对 0.512），作者据此认为该方法在增强缺陷对比度的同时保留了原始图像结构。作者还在不同图像尺寸下比较了基于 Intel TBB 的 CPU 并行计算与基于 CUDA 的 GPU 并行计算，结果表明 GPU 加速显著提高了计算效率。&lt;/p>
 &lt;p>后续工作将把算法推广到非朗伯表面，并进一步提高实时处理效率。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/li-2025-photometric-stereo-based-defect-detection-for/fig-curvature.webp" target="_blank" rel="noopener">
@@ -215,11 +215,22 @@
 &lt;p>SFRF6D 先由参考图像重建物体的粗略三维形状，并与查询图像进行粗对齐；然后在该粗略位姿下渲染参考视角，借助由三维几何引导的注意力与查询图像匹配，使可见区域发挥作用、被遮挡区域不参与匹配；最后对位姿进行精化，并通过渲染比较在多个位姿假设中做出选择。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
-&lt;li>&lt;strong>少量参考图像与一张查询图像。&lt;/strong> 输入是一小组带真值位姿的 RGB-D 参考图像（主实验中为四张）和一张 RGB-D 查询图像，查询掩码将物体分割出来。&lt;/li>
-&lt;li>&lt;strong>粗略三维形状。&lt;/strong> 选取视角与查询图像最接近的参考图像作为锚点，用 ResNet18 提取其特征，并由其深度图生成初始的物体点云。其余参考图像借助相机内参和已知位姿变换到同一世界坐标系中，补全物体形状，再将其归一化到 [−1, 1] 范围内。&lt;/li>
-&lt;li>&lt;strong>粗对齐。&lt;/strong> 用有向包围盒求出物体的中心（点云的均值）和旋转（对点云协方差做主成分分析得到的主轴）。由于此时的对齐仍较粗糙，再以最大化 IoU 为目标调整旋转和尺度，得到粗对齐结果。&lt;/li>
-&lt;li>&lt;strong>几何引导的稀疏注意力。&lt;/strong> 在查询图像的粗略位姿下渲染参考点云。参考点与查询点之间的归一化方向向量为交叉注意力构建 Top-K 掩码，并采用 Gumbel-Softmax 进行软性 Top-K 采样；匹配失败的点对被屏蔽，使注意力集中于可见且相关的区域。多尺度融合模块则自适应地权衡全局特征与局部特征。&lt;/li>
-&lt;li>&lt;strong>精化与选择。&lt;/strong> 联合优化物体尺度和位姿：位姿通过渲染物体形状、最小化其与锚点图像之间的投影误差来优化；尺度则在给定范围内采样，依据与重建形状之间的 IoU 选取。随后求出相对于查询图像的位姿。每个位姿假设被渲染后与查询图像比较，得到一个特征向量；自注意力模块综合所有假设给出评分，再经 Top-K 筛选得到最终位姿。&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>少量参考图像与一张查询图像。&lt;/strong> 输入是一小组带真值位姿的 RGB-D 参考图像（主实验中为四张）和一张 RGB-D 查询图像，查询掩码将物体分割出来。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>粗略三维形状。&lt;/strong> 选取视角与查询图像最接近的参考图像作为锚点，用 ResNet18 提取其特征，并由其深度图生成初始的物体点云。其余参考图像借助相机内参和已知位姿变换到同一世界坐标系中，补全物体形状，再将其归一化到 [−1, 1] 范围内。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>粗对齐。&lt;/strong> 用有向包围盒求出物体的中心（点云的均值）和旋转（对点云协方差做主成分分析得到的主轴）。由于此时的对齐仍较粗糙，再以最大化重叠（IoU）为目标调整旋转和尺度，得到粗对齐结果。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>几何引导的稀疏注意力。&lt;/strong> 在查询图像的粗略位姿下渲染参考点云。参考点与查询点之间的归一化方向向量为交叉注意力构建 Top-K 掩码，并采用 Gumbel-Softmax 进行软性 Top-K 采样；匹配失败的点对被屏蔽，使注意力集中于可见且相关的区域。多尺度融合模块则自适应地权衡全局特征与局部特征。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>精化与选择。&lt;/strong> &lt;em>精化：&lt;/em> 联合优化物体尺度和位姿：位姿通过渲染物体形状、最小化其与锚点图像之间的投影误差来优化；尺度则在给定范围内采样，依据与重建形状之间的 IoU 选取。随后求出相对于查询图像的位姿。&lt;/p>
+&lt;p>&lt;em>选择：&lt;/em> 每个位姿假设被渲染后与查询图像比较，得到一个特征向量；自注意力模块综合所有假设给出评分，再经 Top-K 筛选得到最终位姿。&lt;/p>
+&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-method.webp" target="_blank" rel="noopener">
@@ -232,9 +243,9 @@
 &lt;/a>&lt;figcaption>几何引导的稀疏注意力。归一化方向向量与基于特征相似度的 Top-K 选择共同约束每个查询特征所关注的参考特征。引自论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>使用四张参考图像，在 LM、LMO 和 YCBV 上的平均 ADD(-S) 精度为 83.2%，单个物体耗时 0.9 s&lt;/strong>；FS6D + ICP 和 LatentFusion（均使用 16 张参考图像）分别为 75.8% 和 70.1%，Any6D 为 76.5%（表 1）。&lt;br>&lt;strong>在严重遮挡的 LMO 上达到 67.3%&lt;/strong>，上述三种方法分别为 58.6%、53.5% 和 57.9%（表 1）。&lt;br>在 LMO 上，将几何引导的稀疏注意力替换为普通的全连接注意力后，精度降至 &lt;strong>64.5%&lt;/strong>（表 2）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>使用四张参考图像，在 LM、LMO 和 YCB-Video 上的平均 ADD(-S) 精度为 83.2%，单个物体耗时 0.9 s&lt;/strong>；FS6D + ICP 和 LatentFusion（均使用 16 张参考图像）分别为 75.8% 和 70.1%，Any6D 为 76.5%（表 1）。&lt;br>&lt;strong>在严重遮挡的 LMO 上达到 67.3%&lt;/strong>，上述三种方法分别为 58.6%、53.5% 和 57.9%（表 1）。&lt;br>在 LMO 上，将几何引导的稀疏注意力替换为普通的全连接注意力后，精度降至 &lt;strong>64.5%&lt;/strong>（表 2）。&lt;/aside>
 &lt;p>对比实验使用 BOP 的三个基准：LINEMOD（LM）、物体可见比例有时不足 40% 的 Occlusion LINEMOD（LMO），以及 YCB-Video（YCBV）。精度指标为阈值取物体直径 0.1 倍时的 ADD(-S)。在不使用 CAD 模型的方法中，SFRF6D 在三个数据集上的精度均最高（92.1%、67.3% 和 90.2%），速度也最快。使用 CAD 模型的 FoundationPose 精度仍然更高，平均为 89.7%，耗时 1.0 s；作者指出，SFRF6D 的精度略低，但换来了无需 CAD 模型和更小的计算量。&lt;/p>
-&lt;p>LMO 上的消融实验（表 2）分别考察了各个部分。去掉视角选择器、改用全部渲染视角时，精度变化不大（66.2%），但耗时从 0.94 s 增加到 1.32 s。参考图像较少时，数量的影响最大：一张为 57.3%，两张为 63.4%，四张为 67.3%，八张为 68.1%（耗时 1.03 s），因此作者选用四张，以兼顾精度与开销。只有一张参考图像时，重建的形状严重依赖这一个视角，遮挡或视角差异较大时特征无法稳健对齐。作者将引入预训练基础模型、动态场景中的多物体交互，以及面向移动端和边缘计算平台的模型轻量化列为未来工作。&lt;/p>
+&lt;p>LMO 上的消融实验（表 2）分别考察了各个部分。去掉视角选择器（它在渲染视角中做选择）、改用全部渲染视角时，精度变化不大（66.2%），但耗时从 0.94 s 增加到 1.32 s。参考图像较少时，数量的影响最大：一张为 57.3%，两张为 63.4%，四张为 67.3%，八张为 68.1%（耗时 1.03 s），因此作者选用四张，以兼顾精度与开销。只有一张参考图像时，重建的形状严重依赖这一个视角，遮挡或视角差异较大时特征无法稳健对齐。作者将引入预训练基础模型、动态场景中的多物体交互，以及面向移动端和边缘计算平台的模型轻量化列为未来工作。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-table.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/zhang-2025-sfrf6d-selective-fewer-reference-fusion-for/fig-table.webp" alt="对比表：FS6D &amp;#43; ICP、LatentFusion、FoundationPose、Any6D 和 Ours 在是否使用 CAD 模型、模态、参考图像数量、LM/LMO/YCBV 精度、平均值和耗时上的比较。" loading="lazy">
@@ -268,7 +279,7 @@
 &lt;/a>&lt;figcaption>候选区域定位。对轮廓图像集中的每幅图像逐行处理；沿一行，先上升（红）后下降（蓝）的灰度梯度界定出候选区域 I、II、III。引自论文图 4。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>黄绿色基板上体积测量的平均相对误差为 1.39%&lt;/strong>（最大 1.55%），蓝、粉、紫色基板分别为 9.05%、8.03% 和 8.63%（表 II、图 13）。&lt;br>在一幅表面粗糙、边缘扩散噪声明显的图像上，&lt;strong>提取的光条中心线连续、平滑&lt;/strong>，而 Steger 法和细化法会混入噪声点，灰度重心法则提取失败（图 11）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>黄绿色基板上体积测量的平均相对误差为 1.39%&lt;/strong>（最大 1.55%），同一方法在蓝、粉、紫色基板上分别为 9.05%、8.03% 和 8.63%（表 II、图 13）。&lt;br>在一幅表面粗糙、边缘扩散噪声明显的图像上，&lt;strong>提取的光条中心线连续、平滑&lt;/strong>，而 Steger 法和细化法会混入噪声点，灰度重心法则提取失败（图 11）。&lt;/aside>
 &lt;p>体积实验中，用精密点胶针头在四种基板（黄绿、蓝、粉、紫）上点出相近的直线透明胶条，并用精密电子天平称量各样件，作为参考真值。每个样件在车间环境中扫描，测量 5 次；预测重量为测得体积乘以胶的密度 0.0011 g/mm³。黄绿色基板上 5 次测量的相对误差在 1.32% 到 1.55% 之间，其余三种基板则在 8.01% 到 9.16% 之间。作者据此认为，CSBO 提高了透明胶的三维重建精度。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2025-volume-measurement-technology-of-dispensing-transparent/fig-specimens.webp" target="_blank" rel="noopener">
@@ -309,9 +320,9 @@
 &lt;/a>&lt;figcaption>方法总览。KPConv 提取多层级形状特征；GMSP 将二维语义特征转化为先验 θ；两个语义引导特征交互（SGFI）模块在自注意力和交叉注意力中利用这些先验；语义约束匹配（SCM）模块输出最终的对应关系。引自论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率分别为 94.7% 和 75.9%&lt;/strong>，在两者上均为所有对比方法中最高（表 1）。&lt;br>经 ICP 精化后提升至 &lt;strong>95.4% 和 77.4%&lt;/strong>（表 2）。&lt;br>将四个语义模块全部替换为常规模块后，召回率降至 &lt;strong>92.1% 和 66.5%&lt;/strong>（表 3）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率分别为 94.7% 和 75.9%&lt;/strong>，在两者上均为所有对比方法中最高（表 1）。&lt;br>经 ICP 精化后提升至 &lt;strong>95.4% 和 77.4%&lt;/strong>（表 2）。&lt;br>将四个语义模块（语义约束匹配、语义感知焦点损失、语义自注意力、GMSP 引导的交叉注意力）全部替换为常规模块后，召回率降至 &lt;strong>92.1% 和 66.5%&lt;/strong>（表 3）。&lt;/aside>
 &lt;p>实验使用室内 RGB-D 基准 3DMatch 及其低重叠子集 3DLoMatch（重叠率 10–30% 的扫描对）。配准召回率指估计变换误差（RMSE）小于 0.2 m 的扫描对所占比例。SemReg 在两个子集上均居首位，在 3DMatch 上领先 SIRA-PCR，在 3DLoMatch 上领先 GeoTransformer；在论文的 ICP 精化对比中，它相对次优方法的优势扩大到 1.5 和 2.9 个百分点。重叠越少，语义模块的作用越明显：在 3DLoMatch 上它们贡献了 9.4 个百分点的召回率，而在 3DMatch 上为 2.6 个百分点。在一个重叠率仅 12.53%、唯一共有物体是一把椅子的极端例子中，语义先验依然能在目标点云中找到这把椅子并成功配准，而 GeoTransformer 配准失败。&lt;/p>
-&lt;p>SemReg 在粗粒度层级上匹配，每对扫描建立 0.1K–1K 个对应关系，而 GeoTransformer 等稠密方法为 6K–7K 个。因此它的内点率低于部分对比方法，但配准召回率更高。室外 KITTI 数据集上的结果见补充材料。该方法依赖与扫描对齐的 RGB 图像，因此不能直接用于单独的点云；作者提出，未来可先由点云渲染出二维图像来解决这一问题。&lt;/p>
+&lt;p>SemReg 在粗粒度层级上匹配，每对扫描建立 0.1K–1K 个对应关系，而 GeoTransformer 等稠密方法为 6K–7K 个。因此它的内点率（真值变换下距离小于 0.1 m 的对应关系所占比例）低于部分对比方法，但配准召回率更高。室外 KITTI 数据集上的结果见补充材料。该方法依赖与扫描对齐的 RGB 图像，因此不能直接用于单独的点云；作者提出，未来可先由点云渲染出二维图像来解决这一问题。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-semreg/fig-results.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2024-semreg/fig-results.webp" alt="三组室内扫描对（蓝色与黄色）：输入、真值、特征与对应关系可视化，以及 Lepard 与 SemReg 的配准结果。" loading="lazy">
@@ -347,11 +358,12 @@
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-topformer/fig-method.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/fung-2024-topformer/fig-method.webp" alt="网络结构图：黄色与蓝色点云 X、Y 进入 KPConv 编码器；包含拓扑结构编码、自注意力和交叉注意力的拓扑感知 Transformer 输出置信度矩阵；经最优传输、互为 top-k 选择和 RANSAC 得到对齐的点云及 R、t。" loading="lazy">
-&lt;/a>&lt;figcaption>方法总览。KPConv 编码器输出稀疏点、稠密点及其特征；拓扑结构编码与稀疏特征融合后进行自注意力和交叉注意力；由置信度矩阵得到稀疏匹配，以此约束稠密对应关系的选取，稠密对应经最优传输和互为 top-k 选择细化后送入 RANSAC。引自论文图 3。&lt;/figcaption>
+&lt;/a>&lt;figcaption>方法总览。KPConv 编码器输出稀疏点、稠密点及其特征；拓扑结构编码与稀疏特征融合后进行自注意力和交叉注意力；由置信度矩阵得到稀疏匹配，以此约束稠密对应关系的选取，稠密对应在稠密层级经最优传输和互为 top-k 选择细化后送入 RANSAC。引自论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">使用 5,000 个对应关系时，&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率分别为 92.4% 和 75.1%&lt;/strong>，GeoTransformer 为 92.0% 和 75.0%（表 1）。&lt;br>&lt;strong>在 KITTI 上配准召回率为 99.8%&lt;/strong>，相对平移误差 &lt;strong>6.7 cm&lt;/strong>，为对比方法中最低（表 2）。&lt;br>去掉拓扑结构编码后，3DMatch 和 3DLoMatch 上的召回率降至 &lt;strong>89.7% 和 67.4%&lt;/strong>（表 3）。&lt;/aside>
-&lt;p>室内实验使用 3DMatch 及其低重叠子集 3DLoMatch（重叠率 10–30% 的扫描对）。配准召回率指估计变换的 RMSE 小于 0.2 m 的扫描对所占比例，计算时运行 5 万次 RANSAC 迭代。在两个子集上，从 5,000 到 250 的各个对应关系数量下，TopFormer 的配准召回率都是最高或并列最高；它在 3DMatch 上的特征匹配召回率保持在 98.4% 至 98.7% 之间。在 5,000 个对应关系时，它的内点率低于 GeoTransformer（3DMatch 上 71.7% 对 71.9%，3DLoMatch 上 37.2% 对 43.5%），但对应关系较少时更高，例如 1,000 个对应关系时，3DMatch 上为 82.8% 对 76.0%，3DLoMatch 上为 53.1% 对 46.2%。在室外 KITTI 里程计数据上，多数对比方法的召回率已达到 99.8%，TopFormer 同样达到这一水平，旋转误差为 0.27°。&lt;/p>
+&lt;aside class="keypoint">使用 5,000 个对应关系时，&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率（RMSE 小于 0.2 m 的扫描对所占比例）分别为 92.4% 和 75.1%&lt;/strong>，GeoTransformer 为 92.0% 和 75.0%（表 1）。&lt;br>&lt;strong>在 KITTI 上配准召回率为 99.8%&lt;/strong>，相对平移误差 &lt;strong>6.7 cm&lt;/strong>，为对比方法中最低（表 2）。&lt;br>去掉拓扑结构编码后，3DMatch 和 3DLoMatch 上的召回率降至 &lt;strong>89.7% 和 67.4%&lt;/strong>（表 3）。&lt;/aside>
+&lt;p>室内实验使用 3DMatch 及其低重叠子集 3DLoMatch（重叠率 10–30% 的扫描对）。配准召回率指估计变换的 RMSE 小于 0.2 m 的扫描对所占比例，计算时运行 5 万次 RANSAC 迭代。在两个子集上，从 5,000 到 250 的各个对应关系数量下，TopFormer 的配准召回率都是最高或并列最高；它在 3DMatch 上的特征匹配召回率保持在 98.4% 至 98.7% 之间。&lt;/p>
+&lt;p>在 5,000 个对应关系时，它的内点率低于 GeoTransformer（3DMatch 上 71.7% 对 71.9%，3DLoMatch 上 37.2% 对 43.5%），但对应关系较少时更高，例如 1,000 个对应关系时，3DMatch 上为 82.8% 对 76.0%，3DLoMatch 上为 53.1% 对 46.2%。在室外 KITTI 里程计数据上，多数对比方法的召回率已达到 99.8%，TopFormer 同样达到这一水平，旋转误差为 0.27°。&lt;/p>
 &lt;p>消融实验表明，编码的两个组成部分都有贡献。去掉测地距离后，配准召回率在 3DMatch 上由 92.4% 降至 90.3%，在 3DLoMatch 上由 75.1% 降至 72.3%；去掉基于法向的方向项后，分别降至 91.9% 和 73.9%。完全去掉编码、退化为普通 Transformer 时，召回率分别下降 2.7 和 7.7 个百分点，内点率分别下降 8.6 和 5.6 个百分点。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/fung-2024-topformer/fig-results.webp" target="_blank" rel="noopener">
@@ -366,10 +378,10 @@
 &lt;li>&lt;strong>光度立体成像。&lt;/strong> WTAYOLO 采用光度立体系统，降低表面反射带来的干扰。&lt;/li>
 &lt;li>&lt;strong>扩大感受野。&lt;/strong> WTAConv 模块扩大感受野，增强从图像中提取划痕特征的能力。&lt;/li>
 &lt;li>&lt;strong>通道与空间注意力。&lt;/strong> WTAConv 通过通道注意力和空间注意力机制强化重要特征，同时抑制冗余信息。&lt;/li>
-&lt;li>&lt;strong>划痕检测。&lt;/strong> 模型在不增加参数量的前提下检测出细微划痕。&lt;/li>
+&lt;li>&lt;strong>划痕检测。&lt;/strong> 模型检测出细微划痕。&lt;/li>
 &lt;/ol>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>mAP50 达到 86.8%&lt;/strong>，&lt;strong>比 YOLOv11n 提高 5.1%&lt;/strong>，且未增加参数量。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>mAP50 达到 86.8%&lt;/strong>，&lt;strong>比基线模型 YOLOv11n 提高 5.1%&lt;/strong>，且未增加参数量。&lt;/aside>
 &lt;p>作者总结认为，该方法在精度与模型成本效益之间取得了有效平衡，为工业应用提供了有效的解决方案。&lt;/p>
 &lt;p>&lt;em>本页内容依据论文摘要整理，全文见出版方页面：&lt;a href="https://doi.org/10.1145/3725949.3725956">doi.org/10.1145/3725949.3725956&lt;/a>。&lt;/em>&lt;/p></description></item><item><title>Weighted Point Cloud Normal Estimation</title><link>https://willpan.xyz/zh/publications/wang-2023-weighted-normal/</link><pubDate>Sat, 01 Jul 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/wang-2023-weighted-normal/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
 &lt;p>扫描设备获取的原始点云没有法向信息，且常常带有噪声；而准确的法向能够提升点云去噪、曲面重建等下游任务的效果。经典的 PCA 方法根据邻域点的协方差矩阵计算每个点的法向，简单直接，但容易模糊细节，在噪声点云上也不够稳定。PCPNet、Nesti-Net 等基于学习的回归方法对噪声更鲁棒，却忽略了不同邻域点对中心点法向的贡献并不相同，因此在复杂曲面上可能不够准确。DeepFit、AdaFit 等曲面拟合方法能较好地适应复杂几何，但在严重噪声下鲁棒性会下降。&lt;/p>
@@ -394,8 +406,8 @@
 &lt;/a>&lt;figcaption>方法总览：双分支对比预训练（左）与使用预训练点编码器和权重回归器的加权法向回归（右）。引自论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">在带高斯噪声的 PCPNet 形状上，四个噪声水平的&lt;strong>平均 RMSE 为 17.42°&lt;/strong>，是所有对比方法中最低的（AdaFit 17.66°，DeepFit 18.14°，PCA 最佳设置 20.23°）（表 I）。&lt;br>&lt;strong>在 0.60%、0.84% 和 1.20% 三个噪声水平下误差均为最低&lt;/strong>，例如在 1.20% 噪声下为 21.48°，AdaFit 为 21.94°（表 I）。&lt;br>在 PCPNet 验证集上，完整方法达到 &lt;strong>14.46°&lt;/strong>，仅用余弦损失训练的基线为 21.15°（表 II）。&lt;/aside>
-&lt;p>合成测试集包含 19 个 PCPNet 形状，每个形状有四种高斯噪声水平（包围盒对角线长度的 0.36%、0.6%、0.84% 和 1.2%）；对比方法包括 PCA、曲面拟合方法 DI、DeepFit 和 AdaFit，以及回归方法 PCPNet 和 Nesti-Net。在最低噪声水平下 DeepFit 略优（13.18° 对 13.25°）；随着噪声增大，本方法的优势逐渐显现。消融实验表明两项设计都有作用：去掉权重回归时误差为 14.70°，去掉对比预训练时为 18.21°。&lt;/p>
+&lt;aside class="keypoint">在带高斯噪声的 PCPNet 形状上，四个噪声水平的&lt;strong>法向夹角的平均 RMSE 为 17.42°&lt;/strong>，是所有对比方法中最低的（AdaFit 17.66°，DeepFit 18.14°，PCA 最佳设置 20.23°）（表 I）。&lt;br>&lt;strong>在 0.60%、0.84% 和 1.20% 三个噪声水平下误差均为最低&lt;/strong>（噪声以包围盒对角线长度的百分比计），例如在 1.20% 噪声下为 21.48°，AdaFit 为 21.94°（表 I）。&lt;br>在 PCPNet 验证集上，完整方法达到 &lt;strong>14.46°&lt;/strong>，仅用余弦损失训练的基线为 21.15°（表 II）。&lt;/aside>
+&lt;p>合成测试集包含 19 个 PCPNet 形状，每个形状有四种高斯噪声水平（包围盒对角线长度的 0.36%、0.6%、0.84% 和 1.2%）；对比方法包括 PCA、曲面拟合方法 DI（Deep Iterative）、DeepFit 和 AdaFit，以及回归方法 PCPNet 和 Nesti-Net。在最低噪声水平下 DeepFit 略优（13.18° 对 13.25°）；随着噪声增大，本方法的优势逐渐显现。消融实验表明两项设计都有作用：去掉权重回归时误差为 14.70°，去掉对比预训练时为 18.21°。&lt;/p>
 &lt;p>在 Kinect Fusion 数据集的原始扫描上，以数据集提供的干净法向为参照，本方法在图中三个形状上的误差都低于 AdaFit 和 Nesti-Net。在没有真值的 Paris-rue-Madame 街景扫描上，它在窗格等复杂区域给出的法向更整齐，同时保留了建筑屋檐、车灯等特征。将预测法向用于点云滤波时，按 Chamfer 距离衡量其滤波结果最好；在对尖锐的 Star 形状进行泊松重建时，尖端的重建也更准确。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2023-weighted-normal/fig-boxunion.webp" target="_blank" rel="noopener">
@@ -424,9 +436,9 @@
 &lt;div class="explainer" data-explainer="/publications/zhang-2023-double-sampling/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>每幅条纹拍摄两次。&lt;/strong> 在相机和投影仪上加入触发控制装置。投影仪以一定速率投射 N 幅条纹图，并在每个投射周期内触发相机两次：投射条纹 I&lt;sub>1&lt;/sub> 时采集 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>，投射 I&lt;sub>2&lt;/sub> 时采集 I&lt;sub>21&lt;/sub> 和 I&lt;sub>22&lt;/sub>，依此类推。&lt;/li>
-&lt;li>&lt;strong>区分运动与相移。&lt;/strong> 同一幅投射条纹下拍到的两幅图像（如 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>）之间只有物体运动引起的相移（δ&lt;sub>1&lt;/sub> = 0）；不同条纹下拍到的图像之间还包含 PSP 相移 δ&lt;sub>2&lt;/sub> = 2π/N。相位由 I&lt;sub>11&lt;/sub>、I&lt;sub>12&lt;/sub> 和 I&lt;sub>21&lt;/sub> 联合分析。&lt;/li>
+&lt;li>&lt;strong>区分运动与相移。&lt;/strong> 同一幅投射条纹下拍到的两幅图像（如 I&lt;sub>11&lt;/sub> 和 I&lt;sub>12&lt;/sub>）之间没有 PSP 相移（δ&lt;sub>1&lt;/sub> = 0），因此只相差物体的运动；不同条纹下拍到的图像之间还包含 PSP 相移 δ&lt;sub>2&lt;/sub> = 2π/N。因此相位由 I&lt;sub>11&lt;/sub>、I&lt;sub>12&lt;/sub> 和 I&lt;sub>21&lt;/sub> 三幅图像联合分析。&lt;/li>
 &lt;li>&lt;strong>跟踪运动。&lt;/strong> 通过跟踪物体得到描述其运动的旋转矩阵和平移向量，进而得到描述各点运动前后位置关系的坐标变换 (f&lt;sub>n&lt;/sub>, g&lt;sub>n&lt;/sub>)。&lt;/li>
-&lt;li>&lt;strong>最小二乘求解相位。&lt;/strong> 三幅图像都写成 A + B cos(ϕ + δ&lt;sub>k&lt;/sub>) + C sin(ϕ + δ&lt;sub>k&lt;/sub>) 的形式，其中 ϕ 为参考平面相位在变换后坐标处的取值。对三幅图像（N = 3）的平方误差求最小，得到线性方程组 D X = E，其中 X = [A B C]&lt;sup>T&lt;/sup>，物体引起的相位变化为 φ = tan&lt;sup>−1&lt;/sup>(−C/B)。再根据相位和系统参数重建物体。&lt;/li>
+&lt;li>&lt;strong>最小二乘求解相位。&lt;/strong> 三幅图像都写成 A + B cos(ϕ + δ&lt;sub>k&lt;/sub>) + C sin(ϕ + δ&lt;sub>k&lt;/sub>) 的形式，其中 A、B、C 为未知量，ϕ 为参考平面相位在变换后坐标处的取值。对三幅图像（N = 3）的平方误差求最小，得到关于 X = [A B C]&lt;sup>T&lt;/sup> 的线性方程组 D X = E，物体引起的相位变化为 φ = tan&lt;sup>−1&lt;/sup>(−C/B)。再根据相位和系统参数重建物体。&lt;/li>
 &lt;li>&lt;strong>图像复用。&lt;/strong> 每连续三幅图像即可得到一幅物体相位图，各组相互重叠，每多拍一幅图像就开始新的一帧。传统 PSP 每一帧都需要三幅投射条纹。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
@@ -440,8 +452,8 @@
 &lt;/a>&lt;figcaption>条纹投射策略：(a) 传统 PSP 重建的帧；(b) 本文方法重建的帧，相互重叠的图像组各自给出一帧。论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>每幅投射条纹采集两幅图像&lt;/strong>，由相机和投影仪上的触发控制装置实现（第 3 节，图 1）。&lt;br>&lt;strong>每连续三幅图像得到一幅物体相位图&lt;/strong>，通过复用条纹图像实现（图 2、图 5a）。&lt;br>&lt;strong>拍摄帧率翻倍&lt;/strong>，相对于投影仪的最高帧率（第 5 节）。&lt;br>&lt;strong>仿真中物体在相邻两幅条纹图之间移动 10 个像素&lt;/strong>：所提方法重建出方块，而传统 PSP 对同一组图像的重建误差很大（图 5、图 6）。&lt;/aside>
-&lt;p>该方法通过仿真验证。分别仿真静止物体和运动物体的条纹图，运动物体从左向右移动，相邻两幅条纹图之间移动 10 个像素。为便于比较，先用传统 PSP 重建静止状态的条纹图（论文图 3）。在运动状态下，同一投射条纹下采集的图像只包含物体运动，不同投射条纹下的图像则同时包含条纹相移和物体运动（论文图 4）。通过跟踪物体计算运动的旋转矩阵和平移向量，再用所提模型计算相位，并通过复用由每三幅图像得到一幅物体相位图。由不同帧的相位图完成运动方块的高帧率三维重建（图 5）。对同一组图像使用传统 PSP 重建，结果存在很大误差（图 6）。&lt;/p>
+&lt;aside class="keypoint">&lt;strong>仿真中物体在相邻两幅条纹图之间移动 10 个像素&lt;/strong>：所提方法重建出方块，而传统 PSP 对同一组图像的重建误差很大（图 5、图 6）。&lt;br>&lt;strong>每幅投射条纹采集两幅图像&lt;/strong>，由相机和投影仪上的触发控制装置实现（图 1）。&lt;br>&lt;strong>每连续三幅图像得到一幅物体相位图&lt;/strong>，通过复用条纹图像实现（图 2）。&lt;br>&lt;strong>拍摄帧率为投影仪最高帧率的两倍&lt;/strong>，因为相机在每幅条纹下拍摄两次。&lt;/aside>
+&lt;p>该方法通过仿真验证。分别仿真静止物体和运动物体的条纹图，运动物体从左向右移动，相邻两幅条纹图之间移动 10 个像素。为便于比较，先用传统 PSP 重建静止状态的条纹图。在运动状态下，同一投射条纹下采集的图像只包含物体运动，不同投射条纹下的图像则同时包含条纹相移和物体运动。通过跟踪物体计算运动的旋转矩阵和平移向量，再用所提模型计算相位，并通过复用由每三幅图像得到一幅物体相位图。由不同帧的相位图完成运动方块的高帧率三维重建（图 5）。对同一组图像使用传统 PSP 重建，结果存在很大误差（图 6）。&lt;/p>
 &lt;p>作者在结论中指出，该方法只需推导新的公式，并在三步相移的基础上投射前两步的条纹图，即可重建运动物体；它能以较低成本使拍摄帧率翻倍，同时不损失 PSP 的优点。与传统 PSP 的对比以图 5 和图 6 直观呈现。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2023-double-sampling/fig-results.webp" target="_blank" rel="noopener">
@@ -466,9 +478,9 @@
 &lt;/a>&lt;figcaption>并行曲率滤波流程：在 3 × 3 邻域内枚举 8 个投影距离，在 GPU 上通过卷积为每个像素计算这些距离；每次迭代用其中最小的距离（d&lt;sub>m&lt;/sub>）更新图像。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">单块 GPU 每秒处理 &lt;strong>332 亿像素（33.2 Gpixel/s）&lt;/strong>（摘要）。&lt;br>对同一幅图像迭代 3000 次，&lt;strong>CPU 约需 87 秒，GPU 约需 6 秒&lt;/strong>（图 3）。&lt;/aside>
+&lt;aside class="keypoint">单块 GPU 每秒处理 &lt;strong>332 亿像素（33.2 Gpixel/s）&lt;/strong>。&lt;br>对同一幅图像迭代 3000 次，&lt;strong>CPU 约需 87 秒，GPU 约需 6 秒&lt;/strong>（图 3）。&lt;/aside>
 &lt;p>PCF 的 CUDA 实现在 GPU 线程块大小为 16 到 32 的设置下运行，所用 GPU 为 NVIDIA GeForce GTX 1080 Ti（3584 个 CUDA 核心、11264 MB 全局内存、每个线程块 49152 字节共享内存），对比对象是在 Intel Xeon E5-1620 v4（3.50 GHz）CPU 上运行的原始曲率滤波。图 3 中，两者的计算时间都随迭代次数增长，但 GPU 上的增长要慢得多。作者据此认为，这样的速度使曲率滤波可以用于视频处理、生物医学图像处理等实时应用。&lt;/p>
-&lt;p>论文还将高斯曲率和平均曲率两种 PCF 应用于一张照片，并绘制图中一条直线上经 10 次和 30 次迭代后的灰度分布。两种方法下，灰度剖面都随迭代次数增加而变得更平滑；作者认为平均曲率 PCF 比高斯曲率 PCF 更高效。&lt;/p>
+&lt;p>论文还将高斯曲率和平均曲率两种 PCF 应用于一张照片，并绘制图中一条直线上经 10 次和 30 次迭代后的灰度分布。两种方法下，灰度剖面都随迭代次数增加而变得更平滑；作者根据这些剖面认为，平均曲率 PCF 的平滑效率高于高斯曲率 PCF（比较的是平滑效果，而非运行时间）。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2019-parallel/fig-timing.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/pan-2019-parallel/fig-timing.webp" alt="计算时间（秒）随迭代次数（0 到 3000）变化的折线图：蓝色虚线（CPU）升至约 87 秒，红色实线（GPU）始终低于约 7 秒。" loading="lazy">

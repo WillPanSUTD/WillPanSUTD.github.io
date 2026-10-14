@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Renlong Qi | 潘威</title><link>https://willpan.xyz/zh/author/renlong-qi/</link><atom:link href="https://willpan.xyz/zh/author/renlong-qi/index.xml" rel="self" type="application/rss+xml"/><description>Renlong Qi</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Thu, 01 Jan 2026 00:00:00 +0000</lastBuildDate><item><title>Dynamic correlation network and structure-aware matching for robust point cloud registration</title><link>https://willpan.xyz/zh/publications/lu-2026-dynamic-correlation-network-and-structure-aware/</link><pubDate>Thu, 01 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/lu-2026-dynamic-correlation-network-and-structure-aware/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
 &lt;p>点云配准的任务，是求出把同一场景中两帧部分重叠的三维扫描对齐的旋转和平移，例如从不同视角采集的 LiDAR 或 RGB-D 扫描。学习类方法通常先从每个点的邻域中聚合特征来描述该点，再在两帧之间进行点匹配。当两帧之间的相对旋转较大时，这些特征以及特征之间的相关性会随朝向而变化，匹配也就随之不稳定。&lt;/p>
-&lt;p>常见的做法是在训练时对扫描施加随机旋转，但数据增强无法覆盖连续的三维旋转空间 SO(3)，训练中未出现过的朝向仍会造成性能下降。PARE-Net 等旋转等变网络缓解了这一问题，但它们仍用一个固定的 MLP 来组合邻域特征，对所有邻域施加相同的相关性建模。此外，即便两个超点已经正确匹配，超点内部的单个点仍可能被错误配对。&lt;/p>
+&lt;p>常见的做法是在训练时对扫描施加随机旋转，但数据增强无法覆盖连续的三维旋转空间 SO(3)，训练中未出现过的朝向仍会造成性能下降。PARE-Net 等旋转等变网络缓解了这一问题，但它们仍用一个固定的多层感知机（MLP）来组合邻域特征，对所有邻域施加相同的相关性建模。此外，即便两个超点（粗采样点，每个对应一块局部点云块，即 patch）已经正确匹配，超点内部的单个点仍可能被错误配对。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-dynamic-correlation-network-and-structure-aware/fig-problem.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/lu-2026-dynamic-correlation-network-and-structure-aware/fig-problem.webp" alt="蓝色与金色两帧室内扫描及其对应连线的三幅视图：两个圈出的 patch 之间以红线为主，随后是不使用和使用 SAPM 的稠密绿色对应关系，标注的内点率分别为 88.2% 和 93.2%。" loading="lazy">
 &lt;/a>&lt;figcaption>(a) 即使在一对正确匹配的超点 patch（圈出部分）内部，点级匹配也可能出错（红线）。(b) 不使用 SAPM 与 (c) 使用 SAPM 时的稠密对应关系，后者更加连贯。引自论文图 3。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
-&lt;p>该方法沿用由粗到精的框架：骨干网络提取粗粒度的超点和稠密的点级特征，先匹配超点，再只在匹配的超点 patch 内部进行点匹配。论文改进了其中两个环节：在 PAREConv-FPN 骨干网络中加入动态相关网络（DCN），依据旋转不变的线索决定如何组合邻域特征；并用结构感知点匹配（SAPM）模块细化每个 patch 内的点匹配。&lt;/p>
+&lt;p>该方法沿用由粗到精的框架：骨干网络提取粗粒度的超点（稀疏的一组点，每个对应一块局部点云 patch）和稠密的点级特征，先匹配超点，再只在匹配的超点 patch 内部进行点匹配。论文改进了其中两个环节：在 PAREConv-FPN 骨干网络中加入动态相关网络（DCN），依据旋转不变的线索决定如何组合邻域特征；并用结构感知点匹配（SAPM）模块细化每个 patch 内的点匹配。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/lu-2026-dynamic-correlation-network-and-structure-aware/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/lu-2026-dynamic-correlation-network-and-structure-aware/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>带旋转的输入。&lt;/strong> 两帧扫描之间存在任意的相对旋转；即使训练时没有见过这一朝向，网络也要估计出两者之间的刚体变换。&lt;/li>
 &lt;li>&lt;strong>旋转不变的线索。&lt;/strong> 对每个点及其近邻，向量神经元编码器由相对偏移、邻域平均偏移以及二者的叉积构造特征。这些特征随扫描一起旋转，而它们的模长不变，因此模长可作为旋转不变的描述子。&lt;/li>
 &lt;li>&lt;strong>动态卷积核。&lt;/strong> 通道重分配网络把该描述子转换为对一组可学习卷积核（实验中为 4 个）的 softmax 得分，每个邻点的卷积核即这组核按得分加权求和的结果。由于得分只取决于旋转不变量，核的选择不随旋转改变，而聚合后的特征仍保持旋转等变。&lt;/li>
 &lt;li>&lt;strong>patch 内的上下文。&lt;/strong> 每对匹配的超点确定两个局部 patch。SAPM 在各自的 patch 内用线性自注意力细化每个点的描述子，计算量与 patch 大小成线性关系；离其他超点更近的点被掩码排除。&lt;/li>
-&lt;li>&lt;strong>一致的匹配与位姿。&lt;/strong> 对 patch 相似度矩阵分别按行和按列做掩码 softmax，再与逐点置信度融合，双向 top-k 的元素构成稠密匹配。每个 patch 用 SVD 给出一个位姿假设，由基于特征的假设生成器保留最优者，无需 RANSAC。&lt;/li>
+&lt;li>&lt;strong>一致的匹配与位姿。&lt;/strong> 对 patch 相似度矩阵分别按行和按列做掩码 softmax，再与逐点置信度融合。行、列两个方向上都在 top-k 之内的元素构成稠密匹配。每个 patch 用 SVD 给出一个位姿假设，由基于特征的假设生成器保留最优者，无需 RANSAC。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/lu-2026-dynamic-correlation-network-and-structure-aware/fig-method.webp" target="_blank" rel="noopener">
@@ -22,7 +22,7 @@
 &lt;/a>&lt;figcaption>方法总览。加入 DCN 的 PAREConv-FPN 骨干网络输出粗粒度超点和稠密点级特征；超点匹配确定局部 patch，SAPM 在每个 patch 内建立稠密对应关系，各 patch 由 SVD 得到的假设 (R_i, t_i) 中最优者即为最终变换。引自论文图 1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率分别为 95.4% 和 79.6%&lt;/strong>，其中 3DLoMatch 的结果在所有对比方法中最高（表 3）。&lt;br>&lt;strong>在 3DLoMatch 和旋转后的 3DLoMatch 上的变换召回率分别为 82.3% 和 82.7%&lt;/strong>，而 FCGF 在旋转后下降 15.1 个百分点（表 4）。&lt;br>&lt;strong>在 KITTI 上的旋转误差为 0.21°&lt;/strong>，为所有对比方法中最低，平移误差 4.8 cm，召回率 99.8%（表 2）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>在 3DMatch 和 3DLoMatch 上的配准召回率（对齐后 RMSE 小于 0.2 m 的扫描对所占比例）分别为 95.4% 和 79.6%&lt;/strong>，其中 3DLoMatch 的结果在所有对比方法中最高（表 3）。&lt;br>&lt;strong>在 3DLoMatch 和旋转后的 3DLoMatch 上的变换召回率（旋转误差小于 15° 且平移误差小于 0.3 m 的扫描对所占比例）分别为 82.3% 和 82.7%&lt;/strong>，而 FCGF 在旋转后比未旋转的 3DLoMatch 下降 15.1 个百分点（表 4）。&lt;br>&lt;strong>在 KITTI 上的旋转误差为 0.21°&lt;/strong>，为所有对比方法中最低，平移误差 4.8 cm，召回率 99.8%（表 2）。&lt;/aside>
 &lt;p>3DMatch 和 3DLoMatch 是室内基准，重叠率分别在 30% 以上和 10%–30% 之间；KITTI 为室外驾驶场景扫描。在 3DMatch 上，该方法与表现最好的基于 RANSAC 的方法 BUFFER-X（95.6%）接近，并略优于 DFAT 和 PARE-Net（均为 94.9%）；即使把自身的估计器换成 RANSAC，结果仍有 95.2% 和 79.3%。对 3DLoMatch 施加任意旋转后，FCGF、Predator 等主要依赖旋转增强的方法变换召回率下降，而采用旋转不变或等变设计的方法（包括本方法）保持稳定。在 KITTI 上，CAST 的平移误差更低（2.5 cm），而本方法的旋转误差最低。在 KITTI 上的消融实验中，DCN 和 SAPM 单独使用都能降低误差，二者结合时旋转误差从 0.239° 降到 0.211°，平移误差从 5.5 cm 降到 4.8 cm（表 6）。模型参数量为 4.04 M，在 RTX 4090 上耗时 100.29 ms，快于 CAST（129.80 ms）和 PARE-Net（122.80 ms）（表 5）。&lt;/p>
 &lt;p>作者指出了两点局限：重叠率极低时，粗粒度的超点匹配可能出错；高度重复的几何结构会产生有歧义的描述子，从而误导假设选择。&lt;/p>
 &lt;figure class="rfig">

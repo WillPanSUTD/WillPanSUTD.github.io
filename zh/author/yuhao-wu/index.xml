@@ -12,7 +12,7 @@
 &lt;ol>
 &lt;li>&lt;strong>扫描焊缝。&lt;/strong> 三维激光轮廓仪（OPT-LPC20，405 nm 蓝色激光线）扫描密封钉，横向分辨率约 0.05 mm。改进的 RANSAC 算法拟合密封钉与电池顶盖的参考平面，再以密封钉中心为圆心划定圆形区域，提取待检测的焊缝区域。&lt;/li>
 &lt;li>&lt;strong>关注法向量。&lt;/strong> 几乎所有缺陷区域都表现出明显的高度和法向量变化。在缺陷边界附近，相邻两点的坐标几乎相同，法向量却明显不同，因此相邻点之间的法向量差异是识别缺陷的关键指标。&lt;/li>
-&lt;li>&lt;strong>局部图注意力滤波器（LGAF）。&lt;/strong> 每个点与其 k 个最近邻相连。LGAF 根据点自身特征与其到各近邻的特征差之间的相关性，并结合基于空间距离的权重，计算注意力权重，再按这些权重聚合近邻特征。法向量差异越大，注意力权重越高，网络因而聚焦于缺陷边界。&lt;/li>
+&lt;li>&lt;strong>局部图注意力滤波器（LGAF）。&lt;/strong> 每个点与其 k 个最近邻相连。对每个近邻，LGAF 计算点自身特征与其到该近邻的特征差之间的相关性，并按两点的空间距离加权，得到注意力权重；再按这些权重聚合近邻特征。法向量差异越大，注意力权重越高，网络因而聚焦于缺陷边界。&lt;/li>
 &lt;li>&lt;strong>空间注意力图池化（SAG-Pooling）。&lt;/strong> 编码器下采样时，每个点的得分是学习得到的空间注意力权重与其相对近邻的法向量差异之积。只保留排名靠前的点，因此只有在空间上重要、几何上又有区分度的点（例如缺陷边缘上的点）才会被保留。&lt;/li>
 &lt;li>&lt;strong>逐点分类。&lt;/strong> 解码器由带位置编码的图卷积模块构成，逐层上采样回到完整点集，并通过跳跃连接融合编码器特征。网络为每个点分配六个类别之一：正常表面，或五类缺陷之一（爆点、凹坑、翘曲、熔珠、针孔）。训练时采用类别加权损失，提高少数缺陷类别的影响。&lt;/li>
 &lt;/ol>
@@ -27,9 +27,9 @@
 &lt;/a>&lt;figcaption>LGASS 网络结构。编码器以 GCN 模块开头，随后堆叠 LGA Filter 模块与 SAG Pooling；解码器由 GCN 与上采样模块组成，每次上采样从 k 个最近邻插值特征，并加入跳跃连接（右侧插图）。引自论文图 6。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">在密封钉数据集上，&lt;strong>mIoU 达到 79.26%，总体精度（OA）达到 99.43%&lt;/strong>（五次运行的平均值），高于 PTv3（mIoU 75.13%）和 OA-CNN（74.04%）（表 4）。&lt;br>&lt;strong>针孔类 IoU 为 65.23%&lt;/strong>，对比方法最高为 60.04%（表 4）。&lt;br>与采用标准图卷积和池化的基线相比，LGAF 与 SAG-Pooling 共同带来 &lt;strong>2.59 个百分点的 mIoU 提升&lt;/strong>（表 5）。&lt;br>在 RTX 4070 GPU 上处理一个样本耗时 &lt;strong>220.9 ms&lt;/strong>（表 6）。&lt;/aside>
+&lt;aside class="keypoint">在密封钉数据集上，&lt;strong>mIoU（各类别交并比的平均值）达到 79.26%，总体精度（OA）达到 99.43%&lt;/strong>（五次运行的平均值），高于 PTv3（mIoU 75.13%）和 OA-CNN（74.04%）（表 4）。&lt;br>&lt;strong>针孔类 IoU 为 65.23%&lt;/strong>，对比方法最高为 60.04%（表 4）。&lt;br>与采用标准图卷积和池化的基线相比，LGAF 与 SAG-Pooling 共同带来 &lt;strong>2.59 个百分点的 mIoU 提升&lt;/strong>（表 5）。&lt;br>在 RTX 4070 GPU 上处理一个样本耗时 &lt;strong>220.9 ms&lt;/strong>（表 6）。&lt;/aside>
 &lt;p>作者为此构建了一个新数据集，采集自检测产线上的真实密封钉，缺陷均为自然产生：共 271 个正常样本和 658 个缺陷样本，涵盖五类缺陷（爆点 170、凹坑 112、翘曲 132、熔珠 102、针孔 142；表 1）。代码和数据集已在线公开。在这一仅用几何信息的设定下，LGASS 与 GACNet、PointNet、PointNet++、Point Transformer（PTv1 和 PTv3）以及 OA-CNN 进行了比较。在五个不同随机种子下，其 mIoU 保持在 78.97% 至 79.61% 之间，并在五类缺陷中的四类（凹坑、熔珠、翘曲、针孔）上取得了最高 IoU。&lt;/p>
-&lt;p>消融实验说明了性能提升的来源。用 LGAF 替换图卷积使 mIoU 提高 2.19 个百分点，单独使用 SAG-Pooling 提高 0.46 个百分点，两者结合提高 2.59 个百分点（表 5）。法向量是更好的输入：仅用法向量时 mIoU 为 79.23%，仅用坐标时为 76.94%，两者同时输入时为 78.31%（表 7）。类别加权损失提高了少数类别的 IoU，针孔提高 2.3 个百分点，熔珠提高 2.13 个百分点，mIoU 由 78.73% 提升至 79.26%（表 8）。推理时约占用 2.8 GB 显存。作者也指出，LGASS 在高度内凹的几何形状上可能表现欠佳，例如带有重叠缺陷的凹型密封钉，此时固定的 k 近邻图限制了长距离上下文建模；针孔等稀有类别的 IoU 也仍低于其他类别。&lt;/p>
+&lt;p>消融实验说明了性能提升的来源。用 LGAF 替换图卷积使 mIoU 提高 2.19 个百分点，单独使用 SAG-Pooling 提高 0.46 个百分点，两者结合提高 2.59 个百分点（表 5）。法向量是更好的输入：在输入消融实验中，仅用法向量时 mIoU 为 79.23%，仅用坐标时为 76.94%，两者同时输入时为 78.31%（表 7）。类别加权损失提高了少数类别的 IoU，针孔提高 2.3 个百分点，熔珠提高 2.13 个百分点，mIoU 由 78.73% 提升至 79.26%（表 8）。推理时约占用 2.8 GB 显存。作者也指出，LGASS 在高度内凹的几何形状上可能表现欠佳，例如带有重叠缺陷的凹型密封钉，此时固定的 k 近邻图限制了长距离上下文建模；针孔等稀有类别的 IoU 也仍低于其他类别。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-results.webp" target="_blank" rel="noopener">
 &lt;img src="https://willpan.xyz/publications/pan-2026-industrial-point-cloud-segmentation/fig-results.webp" alt="三个密封钉点云样本的分割结果网格，灰色为表面，红色为缺陷点，五列依次为真值、GACNet、OA-CNN、PTv3 和本文方法。" loading="lazy">

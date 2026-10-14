@@ -172,7 +172,7 @@ export default function mount(el, { kit, lang }) {
         // duplicated global feature grows row by row
         const rows = 8, shown = Math.max(1, Math.round(rows * e));
         for (let k = 0; k < shown; k++) box(g, bx + 32, by + (k * h) / rows, 60, h / rows - 1, GLOB, { opacity: 0.95 });
-        label(g, bx + 62, by - 20, ["G", { sub: "i" }, " " + L.copy], { size: 18 });
+        label(g, bx + 62, by - 20, ["G", { sub: "i" }, " " + L.copy], { size: 18 });
         // concat + MLP -> F'_i
         const ax = bx + 102, fx = 500;
         arrow(g, [ax, by + h / 2], [ax + (fx - 10 - ax) * e, by + h / 2], { opacity: 0.4 + 0.6 * e });
@@ -209,7 +209,7 @@ export default function mount(el, { kit, lang }) {
         // tangent plane through the patch centre
         line(g, [PX - R - 10, PY], [PX + R + 10, PY], { stroke: mute, dash: "7 5", w: 1.6 });
         drawPatch(g, 2, 1, { weights: true, hideCentre: true });
-        label(g, PX - R - 6, PY - 10, L.tangent, { size: 16, fill: body, anchor: "start" });
+        label(g, PX - R + 6, PY - 10, L.tangent, { size: 14, fill: body, anchor: "start" });
         // centre point moves by d
         const dy = OFF * e;
         kit.svg("circle", { cx: PX, cy: PY, r: 6, fill: "none", stroke: ink, "stroke-width": 2.2, opacity: 1 - 0.6 * e }, g);

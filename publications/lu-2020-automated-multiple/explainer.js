@@ -9,7 +9,7 @@ export default function mount(el, { kit, lang }) {
     en: {
       steps: [
         "Red fringe patterns are projected and captured by a colour camera. The red channel keeps the fringes for phase retrieval; the blue channel gives a fringe-free object image for tracking.",
-        "The objects are identified automatically in the blue image: OTSU thresholding separates them from the background, dilation merges parts that were split apart, and each contour gives a bounding box.",
+        "The objects are identified automatically in the blue image: OTSU automatic thresholding separates them from the background, dilation merges parts that were split apart, and each contour gives a bounding box.",
         "Each object in its box is a template. KCF finds it in the next fringe image although every object moves differently, and the new box becomes the template for the following image.",
         "SIFT matches feature points between each object before and after movement. From these correspondences, SVD gives every object its own rotation matrix R and translation vector t.",
         "With its own R and t, each object's phase is solved by least squares from the red channel and the object is reconstructed, one object after another. Traditional PSP leaves motion errors.",

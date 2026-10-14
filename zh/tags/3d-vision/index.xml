@@ -5,7 +5,7 @@
 &lt;div class="explainer" data-explainer="/publications/qiu-2026-3d-surface-matching-based-on-adaptive/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;/div>
 &lt;ol>
 &lt;li>&lt;strong>深度图与曲率图。&lt;/strong> 将模型点云转换为深度图，并据此计算曲面曲率图。&lt;/li>
-&lt;li>&lt;strong>自适应阈值分割。&lt;/strong> 自适应阈值迭代分割算法剔除冗余点，保留几何意义显著的高曲率特征点作为模型点云。&lt;/li>
+&lt;li>&lt;strong>自适应阈值分割。&lt;/strong> 自适应阈值迭代分割算法剔除冗余点，保留几何意义显著的高曲率特征点作为精简后的模型点云。&lt;/li>
 &lt;li>&lt;strong>粗匹配。&lt;/strong> 基于积分体积描述子的粗匹配算法在场景点云中确定目标点云的大致位姿；据作者介绍，这提高了粗匹配的精度和鲁棒性，并降低了 ICP 迭代对初始位姿的依赖。&lt;/li>
 &lt;li>&lt;strong>精匹配。&lt;/strong> 最后由迭代最近点（ICP）算法完成曲面精匹配。&lt;/li>
 &lt;/ol>
@@ -35,7 +35,7 @@
 &lt;/a>&lt;figcaption>在物体周围球面上均匀采样的视角。对视角 a 和 b，分别渲染三种平面内旋转下的物体图像，说明旋转如何分解为视角 R&lt;sup>γ&lt;/sup> 和平面内旋转 R&lt;sup>θ&lt;/sup>。引自论文图 2。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>LM-O 上 ADD(-S) 为 65.3%&lt;/strong>，GDR-Net 为 62.2%（表 2）。&lt;br>&lt;strong>YCB-V 上 ADD(-S) 为 65.9%，AUC of ADD-S 为 92.4%&lt;/strong>，GDR-Net 分别为 60.1% 和 91.6%（表 4）。&lt;br>&lt;strong>LINEMOD 上 ADD(-S) 为 97.6%&lt;/strong>（使用真值 ROI），使用 Fast R-CNN 检测结果时为 94.8%（表 1）。&lt;br>用同样 600 张真实图像重新训练后，ZebraPose 和 CheckerPose 在 LM-O 上为 &lt;strong>38.2% 和 40.5%&lt;/strong>（表 3）。&lt;/aside>
+&lt;aside class="keypoint">ADD(-S) 指位姿误差小于物体直径 10% 的比例。&lt;strong>LM-O 上 ADD(-S) 为 65.3%&lt;/strong>，GDR-Net 为 62.2%（表 2）。&lt;br>&lt;strong>YCB-V 上 ADD(-S) 为 65.9%，AUC of ADD-S 为 92.4%&lt;/strong>，GDR-Net 分别为 60.1% 和 91.6%（表 4）。&lt;br>&lt;strong>LINEMOD 上 ADD(-S) 为 97.6%&lt;/strong>（使用真值 ROI），使用 Fast R-CNN 检测结果时为 94.8%（表 1）。&lt;br>用同样 600 张真实图像重新训练后，ZebraPose 和 CheckerPose 在 LM-O 上为 &lt;strong>38.2% 和 40.5%&lt;/strong>，本方法为 65.3%（表 3）。&lt;/aside>
 &lt;p>实验使用 LINEMOD（杂乱场景中的 13 个物体）、LM-O（8 个部分遮挡的物体，1,214 张测试图像）和 YCB-V（21 个物体，遮挡严重，且包含多个对称物体）。当 ADD(-S) 误差小于物体直径的 10% 时，位姿判为正确；在 YCB-V 上还报告了阈值上限为 10 cm 的 ADD(-S) 曲线下面积（AUC）。旋转网络只用合成图像训练，平移网络每个物体使用 600 张真实图像；在 YCB-V 上，训练还额外使用了基于物理渲染（PBR）的图像。&lt;/p>
 &lt;p>在 LM-O 上，该方法在大多数物体上领先于对比方法，相对 GDR-Net 提升最大的是 Holepuncher（74.5% 对 60.1%）、Duck 和 Ape；在 Can 和 Eggbox 上，GDR-Net 仍略高。在 YCB-V 上，该方法的 AUC of ADD(-S) 也领先，为 86.9%，GDR-Net 为 84.4%。小样本对比的差距最为明显：用同样 600 张真实图像重新训练 ZebraPose 和 CheckerPose 后，它们在 YCB-V 上的 ADD(-S) 降至 35.7% 和 37.8%，而本方法为 65.9%（表 5）。论文还在 LINEMOD 上单独评估了旋转各模块：在真实图像、预测 ROI 条件下，视角检索误差在 10° 以内的比例超过 70%；平面内旋转误差在 10° 以内的比例，在使用预测视角和预测 ROI 时为 74%，使用真值视角时超过 90%（图 5、图 6），可见平面内旋转精度在很大程度上取决于视角检索的质量。作者指出，该方法的精度部分依赖目标检测器的可靠性，对未见物体类别的泛化能力仍然有限。&lt;/p>
 &lt;figure class="rfig">
@@ -63,7 +63,7 @@
 &lt;li>&lt;strong>建立多项式模型。&lt;/strong> 世界坐标 X、Y、Z 均表示为 u、v、ϕ 的 n 阶多项式，标定由此转化为线性方程组 W = Ax。3 阶、4 阶、5 阶模型分别有 60、105、168 个系数；综合考虑重构精度与计算效率，本文以 4 阶模型作为标准模型。&lt;/li>
 &lt;li>&lt;strong>贪婪选取方程。&lt;/strong> 每次迭代中，SGRK 计算各方程的残差，保留残差超过阈值的行，再按与残差平方成正比的概率从中抽取一行。误差大的方程因此优先得到更新，收敛更快。&lt;/li>
 &lt;li>&lt;strong>更新并稀疏化。&lt;/strong> 用选中的行对系数做加权 Kaczmarz 投影更新，再通过软阈值操作将较小的系数置零，使解保持稀疏。&lt;/li>
-&lt;li>&lt;strong>迭代收敛后重建。&lt;/strong> 迭代持续到系数的相对标准误差低于 10⁻⁶ 为止。测量物体时，将各点的像素坐标和绝对相位代入拟合好的多项式，即可求得其三维坐标。&lt;/li>
+&lt;li>&lt;strong>迭代收敛后重建。&lt;/strong> 迭代持续到系数的相对标准误差（RSE）低于 10⁻⁶ 为止。测量物体时，将各点的像素坐标和绝对相位代入拟合好的多项式，即可求得其三维坐标。&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/zhang-2025-fringe-projection-calibration/fig-method.webp" target="_blank" rel="noopener">
@@ -87,10 +87,10 @@
 &lt;li>&lt;strong>光度立体成像。&lt;/strong> WTAYOLO 采用光度立体系统，降低表面反射带来的干扰。&lt;/li>
 &lt;li>&lt;strong>扩大感受野。&lt;/strong> WTAConv 模块扩大感受野，增强从图像中提取划痕特征的能力。&lt;/li>
 &lt;li>&lt;strong>通道与空间注意力。&lt;/strong> WTAConv 通过通道注意力和空间注意力机制强化重要特征，同时抑制冗余信息。&lt;/li>
-&lt;li>&lt;strong>划痕检测。&lt;/strong> 模型在不增加参数量的前提下检测出细微划痕。&lt;/li>
+&lt;li>&lt;strong>划痕检测。&lt;/strong> 模型检测出细微划痕。&lt;/li>
 &lt;/ol>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>mAP50 达到 86.8%&lt;/strong>，&lt;strong>比 YOLOv11n 提高 5.1%&lt;/strong>，且未增加参数量。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>mAP50 达到 86.8%&lt;/strong>，&lt;strong>比基线模型 YOLOv11n 提高 5.1%&lt;/strong>，且未增加参数量。&lt;/aside>
 &lt;p>作者总结认为，该方法在精度与模型成本效益之间取得了有效平衡，为工业应用提供了有效的解决方案。&lt;/p>
 &lt;p>&lt;em>本页内容依据论文摘要整理，全文见出版方页面：&lt;a href="https://doi.org/10.1145/3725949.3725956">doi.org/10.1145/3725949.3725956&lt;/a>。&lt;/em>&lt;/p></description></item><item><title>Sequencing in Transformation of Rasterized 3D Models</title><link>https://willpan.xyz/zh/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/</link><pubDate>Mon, 01 Jan 2018 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
 &lt;p>栅格化三维结构由离散、等大的构件组成，就像图片由像素组成：在计算机中是体素，在现实中可以是立方块、砖块，甚至罐头。这类构件便于作为数据处理，易于复用，也适合批量生产。本论文关注的问题是：如何把一个这样的结构变成另一个。论文将其表述为从源结构到目标结构的变换，目标是找到一条机器可以执行的高效操作序列，效率由与应用相关的代价函数衡量。用原料堆搭建结构是其中的特例，此时源结构就是原料堆。&lt;/p>
@@ -104,11 +104,23 @@
 &lt;p>论文研究了三个案例，用论文自己的话说，它们代表了栅格化结构变换与成形中的大多数排序问题：同质体素的抓放（第 3 章）、异质乐高积木的抓放（第 4 章），以及体素链的折叠（第 5 章）。下面的演示逐步重现论文中的体素算例，最后并列给出另外两个案例。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-method.webp" alt="" loading="lazy">&lt;/div>
 &lt;ol>
-&lt;li>&lt;strong>对齐与分类。&lt;/strong> 两个网格模型先被栅格化为体素。假设二者在竖直方向已经对齐、且只允许平移，在水平面内穷举搜索即可找到重叠最大的对齐位置。只属于源结构的体素为待移体素（M），只属于目标结构的为空位（V），重叠的体素原地保留。若 M 与 V 数量不等，多出的体素放入一个线形料堆，或从中取用。&lt;/li>
-&lt;li>&lt;strong>为每次移动定价。&lt;/strong> 代价函数模拟一台三轴直角坐标机器，它只在安全平面 z&lt;sub>max&lt;/sub> 上做水平移动：c&lt;sub>ij&lt;/sub> = |x&lt;sub>j&lt;/sub> − x&lt;sub>i&lt;/sub>| + |y&lt;sub>j&lt;/sub> − y&lt;sub>i&lt;/sub>| + 2z&lt;sub>max&lt;/sub> − z&lt;sub>i&lt;/sub> − z&lt;sub>j&lt;/sub>。以最小总代价把每个 M 配给一个 V 是一个指派问题，匈牙利算法可在 O(n&lt;sup>3&lt;/sup>) 时间内求解，而无需比较 n! 种方案。&lt;/li>
-&lt;li>&lt;strong>满足顶部抓取约束。&lt;/strong> 使用真空吸盘夹爪时，只有顶面上的体素才能被抓取或放置。一次性对全部 M 和 V 求最优配对（全局优化策略 GOS）能给出代价下界，但这些配对可能陷入死锁。局部优化策略（LOS）只用当前可达的 M 和 V 构造代价矩阵，用匈牙利算法求配对并执行这些移动。&lt;/li>
-&lt;li>&lt;strong>更新并重复。&lt;/strong> 每一轮之后顶面发生变化，于是重新构造代价矩阵，重复上述过程，直到所有 M 都放入空位。在该算例中，LOS 的总代价为 27，与 GOS 下界相同。论文还比较了两种更简单的基线：每步只移动当前代价最小的一对可达体素的贪心策略（GSS），以及随机策略（RSS）。&lt;/li>
-&lt;li>&lt;strong>推广到积木与链。&lt;/strong> 对乐高积木，体素被逐层合并为积木。刚性方法（RT）在变换前就生成源、目标两套积木布局；柔性方法（FT）在变换过程中实时生成目标布局，优先采用源结构上可取出的积木类型。每种方法再与三种经由缓存区和库存调度积木的策略组合（见下图），共得到六种算法，并用三个指标评价：代价（抓放次数）、复用率（源结构积木最终用于目标结构的比例），以及随复用率升高、随代价增加而降低的综合性能。对链式结构，先在形状的体素中寻找一条哈密顿路径，把形状转化为一维的链；为使哈密顿路径存在，可以删补体素，也可以把每个体素细分为 4 个（二维）或 8 个（三维）子体素。随后根据初始与目标关节角之差规划折叠过程。&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>对齐与分类。&lt;/strong> 两个网格模型先被栅格化为体素。假设二者在竖直方向已经对齐、且只允许平移，在水平面内穷举搜索即可找到重叠最大的对齐位置。只属于源结构的体素为待移体素（M），只属于目标结构的为空位（V），重叠的体素原地保留。若 M 与 V 数量不等，多出的体素放入一个线形料堆，或从中取用。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>为每次移动定价。&lt;/strong> 代价函数模拟一台三轴直角坐标机器，它只在安全平面 z&lt;sub>max&lt;/sub> 上做水平移动：把待移体素 i 移入空位 j 的代价为 c&lt;sub>ij&lt;/sub> = |x&lt;sub>j&lt;/sub> − x&lt;sub>i&lt;/sub>| + |y&lt;sub>j&lt;/sub> − y&lt;sub>i&lt;/sub>| + 2z&lt;sub>max&lt;/sub> − z&lt;sub>i&lt;/sub> − z&lt;sub>j&lt;/sub>。以最小总代价把每个 M 配给一个 V 是一个指派问题，匈牙利算法可在 O(n&lt;sup>3&lt;/sup>) 时间内求解，而无需比较 n! 种方案。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>满足顶部抓取约束。&lt;/strong> 使用真空吸盘夹爪时，只有顶面上的体素才能被抓取或放置。一次性对全部 M 和 V 求最优配对（全局优化策略 GOS）能给出代价下界，但这些配对可能陷入死锁。局部优化策略（LOS）只用当前可达的 M 和 V 构造代价矩阵，用匈牙利算法求配对并执行这些移动。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>更新并重复。&lt;/strong> 每一轮之后顶面发生变化，于是重新构造代价矩阵，重复上述过程，直到所有 M 都放入空位。在该算例中，LOS 的总代价为 27，与 GOS 下界相同。论文还比较了两种更简单的基线：每步只移动当前代价最小的一对可达体素的贪心策略（GSS），以及随机策略（RSS）。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>推广到积木与链。&lt;/strong> &lt;em>积木（乐高）。&lt;/em> 体素被逐层合并为积木。刚性方法（RT）在变换前就生成源、目标两套积木布局；柔性方法（FT）在变换过程中实时生成目标布局，优先采用源结构上可取出的积木类型。每种方法再与三种经由缓存区和库存调度积木的策略组合（见下图），共得到六种算法，即 RT1–RT3 和 FT1–FT3，名称由方法和策略编号组成。&lt;/p>
+&lt;p>算法用三个指标评价：代价（抓放次数）、复用率（源结构积木最终用于目标结构的比例），以及综合性能（复用率越高、代价越低，该值越高）。&lt;/p>
+&lt;p>&lt;em>链。&lt;/em> 对链式结构，先在形状的体素中寻找一条哈密顿路径，把形状转化为一维的链；为使哈密顿路径存在，可以删补体素，也可以把每个体素细分为 4 个（二维）或 8 个（三维）子体素。随后根据初始与目标关节角之差规划折叠过程。&lt;/p>
+&lt;/li>
 &lt;/ol>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-method.webp" target="_blank" rel="noopener">
@@ -126,7 +138,7 @@
 &lt;/a>&lt;figcaption>折叠：字母 A 和 O 各被栅格化为 28 个像素，通过求解哈密顿路径（HP）把每个形状转化为一条链，再把 A 链折叠成 O 链。引自论文图 5.1。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>LOS 代价接近 GOS 下界，计算只需数秒而非一个多小时。&lt;/strong> 在 wall → pyramid 变换（1,643 对 M-V）中，LOS 代价为 60,199，GOS 下界为 60,021；计算时间为 9.5 s，GOS 为 4,440 s（表 3.1）。&lt;br>&lt;strong>乐高：复用率与代价的权衡。&lt;/strong> 在含颜色信息的 Growlithe → Charmander 变换中，FT3 以 3,203 次抓放复用了 56.1% 的源积木，FT1 则以 6,015 次抓放复用了 69.3%（测试 3，图 4.13）。&lt;br>&lt;strong>FT3 的综合性能最高。&lt;/strong> 这是七种模型规模下、每种规模 56 组变换的平均结果；在刚性算法中 RT2 最好（图 4.9）。&lt;/aside>
+&lt;aside class="keypoint">&lt;strong>LOS 代价接近 GOS 下界，计算只需数秒而非一个多小时。&lt;/strong> 在 wall → pyramid 变换（1,643 对 M-V）中，LOS 代价为 60,199，GOS 下界为 60,021；计算时间为 9.5 s，GOS 为 4,440 s（表 3.1）。&lt;br>&lt;strong>乐高：复用率与代价的权衡。&lt;/strong> 在含颜色信息的 Growlithe → Charmander 变换中，FT3 以 3,203 次抓放复用了 56.1% 的源积木，FT1 则以 6,015 次抓放复用了 69.3%（测试 3，图 4.13）。&lt;br>&lt;strong>FT3 的综合性能最高。&lt;/strong> 该结论是七种模型规模下、每种规模 56 组变换的平均结果；在刚性算法中 RT2 最好（图 4.9）。&lt;/aside>
 &lt;p>体素策略在八个模型上测试（wall、pyramid、starfish、cube、igloo、castle、stairs 和 Eiger 山体），每个模型栅格化为 2,250 至 2,550 个体素，并两两相互变换。GOS 的代价始终最低，但本身并不给出可行的序列，而且耗时最长，因为它要在一个很大的代价矩阵上运行一次匈牙利算法。LOS 的代价次之，GSS 略差，RSS 明显更差但速度最快。工作量取决于 M-V 对的数量，而不是模型大小：wall → pyramid 需要 1,643 对，而形状更相近的 pyramid → igloo 只需 325 对。在不同栅格化分辨率下，总代价大致随 M-V 对数线性增长，LOS 的耗时也是如此，尽管匈牙利算法本身的复杂度为 O(n&lt;sup>3&lt;/sup>)。LOS 因在代价与计算时间之间取得良好平衡而脱颖而出。论文指出的局限是顶部抓取约束，它使悬挑结构无法搭建；而像乐高这样能相互扣合的积木可以形成悬挑，这正是乐高一章的出发点。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/pan-2018-sequencing-in-transformation-of-rasterized-3d/fig-results.webp" target="_blank" rel="noopener">

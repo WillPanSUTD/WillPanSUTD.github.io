@@ -9,7 +9,7 @@ export default function mount(el, { kit, lang }) {
     en: {
       steps: [
         "A trigger control device links the camera and the projector. For each projected fringe pattern I₁, I₂, I₃ …, the camera is triggered twice, so two consecutive images are captured before the next projection (I₁₁ and I₁₂ for I₁, I₂₁ and I₂₂ for I₂, …).",
-        "Two images of the same projected fringe differ only by the object's motion (δ₁ = 0). Images of different fringes differ by the motion and by the PSP phase shift δ₂ = 2π/N. The phase is analysed in I₁₁, I₁₂ and I₂₁.",
+        "Two images of the same projected fringe have no PSP phase shift between them (δ₁ = 0), so they differ only by the object's motion. Images of different fringes differ by the motion and by the PSP phase shift δ₂ = 2π/N. The phase is analysed in I₁₁, I₁₂ and I₂₁.",
         "Tracking the object gives the rotation matrix and translation vector of its motion. From them follows the coordinate transformation (fₙ, gₙ) that relates each point's position before and after the motion.",
         "Each image is written as A + B cos(ϕ + δₖ) + C sin(ϕ + δₖ), where ϕ is the reference-plane phase at the transformed coordinates. Least squares over the three images (N = 3) gives A, B and C, and the phase change of the object is φ = tan⁻¹(−C/B).",
         "Multiplexing: every three consecutive images give one object phase map, so the frames overlap and a new frame starts with each image (Fig. 2b). Traditional PSP needs three projections for each frame (Fig. 2a).",
@@ -30,7 +30,7 @@ export default function mount(el, { kit, lang }) {
     zh: {
       steps: [
         "触发控制装置把相机与投影仪联动起来：投影仪每投射一幅条纹图 I₁、I₂、I₃ ……，相机都被触发两次，在下一次投射前连续拍下两幅图像（I₁ 对应 I₁₁ 和 I₁₂，I₂ 对应 I₂₁ 和 I₂₂，……）。",
-        "同一幅投射条纹下拍到的两幅图像之间只有物体运动带来的差异（δ₁ = 0）；不同条纹下的图像之间既有运动，也有 PSP 相移 δ₂ = 2π/N。相位由 I₁₁、I₁₂ 和 I₂₁ 三幅图像联合求解。",
+        "同一幅投射条纹下拍到的两幅图像之间没有 PSP 相移（δ₁ = 0），只相差物体的运动；不同条纹下的图像之间既有运动，也有 PSP 相移 δ₂ = 2π/N。相位由 I₁₁、I₁₂ 和 I₂₁ 三幅图像联合求解。",
         "跟踪物体运动，得到描述运动的旋转矩阵和平移向量。由此得到坐标变换关系 (fₙ, gₙ)，它描述物体上各点在运动前后的位置对应。",
         "每幅图像写成 A + B cos(ϕ + δₖ) + C sin(ϕ + δₖ)，其中 ϕ 为参考平面相位在变换后坐标处的取值。对三幅图像（N = 3）做最小二乘求出 A、B、C，物体引起的相位变化为 φ = tan⁻¹(−C/B)。",
         "复用：每连续三幅图像即可解出一幅物体相位图，各帧相互重叠，每多拍一幅图像就开始新的一帧（图 2b）。传统 PSP 每一帧都需要三次投射（图 2a）。",
