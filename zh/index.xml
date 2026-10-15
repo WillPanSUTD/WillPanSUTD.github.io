@@ -1,4 +1,54 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>潘威</title><link>https://willpan.xyz/zh/</link><atom:link href="https://willpan.xyz/zh/index.xml" rel="self" type="application/rss+xml"/><description>潘威</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Tue, 30 Jun 2026 00:00:00 +0000</lastBuildDate><item><title>Fusing Phase Map Servoing and MPC for High-Precision Robotic Tracking of Dynamic Objects</title><link>https://willpan.xyz/zh/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/</link><pubDate>Wed, 28 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>潘威</title><link>https://willpan.xyz/zh/</link><atom:link href="https://willpan.xyz/zh/index.xml" rel="self" type="application/rss+xml"/><description>潘威</description><generator>Hugo Blox Builder (https://hugoblox.com)</generator><language>zh-Hans</language><lastBuildDate>Tue, 30 Jun 2026 00:00:00 +0000</lastBuildDate><item><title>Physically inspired geometry-to-photometry rendering and lightweight convolutional neural network for real-time weld defect detection</title><link>https://willpan.xyz/zh/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/</link><pubDate>Sat, 10 Oct 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;p>锂离子电池顶盖的焊缝决定电芯的密封性能，焊缝缺陷可能导致电解液泄漏或热失控。据作者分析，自动检测焊缝难在三点。缺陷与正常焊缝的高度差仅为亚毫米级，在反光、纹理微弱的金属表面上不会形成稳定的亮度对比，因此普通二维相机图像中几乎没有可用的缺陷信号。三维扫描仪能记录这种偏差，但点云网络太慢、太重，不适合产线。而把深度图直接输入二维卷积网络时，网络看到的是标量灰度场，微小缺陷容易被忽略。&lt;/p>
+&lt;p>因此，本文保留三维测量，但改变它呈现给检测器的方式：用一种确定性、物理上可解释的渲染把深度图转换为彩色图像，使微小的几何变化变成强烈的光度对比，再由轻量的二维检测器在该图像上检测。推理时无需多传感器融合，也无需点云处理。&lt;/p>
+&lt;h2 id="方法原理">方法原理&lt;/h2>
+&lt;p>框架分两个阶段（论文图 1）：深度—法向引导的光照渲染，以及用作者称为 YOLO-WaveletTiny（YOLO-WT）的网络进行检测。&lt;/p>
+&lt;div class="explainer" data-explainer="/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;img class="explainer-fallback" src="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-workflow.webp" alt="" loading="lazy">&lt;/div>
+&lt;ol>
+&lt;li>&lt;strong>深度采集。&lt;/strong> 用三维线激光轮廓扫描仪（OPT-LPC61）扫描焊缝，得到单视角深度图。所有实验均不做多视角配准或融合。&lt;/li>
+&lt;li>&lt;strong>深度—RGB 映射。&lt;/strong> 查找表不采用固定色表，而是根据每幅深度图的统计量构建。直方图箱宽由 Freedman–Diaconis 准则给出，h = 2·IQR / ∛N；直方图的累积分布被线性映射到 0–255 的索引范围，再由分段 RGB 渐变把每个索引转换为颜色。得到的伪彩色图承载焊缝的整体深度层次。&lt;/li>
+&lt;li>&lt;strong>表面法向量。&lt;/strong> 对每个像素构造指向邻点的两条对角向量，二者叉乘并归一化即得表面法向量。正常焊缝上法向量方向一致；在凹坑和凸起处，法向量发生突变。&lt;/li>
+&lt;li>&lt;strong>Phong 光照。&lt;/strong> 法向量驱动 Phong 模型：环境光、漫反射（N·L）和镜面反射（(R·V)ⁿ）三项相加得到光照强度 I，渲染图等于 I 乘以伪彩色图。由于结果取决于法向量的点积，微小缺陷引起的细小法向扰动也会带来显著的亮度变化。渲染用 C++ 和 OpenCV 实现，参数（论文表 3）为经验值，例如环境光权重 0.1、漫反射 0.5、镜面反射 0.3、高光指数 32。&lt;/li>
+&lt;li>&lt;strong>YOLO-WaveletTiny。&lt;/strong> 检测器以 YOLOv11n 为基础，加入两个小波模块。主干中的 &lt;strong>WDSConv&lt;/strong> 用 Haar 小波分解代替 3×3 深度卷积，得到一个低频子带和三个高频子带，对每个子带做深度卷积后经逆小波变换重建，再用 1×1 卷积投影。颈部的 &lt;strong>IWUpsample&lt;/strong> 用多级逆小波重建代替插值上采样，使细微的高频缺陷细节在特征融合中不被模糊。&lt;/li>
+&lt;/ol>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-workflow.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-workflow.webp" alt="流程图：线激光扫描仪扫描电池顶盖得到深度图；经查找表的深度—RGB 编码变为伪彩色图；在光源、法向、反射和视线方向下进行法向引导的 Phong 光照，得到渲染图；含 WDSConv 和 IWUpSample 模块的 YOLO-WaveletTiny 输出检测框。" loading="lazy">
+&lt;/a>&lt;figcaption>整体流程：深度采集、经查找表的深度—RGB 编码、法向引导的 Phong 光照，以及 YOLO-WaveletTiny 检测。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-rendering.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-rendering.webp" alt="两个焊缝样本、三列：低对比度的灰度深度图、蓝绿红伪彩色图，以及焊道纹理和缺陷都清晰突出的渲染图。" loading="lazy">
+&lt;/a>&lt;figcaption>两个焊缝样本的原始深度图、伪彩色图和渲染图。伪彩色图提高了整体深度对比；渲染图进一步突出了缺陷的局部纹理。论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-network.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-network.webp" alt="三个面板：含主干、颈部和三个检测头的 YOLO-WaveletTiny 结构；由通道划分、并行 WTConv 分支和逐点卷积组成的 WDSConv 模块；由递归通道划分和逆小波变换组成的 IWUpSample 模块。" loading="lazy">
+&lt;/a>&lt;figcaption>YOLO-WaveletTiny 的结构（左）、WDSConv 模块（中）和 IWUpSample 模块（右）。论文图 3。&lt;/figcaption>
+&lt;/figure>
+&lt;h2 id="实验结果">实验结果&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>仅靠渲染，就把 YOLOv11n 基线的 mAP@50 从 85.1% 提高到 91.0%&lt;/strong>，而伪彩色图为 85.7%、法向图为 88.9%；召回率从 74.6% 提高到 87.3%（表 8）。&lt;br>&lt;strong>完整的 YOLO-WT 以 247 万参数和 5.7 GFLOPs 达到 93.8% 的 mAP@50 和 88.7% 的召回率&lt;/strong>，在所比较的检测器中 mAP@50 和召回率最高、模型最小（表 10、表 12）。&lt;br>与点云分割网络相比，YOLO-WT 的缺陷级 F1 最高（89.0%），每幅图 7.3 ms；三维方法需要 168.5 至 573.2 ms（表 13）。&lt;/aside>
+&lt;p>数据集来自汽车电池顶盖焊缝的真实产线检测，包含六类缺陷，样本数从 104 个凸起到 381 个针孔不等，类别明显不均衡（表 2）。每个样本是一幅单视角深度图，裁剪为 640 × 640 像素，按 8:1:1 划分训练、验证和测试集。训练 250 个轮次，使用 SGD，不用预训练权重；检测在 RTX 3080 上运行。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-defects.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-defects.webp" alt="六幅渲染焊缝图，各带一个红色虚线放大框：虚焊、鱼鳞焊、凸起、爆点、针孔和凹坑。" loading="lazy">
+&lt;/a>&lt;figcaption>六类缺陷的渲染图：虚焊、鱼鳞焊、凸起、爆点、针孔和凹坑。论文图 7。&lt;/figcaption>
+&lt;/figure>
+&lt;p>&lt;strong>渲染为何有效。&lt;/strong> 论文先度量各种表示区分缺陷与背景的能力（表 5）。渲染图的边缘梯度增益最高（4.130），但并非每项指标都最高：伪彩色图的平均强度对比最大（0.064），单独的镜面反射分量信噪比最高（1.557）。渲染图在这两项上分别为 0.051 和 0.771，兼顾了三项指标。第二项分析以 16 × 16 像素块为单位，计算法向方向离散度与局部 Michelson 对比度的相关性（表 6）。渲染图在所有表示中相关性最强（Pearson 0.489、Spearman 0.737、Kendall 0.557），而伪彩色图几乎不相关（Pearson 0.121）。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-modalities.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-modalities.webp" alt="两个焊缝样本、六列，每列用红色虚线框放大缺陷：灰度深度图、彩色法向图、伪彩色图、漫反射分量、偏暗的镜面反射分量和最终渲染图。" loading="lazy">
+&lt;/a>&lt;figcaption>缺陷区域在六种表示下的样子，从左到右：深度图、法向图、伪彩色图、漫反射分量、镜面反射分量和渲染图。论文图 8。&lt;/figcaption>
+&lt;/figure>
+&lt;p>对六个渲染参数的 Morris 敏感性分析表明，环境光权重和光源方向主导全部三项可见性指标，漫反射权重和高光指数的影响弱且稳定，可固定为常用值（表 7）。对深度图施加高斯噪声、脉冲噪声和随机遮挡时，强度对比和信噪比逐渐下降。遮挡下边缘增益反而虚增，因为缺失的数据块产生了伪边缘；作者据此指出，有遮挡的扫描在做基于边缘的分析前需要先补洞。&lt;/p>
+&lt;p>&lt;strong>光照模型的选择。&lt;/strong> 用同一个 YOLOv11n 检测器比较了六种经典模型（表 9）。Phong 与 Blinn-Phong 的 mAP@50 并列最高（91.0%），Phong 的精确率最高（90.3%，与 Gooch 并列），召回率为 87.3%。Minnaert 的 mAP@50-95 略高（46.5% 对 46.3%），Rim Lighting 的召回率更高（88.2%）。Phong 在 CPU 上也是六种中最慢的，每幅 15.2 ms；作者认为考虑到漏检的代价，这是可以接受的。&lt;/p>
+&lt;p>&lt;strong>检测器。&lt;/strong> 消融实验（表 10）中，单独加入 IWUpsample 把 mAP@50 从 91.0% 提高到 93.2%，计算量略增；单独加入 WDSConv 让模型更小（245 万参数、5.6 GFLOPs），但精度下降（90.7%）。两者结合达到 93.8% 的 mAP@50、47.6% 的 mAP@50-95 和 88.7% 的召回率，参数比基线少 4.6%，计算量少 10.9%。每幅图的延迟从 5.5 ms 增至 7.3 ms，作者认为仍满足产线的实时要求。精确率略有下降（89.9% 对 90.3%）：模型以少量误报换取更少的漏检，作者指出这在检测中通常更可取。五折交叉验证的 mAP@50 为 94.8 ± 1.03%（表 11）。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-tradeoff.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/cao-2026-physically-inspired-geometry-to-photometry-rendering-and-lightweight/fig-tradeoff.webp" alt="十一个检测器的 mAP@50 与参数量（百万）散点图。YOLO-WT 位于左上，约 250 万参数、93.8%；RT-DETR 模型位于右下，3200 万至 4300 万参数、约 78% 至 83%。" loading="lazy">
+&lt;/a>&lt;figcaption>所比较检测器的 mAP@50 与模型大小。YOLO-WT 以最少的参数取得最高的 mAP@50。论文图 21。&lt;/figcaption>
+&lt;/figure>
+&lt;p>在所比较的二维检测器中（表 12），YOLOv8n 的 mAP@50 排第二（92.3%）。在 mAP@50-95 上，YOLO-WT（47.6%）略低于 DFINE-Nano（48.6%）、DEIM-Nano（48.3%）和 DEIMv2-Nano（47.7%），但后三者更大也更慢（360 万至 370 万参数，14.9 至 18.0 ms，对比 7.3 ms）。作者指出三点局限：渲染参数固定在单一工作点，精确率为召回率作了少量让步，数据只来自一条产线。后续工作包括参数自动调节、提高精确率，以及把数据扩展到其他材料和焊接工艺。&lt;/p></description></item><item><title>Fusing Phase Map Servoing and MPC for High-Precision Robotic Tracking of Dynamic Objects</title><link>https://willpan.xyz/zh/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/</link><pubDate>Wed, 28 Jan 2026 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/zhang-2026-fusing-phase-map-servoing-and-mpc/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
 &lt;p>工业机器人常采用“停—拍—动”的作业方式：先移动到固定位姿、采集图像，再执行任务。要处理在传送带上持续运动的工件，机器人必须依靠连续的视觉反馈闭环控制，即视觉伺服。点、边缘、轮廓等常规视觉特征在工业中常见的弱纹理或高反光表面上难以可靠提取。条纹投影得到的相位图提供了另一种选择：投影仪投射正弦条纹，解调得到的相位无需三维重建，就能给出稠密的亚像素级几何信息。然而，以往基于相位图的伺服研究只针对静止或缓慢变化的场景。&lt;/p>
 &lt;p>运动目标带来两方面困难。其一，感知和图像处理延迟使测得的相位图滞后于物体的实际状态，且目标速度越快，滞后越严重。其二，模型预测控制（MPC）能在约束下对未来状态进行规划，天然适合动态跟踪；但若直接作用于相位图中成千上万个像素，求解代价过高，难以高频运行。&lt;/p>
 &lt;figure class="rfig">
