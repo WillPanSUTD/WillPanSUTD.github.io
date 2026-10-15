@@ -2,9 +2,9 @@
 &lt;p>扫描得到的原始点云含有噪声，因此在上采样、曲面重建等后续处理之前通常需要先滤波。理想的滤波方法应当把含噪点移回真实曲面，保留尖锐的棱边和角点，并使点分布均匀。现有方法往往只能兼顾其中一部分。基于位置的方法（如 CLOP）平滑效果好，但由于不利用法向信息，容易抹平尖锐特征。基于法向的方法能更好地保留尖锐棱边，但滤波后的点往往分布不均；其中一些方法虽然加入了排斥项，仍会在棱边附近留下空洞。深度学习方法需要带真值的含噪点云作为训练数据，且基于局部块处理，即使加入排斥损失，结果仍分布不均，对稀疏或采样不均匀的输入也难以处理。&lt;/p>
 &lt;p>本文建立在此前一种低秩滤波方法的边缘感知点更新之上。单独使用这种更新时，点会向尖锐棱边移动并在那里聚集，在棱边旁留下空洞。这些空洞会影响上采样和曲面重建等后续处理。&lt;/p>
 &lt;figure class="rfig">
-&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/chen-2023-uniform-point/fig-problem.webp" target="_blank" rel="noopener">
-&lt;img src="https://willpan.xyz/publications/chen-2023-uniform-point/fig-problem.webp" alt="四幅小示意图：蓝色采样曲面的拐角附近有黄、绿两个相邻点，红色箭头为法向，α 为两点连线与法向的夹角。" loading="lazy">
-&lt;/a>&lt;figcaption>边缘感知更新在尖锐棱边附近移动点的方式。(a, b) 中黄点固定、绿点移动；(c, d) 中绿点固定、黄点移动。点向棱边移动并在那里聚集，从而在棱边周围留下空洞。引自论文图 3。&lt;/figcaption>
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/chen-2023-uniform-point/fig-problem.svg" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/chen-2023-uniform-point/fig-problem.svg" alt="四幅小示意图：蓝色采样曲面的拐角附近有黄、绿两个相邻点，红色箭头为法向，α 为两点连线与法向的夹角。" loading="lazy">
+&lt;/a>&lt;figcaption>边缘感知更新在尖锐棱边附近移动点的方式。(a, b) 中黄点固定、绿点移动；(c, d) 中绿点固定、黄点移动。点向棱边移动并在那里聚集，从而在棱边周围留下空洞。据论文图 3 重绘。&lt;/figcaption>
 &lt;/figure>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
 &lt;p>该方法分为两个阶段：先平滑点的法向，再利用这些法向更新点的位置。位置更新最小化两项之和：一是边缘感知的数据项，在逼近含噪曲面的同时保留几何特征；二是排斥项，用于控制点的分布。&lt;/p>
