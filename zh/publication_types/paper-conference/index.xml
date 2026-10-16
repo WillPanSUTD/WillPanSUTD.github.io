@@ -400,20 +400,47 @@
 &lt;img src="https://willpan.xyz/publications/fung-2024-topformer/fig-results.webp" alt="三组扫描对的黄蓝两色配准结果网格，带局部放大图：各行分别为重叠率 43.1% 的 3DMatch、19.5% 的 3DLoMatch 和 68.4% 的 KITTI；各列为输入、真值、TopFormer、普通 Transformer 和 GeoTransformer。" loading="lazy">
 &lt;/a>&lt;figcaption>3DMatch（重叠率 43.1%）、3DLoMatch（19.5%）和 KITTI（68.4%）上的配准示例：输入、真值，以及 TopFormer、普通 Transformer 和 GeoTransformer 的结果，并附局部放大图。引自论文图 5。&lt;/figcaption>
 &lt;/figure></description></item><item><title>WTAYOLO: A Detection Model for Weak Scratches on Metal Surfaces</title><link>https://willpan.xyz/zh/publications/xie-2024-wtayolo-a-detection-model-for-weak/</link><pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/xie-2024-wtayolo-a-detection-model-for-weak/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
-&lt;p>锂电池表面的划痕会显著影响其电化学性能和运行安全，因此严格的划痕检测对保证产品质量至关重要。然而，锂电池材料具有反光特性，划痕本身又有特殊的形态特征，这使划痕检测算法仍面临重大挑战。&lt;/p>
+&lt;p>锂电池表面的划痕会影响电池的电化学性能和运行安全，必须在质检中发现。在高反光金属上，这件事很难：铝合金反光强烈，对光照极其敏感；浅划痕深度小、轮廓模糊，与周围表面的对比度极低。划痕的位置随机、形状不规则，很多与表面本身看起来非常相似。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/xie-2024-wtayolo-a-detection-model-for-weak/fig-problem.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/xie-2024-wtayolo-a-detection-model-for-weak/fig-problem.webp" alt="三块方形铝合金板在普通光照下的照片，红框标出微弱划痕；在拉丝反光的表面上几乎看不出划痕。" loading="lazy">
+&lt;/a>&lt;figcaption>普通图像中铝合金板上的微弱划痕（红框标出）。论文图 1。&lt;/figcaption>
+&lt;/figure>
+&lt;p>光度立体在多个方向的光照下对表面成像，无需复杂的激光设备即可获得细致的表面形貌信息，适合检测反光金属上的细小划痕。算法方面，U-Net 类网络广泛用于缺陷分割，YOLO 网络速度快、精度高。作者指出，把 YOLO 分割用于金属划痕的研究很少，而在精度、模型大小和实时性之间取得平衡仍有困难。本文以 YOLOv11n 为基线，构建划痕分割模型 WTAYOLO，输入为光度立体图像。&lt;/p>
 &lt;h2 id="方法原理">方法原理&lt;/h2>
-&lt;p>WTAYOLO 是一个面向金属表面微弱划痕的检测模型。它结合光度立体成像来应对表面反光，并引入新模块 WTAConv，增强从图像中提取划痕特征的能力。&lt;/p>
+&lt;p>WTAYOLO 保留 YOLOv11n 的结构，把其中的 C3K2 模块替换为 C3K2-WTAConv。每个瓶颈结构中加入一种新的卷积 WTAConv，它将小波变换卷积（WTConv）与 CBAM 注意力模块结合起来。&lt;/p>
 &lt;div class="explainer" data-explainer="/publications/xie-2024-wtayolo-a-detection-model-for-weak/explainer.js" data-lang="zh" style="--explainer-ratio: 16/9">&lt;/div>
 &lt;ol>
-&lt;li>&lt;strong>光度立体成像。&lt;/strong> WTAYOLO 采用光度立体系统，降低表面反射带来的干扰。&lt;/li>
-&lt;li>&lt;strong>扩大感受野。&lt;/strong> WTAConv 模块扩大感受野，增强从图像中提取划痕特征的能力。&lt;/li>
-&lt;li>&lt;strong>通道与空间注意力。&lt;/strong> WTAConv 通过通道注意力和空间注意力机制强化重要特征，同时抑制冗余信息。&lt;/li>
-&lt;li>&lt;strong>划痕检测。&lt;/strong> 模型检测出细微划痕。&lt;/li>
+&lt;li>&lt;strong>光度立体图像。&lt;/strong> 用光度立体系统对金属表面成像，降低表面反射的干扰，使划痕显现出来。&lt;/li>
+&lt;li>&lt;strong>小波卷积扩大感受野。&lt;/strong> WTConv 用二维 Haar 小波变换把输入分解为一个低频分量和三个高频分量，对各分量施加小卷积核，再用逆变换重建输出。按两级重复，就能在参数仅按对数增长的情况下获得大感受野，避免大卷积核带来的参数激增。&lt;/li>
+&lt;li>&lt;strong>通道与空间注意力（CBAM）。&lt;/strong> 小波卷积的输出经过 CBAM。通道注意力对特征图做全局平均池化和最大池化，两个描述子经共享 MLP 后为每个通道加权；空间注意力沿通道轴池化，经 7×7 卷积后为每个位置加权。这样强化重要特征、抑制背景。&lt;/li>
+&lt;li>&lt;strong>分割。&lt;/strong> 改进后的主干和颈部网络接 YOLOv11 的分割头，输出划痕掩膜。&lt;/li>
 &lt;/ol>
+&lt;figure class="rfig rfig--tall">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/xie-2024-wtayolo-a-detection-model-for-weak/fig-method.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/xie-2024-wtayolo-a-detection-model-for-weak/fig-method.webp" alt="分为三个虚线区域的网络结构图：主干由 Conv 和 C3K2_WTAConv 模块组成，末端为 SPPF 和 C2PSA；颈部由上采样、拼接、Conv 和 C3K2_WTAConv 模块组成；头部为 Proto 和三个 Segment 输出。右上角为改进的瓶颈结构：Conv 后接 WTAConv，可选的捷径分支相加。" loading="lazy">
+&lt;/a>&lt;figcaption>WTAYOLO：将 YOLOv11n 中的所有 C3K2 模块替换为 C3K2_WTAConv，其瓶颈结构中包含 WTAConv 层（右上）。论文图 2。&lt;/figcaption>
+&lt;/figure>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/xie-2024-wtayolo-a-detection-model-for-weak/fig-wtaconv.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/xie-2024-wtayolo-a-detection-model-for-weak/fig-wtaconv.webp" alt="模块框图：输入分别进入 Conv 和小波变换 WT；WT 输出进入 Conv 和第二级 WT，第二级经 Conv 和逆变换 IWT 后与第一级相加，再经 IWT；结果与输入的 Conv 分支相加后送入 CBAM，得到输出。" loading="lazy">
+&lt;/a>&lt;figcaption>两级小波变换的 WTAConv，后接 CBAM。论文图 3。&lt;/figcaption>
+&lt;/figure>
 &lt;h2 id="实验结果">实验结果&lt;/h2>
-&lt;aside class="keypoint">&lt;strong>mAP50 达到 86.8%&lt;/strong>，&lt;strong>比基线模型 YOLOv11n 提高 5.1%&lt;/strong>，且未增加参数量。&lt;/aside>
-&lt;p>作者总结认为，该方法在精度与模型成本效益之间取得了有效平衡，为工业应用提供了有效的解决方案。&lt;/p>
-&lt;p>&lt;em>本页内容依据论文摘要整理，全文见出版方页面：&lt;a href="https://doi.org/10.1145/3725949.3725956">doi.org/10.1145/3725949.3725956&lt;/a>。&lt;/em>&lt;/p></description></item><item><title>Weighted Point Cloud Normal Estimation</title><link>https://willpan.xyz/zh/publications/wang-2023-weighted-normal/</link><pubDate>Sat, 01 Jul 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/wang-2023-weighted-normal/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
+&lt;aside class="keypoint">&lt;strong>mAP50 达到 0.868，为所比较方法中最高&lt;/strong>：比基线 YOLOv11n（0.817）高 5.1 个百分点，也高于 YOLOv8n（0.799）、YOLOv5n（0.74）、U-Net（0.582）和 Otsu 阈值法（0.289）（表 2）。&lt;br>&lt;strong>参数量没有增加&lt;/strong>：2.727 M，YOLOv11n 为 2.834 M；计算量 10.1 GFLOPs，YOLOv11n 为 10.2（表 3）。&lt;br>两部分都有贡献：仅用小波卷积时 mAP50 为 0.854，再加入注意力后达到 0.868（表 2）。&lt;/aside>
+&lt;p>实验平台是一套光度立体系统，由 OPT 相机（IMX183 传感器，5472×3648）、35 mm OPT 镜头和 OPT 环形光源组成（表 1）。作者用它采集了 566 张带划痕的金属板图像，分辨率 1200×1200，由专家进行像素级标注，其中 510 张用于训练、56 张用于验证。所有模型使用相同的训练参数。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/xie-2024-wtayolo-a-detection-model-for-weak/fig-setup.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/xie-2024-wtayolo-a-detection-model-for-weak/fig-setup.webp" alt="左：实验装置照片，支架上的相机和镜头位于环形光源上方，旁边是相机、镜头和光源的小图。中：分别从 135°、45°、225° 和 315° 照亮的四个亮球。右：四张灰色的金属表面图像，上面有细划痕线。" loading="lazy">
+&lt;/a>&lt;figcaption>(a) 光度立体系统；(b) 四个方向的光源标定；(c) 通过光度立体检测到的划痕示例。论文图 5。&lt;/figcaption>
+&lt;/figure>
+&lt;p>对比方法包括 Otsu 阈值法、U-Net、YOLOv5n、YOLOv8n 和 YOLOv11n。在作者给出的示例中，Otsu 法无法抑制背景噪声，划痕被噪声淹没；U-Net 部分克服了背景干扰，但会漏检低对比度划痕，结果不完整；YOLO 网络能抑制背景并利用多尺度信息，而 WTAYOLO 对微弱划痕的分割效果最好。WTAYOLO 的精确率（0.942）和召回率（0.736）也都最高。&lt;/p>
+&lt;figure class="rfig">
+&lt;a class="rfig-zoom" href="https://willpan.xyz/publications/xie-2024-wtayolo-a-detection-model-for-weak/fig-results.webp" target="_blank" rel="noopener">
+&lt;img src="https://willpan.xyz/publications/xie-2024-wtayolo-a-detection-model-for-weak/fig-results.webp" alt="五行划痕示例，每行八列：灰色输入图像，随后是 Otsu、U-Net、YOLOv5、YOLOv8、YOLOv11、WTAYOLO 和真值的黑底白色掩膜；Otsu 和 U-Net 的掩膜断断续续，WTAYOLO 的掩膜连续。" loading="lazy">
+&lt;/a>&lt;figcaption>分割示例：(a) 输入，(b) Otsu，(c) U-Net，(d) YOLOv5，(e) YOLOv8，(f) YOLOv11，(g) WTAYOLO，(h) 真值。论文图 6。&lt;/figcaption>
+&lt;/figure>
+&lt;p>在模型规模上，WTAYOLO 的参数量比 YOLOv8n（3.258 M）少 16.3%，比 YOLOv11n 少 3.8%；加入注意力只增加 0.003 M 参数。相比之下，更大的 YOLOv11s 用 10.067 M 参数和 35.3 GFLOPs 只达到 0.841 的 mAP50。额外模块会增加耗时：WTAYOLO 每张图需要 20.9 ms，YOLOv11n 为 14.5 ms（表 3）。作者认为这仍满足工业检测的时间要求，并将优化算法、实现实时检测列为后续工作。&lt;/p></description></item><item><title>Weighted Point Cloud Normal Estimation</title><link>https://willpan.xyz/zh/publications/wang-2023-weighted-normal/</link><pubDate>Sat, 01 Jul 2023 00:00:00 +0000</pubDate><guid>https://willpan.xyz/zh/publications/wang-2023-weighted-normal/</guid><description>&lt;h2 id="问题背景">问题背景&lt;/h2>
 &lt;p>扫描设备获取的原始点云没有法向信息，且常常带有噪声；而准确的法向能够提升点云去噪、曲面重建等下游任务的效果。经典的 PCA 方法根据邻域点的协方差矩阵计算每个点的法向，简单直接，但容易模糊细节，在噪声点云上也不够稳定。PCPNet、Nesti-Net 等基于学习的回归方法对噪声更鲁棒，却忽略了不同邻域点对中心点法向的贡献并不相同，因此在复杂曲面上可能不够准确。DeepFit、AdaFit 等曲面拟合方法能较好地适应复杂几何，但在严重噪声下鲁棒性会下降。&lt;/p>
 &lt;figure class="rfig">
 &lt;a class="rfig-zoom" href="https://willpan.xyz/publications/wang-2023-weighted-normal/fig-problem.webp" target="_blank" rel="noopener">

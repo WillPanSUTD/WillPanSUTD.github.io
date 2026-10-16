@@ -1,4 +1,4 @@
-// WTAYOLO schematic (from the abstract only):
+// WTAYOLO schematic:
 // photometric stereo reduces surface-reflection interference ->
 // WTAConv expands the receptive field ->
 // channel and spatial attention strengthen important features, suppress redundant ones ->
